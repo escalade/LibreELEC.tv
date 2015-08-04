@@ -77,8 +77,8 @@
   # Project CFLAGS
     PROJECT_CFLAGS=""
 
-  # SquashFS compression method (gzip / lzo / xz)
-    SQUASHFS_COMPRESSION="lzo"
+  # SquashFS compression method (gzip / lzo / xz / lz4)
+    SQUASHFS_COMPRESSION="gzip"
 
 ################################################################################
 # setup project defaults
