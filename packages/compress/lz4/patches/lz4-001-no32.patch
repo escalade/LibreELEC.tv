@@ -1,0 +1,11 @@
+--- a/programs/Makefile	2016-08-05 10:53:26.524789908 +0000
++++ b/programs/Makefile	2016-08-05 10:53:38.954789829 +0000
+@@ -70,7 +70,7 @@
+ 
+ bins: lz4 lz4c fullbench fuzzer frametest datagen
+ 
+-all: bins m32
++all: bins
+ 
+ lz4: $(LZ4DIR)/lz4.c $(LZ4DIR)/lz4hc.c $(LZ4DIR)/lz4frame.c $(LZ4DIR)/xxhash.c bench.c lz4io.c lz4cli.c
+ 	$(CC)      $(FLAGS) $^ -o $@$(EXT)
