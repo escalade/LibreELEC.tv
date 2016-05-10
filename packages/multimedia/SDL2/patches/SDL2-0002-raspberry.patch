@@ -1,0 +1,28 @@
+--- a/configure	2016-03-21 20:07:04.948987143 +0100
++++ b/configure	2016-03-21 20:09:16.473601150 +0100
+@@ -22897,7 +22897,7 @@
+ case "$host" in
+     *-*-linux*|*-*-uclinux*|*-*-gnu*|*-*-k*bsd*-gnu|*-*-bsdi*|*-*-freebsd*|*-*-dragonfly*|*-*-netbsd*|*-*-openbsd*|*-*-sysv5*|*-*-solaris*|*-*-hpux*|*-*-aix*|*-*-minix*)
+         case "$host" in
+-            *-raspberry-linux*)
++            *armv7ve*|*armv6zk*)
+                 # Raspberry Pi
+                 ARCH=linux
+                 RPI_CFLAGS="-I/opt/vc/include -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux"
+--- a/src/video/SDL_egl.c	2016-03-21 20:07:04.948987143 +0100
++++ b/src/video/SDL_egl.c	2016-03-21 20:09:16.473601150 +0100
+@@ -40,10 +40,10 @@
+ 
+ #if SDL_VIDEO_DRIVER_RPI
+ /* Raspbian places the OpenGL ES/EGL binaries in a non standard path */
+-#define DEFAULT_EGL "/opt/vc/lib/libEGL.so"
+-#define DEFAULT_OGL_ES2 "/opt/vc/lib/libGLESv2.so"
+-#define DEFAULT_OGL_ES_PVR "/opt/vc/lib/libGLES_CM.so"
+-#define DEFAULT_OGL_ES "/opt/vc/lib/libGLESv1_CM.so"
++#define DEFAULT_EGL "/usr/lib/libEGL.so"
++#define DEFAULT_OGL_ES2 "/usr/lib/libGLESv2.so"
++#define DEFAULT_OGL_ES_PVR "/usr/lib/libGLESv2.so"
++#define DEFAULT_OGL_ES "/usr/lib/libGLESv2.so"
+ 
+ #elif SDL_VIDEO_DRIVER_ANDROID || SDL_VIDEO_DRIVER_VIVANTE
+ /* Android */
