@@ -1,0 +1,21 @@
+--- a/1080i/Home.xml	2016-04-07 20:26:46.780304306 +0200
++++ b/1080i/Home.xml	2016-04-07 20:51:29.124300049 +0200
+@@ -1098,6 +1098,18 @@
+ 								<thumb>icons/home/libreelec.png</thumb>
+ 								<property name="id">libreelec</property>
+ 							</item>
++							<item>
++								<label>RetroArch</label>
++								<onclick>XBMC.System.Exec(/usr/bin/retroarch.sh)</onclick>
++								<thumb>icons/defaulticons/DefaultAddonGame.png</thumb>
++								<property name="id">retroarch</property>
++							</item>
++							<item>
++								<label>Emulationstation</label>
++								<onclick>XBMC.System.Exec(/usr/bin/emulationstation.sh)</onclick>
++								<thumb>icons/defaulticons/DefaultAddonGame.png</thumb>
++								<property name="id">emulationstation</property>
++							</item>
+ 						</content>
+ 					</control>
+ 				</control>
