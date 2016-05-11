@@ -25,6 +25,7 @@ PKG_SITE="http://www.zlib.net"
 PKG_URL="http://zlib.net/$PKG_NAME-$PKG_VERSION.tar.xz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_DEPENDS_HOST=""
+PKG_DEPENDS_INIT="zlib"
 PKG_PRIORITY="optional"
 PKG_SECTION="compress"
 PKG_SHORTDESC="zlib: A general purpose (ZIP) data compression library"
@@ -67,3 +68,15 @@ post_makeinstall_target() {
  make -C $ROOT/$PKG_BUILD/.$TARGET_NAME/contrib/minizip DESTDIR=$SYSROOT_PREFIX install
 }
 
+configure_init() {
+ : # reuse target
+}
+
+make_init() {
+ : # reuse target
+}
+
+makeinstall_init() {
+  mkdir -p $INSTALL/lib
+  cp -a ../.install_pkg/usr/lib/* $INSTALL/lib
+}
