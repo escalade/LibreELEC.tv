@@ -77,6 +77,9 @@ pre_make_host() {
 }
 
 post_makeinstall_target() {
+  make -C lib/et DESTDIR=$SYSROOT_PREFIX install
+  make -C lib/ext2fs DESTDIR=$SYSROOT_PREFIX install
+
   rm -rf $INSTALL/sbin/badblocks
   rm -rf $INSTALL/sbin/blkid
   rm -rf $INSTALL/sbin/dumpe2fs
@@ -112,6 +115,7 @@ make_host() {
 }
 
 makeinstall_host() {
+  rm -f $ROOT/$TOOLCHAIN/lib/libcom_err.a $ROOT/$TOOLCHAIN/lib/libext2fs.a
   make -C lib/et DESTDIR=$(pwd)/.install install
   make -C lib/ext2fs DESTDIR=$(pwd)/.install install
 
