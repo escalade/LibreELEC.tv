@@ -1,0 +1,15 @@
+[Unit]
+Description=Userspace NFSv3 Server
+Requires=rpcbind.service
+After=rpcbind.service
+
+ConditionPathExists=!/storage/.cache/services/unfsd.disabled
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/unfsd -d -e /storage/.config/exports
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

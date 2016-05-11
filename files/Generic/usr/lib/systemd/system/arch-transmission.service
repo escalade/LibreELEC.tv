@@ -1,0 +1,24 @@
+[Unit]
+Description=%p container
+Requires=docker.service network-online.service
+After=docker.service network-online.service
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+ExecStart=/usr/sbin/docker run \
+          --rm \
+          --name=%p \
+          --net=host \
+          --hostname=%H-transmission \
+          -v /storage:/storage \
+          -v /var/media:/media \
+          -v config:/root/.config \
+          escalade1/arch-transmission \
+          /usr/sbin/transmission-daemon \
+          -f --log-error \
+          -g /root/.config/transmission
+
+[Install]
+WantedBy=multi-user.target

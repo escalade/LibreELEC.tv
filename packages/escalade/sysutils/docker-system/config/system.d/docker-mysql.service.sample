@@ -1,0 +1,26 @@
+[Unit]
+Description=%p container
+Requires=docker.service
+After=docker.service
+Before=kodi.service
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+ExecStartPre=-/bin/sh -c "mkdir -p /storage/%p/config /storage/%p/data"
+ExecStart=/usr/sbin/docker run \
+          --rm \
+          --name=%p \
+          --hostname=openelec-%p \
+          --volume=/storage/.config/%p/etc:/etc/mysql/conf.d \
+          --volume=/storage/.config/%p/db:/var/lib/mysql \
+          --publish=3306:3306 \
+          --env=MYSQL_ROOT_PASSWORD=openelec \
+          --env=MYSQL_USER=kodi \
+          --env=MYSQL_PASSWORD=kodi \
+          %p
+ExecStop=/usr/sbin/docker stop %p
+
+[Install]
+WantedBy=multi-user.target
