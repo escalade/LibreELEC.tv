@@ -1,0 +1,14 @@
+[Unit]
+Description=Docker loopback mount
+Requires=local-fs.target
+Before=docker.service
+
+[Mount]
+What=/storage/btrfs-loop.img
+Where=/storage/.docker
+
+Options=loop,compress=lzo
+Type=btrfs
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,22 @@
+[Unit]
+Description=%p container
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+ExecStartPre=-/bin/sh -c "mkdir -p /storage/.config/%p"
+ExecStart=/usr/sbin/docker run \
+          --rm \
+          --name=%p \
+          --hostname=openelec-%p \
+          --volume=/storage/.config/%p:/config \
+          --volume=/var/media:/media \
+          --publish=8080:8080 \
+          timhaak/%p
+ExecStop=/usr/sbin/docker stop %p
+
+[Install]
+WantedBy=multi-user.target

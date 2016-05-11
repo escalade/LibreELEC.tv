@@ -1,0 +1,15 @@
+--- a/configure	2016-04-15 20:49:02.242734304 +0200
++++ b/configure	2016-04-15 20:50:14.684979384 +0200
+@@ -9774,12 +9774,6 @@
+           fi
+         done
+ 
+-        if test x"$valid_cxx" = "xno"; then
+-          { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $CXX is not the intended cross-compiler, ReSID will not be configured" >&5
+-$as_echo "$as_me: WARNING: $CXX is not the intended cross-compiler, ReSID will not be configured" >&2;}
+-          with_resid=no
+-          CXX=""
+-        fi
+       fi
+     fi
+   fi
