@@ -1,3 +1,68 @@
+**A fork of LibreELEC with the following features:**
+* LibreELEC 8.0 git
+* Kodi 17 Krypton git
+* Docker 1.11.1
+* Emulationstation (Herdinger fork) + sselph scraper
+* RetroArch git
+* VICE 2.4.24
+* UAE4ARM/FS-UAE git
+* F2FS/BTRFS/XFS filesystem support
+* RPi3 Bluetooth working out of the box
+* UNFS3 NFS server
+
+**Build command**
+```
+# PROJECT=Generic ARCH=x86_64 make image
+or
+# PROJECT=RPi2 ARCH=arm make image
+```
+
+**Reformat /storage to F2FS on next boot**
+```
+# touch /storage/.please_reformat_f2fs
+```
+
+**Automatically backup/restore while reformatting:**
+```
+# touch /storage/.backup
+```
+
+**Emulationstation arguments in /storage/.config/emulationstation/emulationstation.conf**
+```
+EMULATIONSTATION_OPTS="--ignore-gamelist --no-splash"
+```
+
+**Docker arguments in /storage/.config/docker/docker.conf**
+```
+DOCKER_DAEMON_OPTS="--graph=/storage/.docker"
+DOCKER_STORAGE_OPTS="--storage-driver=overlay"
+```
+
+**Out of the box Emulationstation will look for roms in /storage/roms/(amiga|c64|mame|fba|gba|dreamcast|n64|psx|psp|saturn|snes|nes|nds). BIOS files should be put in /storage/roms/bios. Configured input controllers are DS4 (bluetooth) and keyboard. Configuration is in /storage/.config/emulationstation. The keyboard layout is as follows:**
+
+```
+Navigation = Arrow keys
+A = Enter
+B = Backspace
+Page up = ,
+Page down = .
+Start = rctrl
+Select = ralt
+```
+
+**Keyboard buttons in different apps**
+```
+Kodi shutdown menu = S
+Kodi context menu = C
+Emulationstation menu = RCTRL
+uae4arm menu = F12
+uae4arm joystick/mouse switch = F11
+VICE menu = F12
+Retroarch menu = F1
+```
+
+Original README.md below.
+
 # LibreELEC
 
 LibreELEC is a 'Just enough OS' Linux distribution for running the award-winning [Kodi](http://kodi.tv) software on popular mediacentre hardware. LibreELEC is a conservative fork of the popular [OpenELEC](http://openelec.tv) project with a stronger focus on pre-release testing and post-release change management. Further information on the project can be found on the [LibreELEC website](https://libreelec.tv).
