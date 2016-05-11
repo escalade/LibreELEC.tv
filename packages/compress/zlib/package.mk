@@ -53,3 +53,15 @@ post_makeinstall_target() {
  make -C $ROOT/$PKG_BUILD/contrib/minizip DESTDIR=$SYSROOT_PREFIX install
 }
 
+configure_init() {
+ : # reuse target
+}
+
+make_init() {
+ : # reuse target
+}
+
+makeinstall_init() {
+  mkdir -p $INSTALL/lib
+  cp -a ../.install_pkg/usr/lib/* $INSTALL/lib
+}
