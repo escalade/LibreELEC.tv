@@ -40,6 +40,21 @@ if [ "$INITRAMFS_PARTED_SUPPORT" = yes ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET parted:init"
 fi
 
+# F2FS support
+  if [ "$F2FS_SUPPORT" = "yes" ] ; then
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET f2fs-tools:init"
+  fi
+
+# BTRFS support
+  if [ "$BTRFS_SUPPORT" = "yes" ] ; then
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET zlib:init btrfs-progs:init"
+  fi
+
+# XFS support
+  if [ "$XFS_SUPPORT" = "yes" ] ; then
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET xfsprogs-dev:init"
+  fi
+
 post_install() {
   ( cd $ROOT/$BUILD/initramfs
     if [ "$TARGET_ARCH" = "x86_64" -o "$TARGET_ARCH" = "powerpc64" ]; then
