@@ -44,6 +44,21 @@ PKG_MAKE_OPTS_INIT="ARCH=$TARGET_ARCH \
                     KBUILD_VERBOSE=1 \
                     install"
 
+# F2FS support
+  if [ "$F2FS_SUPPORT" = "yes" ] ; then
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET f2fs-tools"
+  fi
+
+# BTRFS support
+  if [ "$BTRFS_SUPPORT" = "yes" ] ; then
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET btrfs-progs"
+  fi
+
+# XFS support
+  if [ "$XFS_SUPPORT" = "yes" ] ; then
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET xfsprogs-dev"
+  fi
+
 # nano text editor
   if [ "$NANO_EDITOR" = "yes" ]; then
     PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET nano"
