@@ -1,0 +1,48 @@
+--- a/Makefile.am	2016-04-28 11:57:28.827338119 +0000
++++ b/Makefile.am	2016-04-28 11:58:17.474004477 +0000
+@@ -1243,29 +1243,29 @@
+ if CODEGEN
+ 
+ gen/blit.h: gen/genblitter$(EXEEXT)
+-	$(b)/gen/genblitter$(EXEEXT) i > $(b)/gen/blit.h
++	LD_LIBRARY_PATH=$(SYSROOT_PREFIX)/usr/lib $(b)/gen/genblitter$(EXEEXT) i > $(b)/gen/blit.h
+ 
+ gen/blitfunc.cpp: gen/genblitter$(EXEEXT) gen/blitfunc.h
+-	$(b)/gen/genblitter$(EXEEXT) f > $(b)/gen/blitfunc.cpp
++	LD_LIBRARY_PATH=$(SYSROOT_PREFIX)/usr/lib $(b)/gen/genblitter$(EXEEXT) f > $(b)/gen/blitfunc.cpp
+ 
+ gen/blitfunc.h: gen/genblitter$(EXEEXT)
+-	$(b)/gen/genblitter$(EXEEXT) h > $(b)/gen/blitfunc.h
++	LD_LIBRARY_PATH=$(SYSROOT_PREFIX)/usr/lib $(b)/gen/genblitter$(EXEEXT) h > $(b)/gen/blitfunc.h
+ 
+ gen/blittable.cpp: gen/genblitter$(EXEEXT) gen/blitfunc.h
+-	$(b)/gen/genblitter$(EXEEXT) t > $(b)/gen/blittable.cpp
++	LD_LIBRARY_PATH=$(SYSROOT_PREFIX)/usr/lib $(b)/gen/genblitter$(EXEEXT) t > $(b)/gen/blittable.cpp
+ 
+ gen/compemu.cpp: gen/gencomp$(EXEEXT)
+-	$(b)/gen/gencomp$(EXEEXT)
++	LD_LIBRARY_PATH=$(SYSROOT_PREFIX)/usr/lib $(b)/gen/gencomp$(EXEEXT)
+ 
+ gen/compstbl.cpp: gen/compemu.cpp
+ 
+ gen/comptbl.h: gen/compemu.cpp
+ 
+ gen/cpudefs.cpp: gen/build68k$(EXEEXT) src/table68k
+-	$(b)/gen/build68k$(EXEEXT) < $(s)/src/table68k > $(b)/gen/cpudefs.cpp
++	LD_LIBRARY_PATH=$(SYSROOT_PREFIX)/usr/lib $(b)/gen/build68k$(EXEEXT) < $(s)/src/table68k > $(b)/gen/cpudefs.cpp
+ 
+ gen/cpuemu_0.cpp: gen/gencpu$(EXEEXT)
+-	cd $(b)/gen && ./gencpu$(EXEEXT) --optimized-flags
++	cd $(b)/gen && LD_LIBRARY_PATH=$(SYSROOT_PREFIX)/usr/lib ./gencpu$(EXEEXT) --optimized-flags
+ 
+ gen/cpuemu_11.cpp: gen/cpuemu_0.cpp
+ 
+@@ -1296,7 +1296,7 @@
+ gen/cputbl.h: gen/cpuemu_0.cpp
+ 
+ gen/linetoscr.cpp: gen/genlinetoscr$(EXEEXT)
+-	$(b)/gen/genlinetoscr$(EXEEXT) > $(b)/gen/linetoscr.cpp
++	LD_LIBRARY_PATH=$(SYSROOT_PREFIX)/usr/lib $(b)/gen/genlinetoscr$(EXEEXT) > $(b)/gen/linetoscr.cpp
+ 
+ endif
+ 

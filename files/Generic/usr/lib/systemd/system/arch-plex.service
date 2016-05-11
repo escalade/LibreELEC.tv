@@ -1,0 +1,28 @@
+[Unit]
+Description=%p container
+Requires=docker.service network-online.service
+After=docker.service network-online.service
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+ExecStart=/usr/sbin/docker run \
+          --rm \
+          --name=%p \
+          --hostname=%H-plex \
+          --net=host \
+          -v /storage:/storage \
+          -v /var/media:/media \
+          -v config:/root/.config \
+          -e LD_LIBRARY_PATH=/opt/plexmediaserver \
+          -e PLEX_MEDIA_SERVER_HOME=/opt/plexmediaserver \
+          -e PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR=/root/.config \
+          -e PLEX_MEDIA_SERVER_MAX_PLUGIN_PROCS=6 \
+          -e PLEX_MEDIA_SERVER_TMPDIR=/tmp \
+          -e TMPDIR=/tmp \
+          escalade1/arch-plex \
+          /opt/plexmediaserver/Plex\x20Media\x20Server
+
+[Install]
+WantedBy=multi-user.target
