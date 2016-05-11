@@ -1,0 +1,19 @@
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+After=network.target docker.socket
+Requires=docker.socket
+ConditionPathExists=!/storage/.cache/services/docker.disabled
+
+[Service]
+Type=notify
+EnvironmentFile=/storage/.config/docker/docker.conf
+ExecStart=/usr/sbin/docker daemon -H fd:// $DOCKER_DAEMON_OPTS $DOCKER_STORAGE_OPTS
+MountFlags=slave
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
+Alias=docker.service

@@ -1,0 +1,2 @@
+/storage 0.0.0.0/0(rw,insecure,anonuid=0,anongid=0,all_squash)
+/media 0.0.0.0/0(rw,insecure,anonuid=0,anongid=0,all_squash)

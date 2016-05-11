@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [ ! -f /storage/.vice/sdl-vicerc ]; then
+  mkdir -p /storage/.vice
+  cp /etc/sdl-vicerc /storage/.vice/
+fi
+
+pidof kodi.bin > /dev/null && KODI=1
+[ "$KODI" = "1" ] && systemctl stop kodi
+[ -x /usr/bin/tvservice ] && tvservice -e "CEA 31" || xrandr -r 50
+x64 "$@" > /tmp/x64.log 2>&1
+[ -x /usr/bin/tvservice ] && tvservice -e "CEA 16" || xrandr -r 60
+sleep 1
+[ "$KODI" = "1" ] && systemctl start kodi
