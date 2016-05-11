@@ -155,7 +155,13 @@
 
 # Support for partitioning and formating disks in initramfs (yes / no)
 # This adds support for parted and mkfs.ext3/4 to initramfs for OEM usage
-  INITRAMFS_PARTED_SUPPORT="no"
+  INITRAMFS_PARTED_SUPPORT="yes"
+
+# Support for extra filesystems (yes / no)
+# This adds filesystem tools both in initramfs and in target
+  F2FS_SUPPORT="yes"
+  BTRFS_SUPPORT="yes"
+  XFS_SUPPORT="yes"
 
 # build with swap support (yes / no)
   SWAP_SUPPORT="no"
