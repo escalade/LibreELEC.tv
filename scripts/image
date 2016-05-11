@@ -153,6 +153,9 @@ $SCRIPTS/install util-linux
 $SCRIPTS/install corefonts
 $SCRIPTS/install network
 
+# NFS server support
+  [ ! "$NFS_SERVER" = "no" ] && $SCRIPTS/install unfs3
+
 # Graphic support
 [ ! "$DISPLAYSERVER" = "no" ] && $SCRIPTS/install $DISPLAYSERVER
 
