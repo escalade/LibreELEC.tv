@@ -202,3 +202,6 @@
   SYSTEM_SIZE=512
 # Default system partition offset, in sectors, eg. 2048
   SYSTEM_PART_START=2048
+
+# Addons to enable
+  ADDON_ENABLE="peripheral.joystick"

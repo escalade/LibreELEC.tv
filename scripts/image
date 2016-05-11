@@ -203,6 +203,14 @@ $SCRIPTS/install debug
 # OEM packages
 [ "$OEM_SUPPORT" = "yes" ] && $SCRIPTS/install oem
 
+# Enable addons
+  if [ -n "$ADDON_ENABLE" ]; then
+    KODI_ADDON_MANIFEST="$ROOT/$BUILD/image/system/usr/share/kodi/system/addon-manifest.xml"
+    for ADDON_ID in $ADDON_ENABLE; do
+      xmlstarlet ed -L --subnode "/addons" -t elem -n "addon" -v "$ADDON_ID" $KODI_ADDON_MANIFEST
+    done
+  fi
+
 # copy project related files to filesystem
 if [ -d "$PROJECT_DIR/$PROJECT/filesystem" ]; then
   cp -PR $PROJECT_DIR/$PROJECT/filesystem/* $INSTALL
