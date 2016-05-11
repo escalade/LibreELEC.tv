@@ -680,6 +680,32 @@
         fi
       fi
       mount_part "$disk" "/storage" "rw,noatime"
+      # get the disk. /storage on 2nd partition
+      PART=$(/bin/busybox grep "/storage " /proc/mounts | /bin/busybox cut -d" " -f1 | /bin/busybox grep '2$')
+      # if requested, do a backup first
+      if [ -f /storage/.backup ]; then
+        mkdir -p /backup && /bin/busybox mount -t tmpfs none /backup
+        /bin/busybox tar -czf /backup/storage.tar.gz /storage
+      fi
+      if [ -f /storage/.please_reformat_f2fs -a -x /sbin/mkfs.f2fs ]; then
+        /bin/busybox umount /storage
+        mkfs.f2fs -l Storage "$PART"
+        mount_part "$PART" "/storage" "rw,noatime"
+      elif [ -f /storage/.please_reformat_btrfs -a -x /sbin/mkfs.btrfs ]; then
+        /bin/busybox umount /storage
+        mkfs.btrfs -f -L Storage "$PART"
+        mount_part "$PART" "/storage" "rw,noatime"
+      elif [ -f /storage/.please_reformat_ext4 -a -L /sbin/mkfs.ext4 ]; then
+        /bin/busybox umount /storage
+        mkfs.ext4 -F -L Storage "$PART"
+        mount_part "$PART" "/storage" "rw,noatime"
+      elif [ -f /storage/.please_reformat_xfs -a -x /sbin/mkfs.xfs ]; then
+        /bin/busybox umount /storage
+        mkfs.xfs -f -L Storage "$PART"
+        mount_part "$PART" "/storage" "rw,noatime"
+      fi
+      [ -f /backup/storage.tar.gz ] && /bin/busybox tar -C / -zxf /backup/storage.tar.gz && /bin/busybox umount /backup
+      rm -f /storage/.backup /storage/.please_reformat*
     else
       # /storage should always be writable
       mount -t tmpfs none /storage
