@@ -43,7 +43,7 @@ PKG_AUTORECONF="no"
 configure_host() {
   export GOOS=linux
   export GOROOT_FINAL=$ROOT/$TOOLCHAIN/lib/golang
-  export GOROOT_BOOTSTRAP=/usr/lib/golang
+  export GOROOT_BOOTSTRAP=/usr/lib/go
   export GOARCH=amd64
 }
 
