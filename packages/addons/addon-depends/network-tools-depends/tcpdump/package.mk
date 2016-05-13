@@ -35,11 +35,13 @@ pre_configure_target() {
   sed -i -e 's/ac_cv_linux_vers=unknown/ac_cv_linux_vers=2/' ../configure
 }
 
-pre_build_target() {
+pre_make_target() {
   # discard native system includes
+  echo PREBUILD
+  echo $PWD
   sed -i "s%-I/usr/include%%g" Makefile
 }
 
-makeinstall_target() {
-  : # nop
+post_makeinstall_target() {
+  rm ../.install_pkg/usr/sbin/tcpdump.4.7.4
 }
