@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="reicast-libretro"
-PKG_VERSION="774f9bc"
+PKG_VERSION="a4b2829"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
@@ -37,6 +37,21 @@ PKG_AUTORECONF="no"
 unpack() {
   tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
   mv $BUILD/reicast* $BUILD/$PKG_NAME-$PKG_VERSION
+}
+
+make_target() {
+  case $PROJECT in
+    RPi)
+      make platform=rpi WITH_DYNAREC=arm
+      ;;
+    RPi2)
+      make platform=rpi2 WITH_DYNAREC=arm
+      ;;
+    Generic)
+      make WITH_DYNAREC=x86_64
+      ;;
+  esac
+
 }
 
 makeinstall_target() {
