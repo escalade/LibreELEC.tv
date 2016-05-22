@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="pcsx_rearmed-libretro"
-PKG_VERSION="18ef763"
+PKG_VERSION="05311a1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
