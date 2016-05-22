@@ -6,9 +6,21 @@ export SDL_MOUSE_RELATIVE=0
 export FB_MULTI_BUFFER=2
 export DISPLAY=:0.0
 
+# Stop Kodi if it's running
 pidof kodi.bin > /dev/null && KODI=1
 [ "$KODI" = "1" ] && systemctl stop kodi
-pidof Xorg > /dev/null && chvt 2
+
+# Check if we have Intel KMS
+grep inteldrmfb /proc/fb > /dev/null && INTEL=1
+
+# Switch to virtual console if we have Intel KMS
+[ "$INTEL" = "1" ] && chvt 2
+
+# Launch RetroArch
 /usr/bin/retroarch "$@" > /tmp/retroarch.log 2>&1
-pidof Xorg > /dev/null && chvt 1
+
+# Switch back to X
+[ "$INTEL" = "1" ] && chvt 1
+
+# Restart Kodi
 [ "$KODI" = "1" ] && systemctl start kodi
