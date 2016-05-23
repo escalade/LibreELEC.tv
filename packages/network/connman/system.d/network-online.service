@@ -8,7 +8,6 @@ Conflicts=shutdown.target
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/sh -c 'echo "waiting on Network to come online ..."'
 ExecStart=/usr/sbin/connmand-wait-online --timeout=30
 StandardOutput=tty
 RemainAfterExit=yes
