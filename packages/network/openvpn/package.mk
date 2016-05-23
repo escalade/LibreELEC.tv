@@ -34,7 +34,6 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
 PKG_CONFIGURE_OPTS_TARGET="ac_cv_have_decl_TUNSETPERSIST=no \
-                           --disable-server \
                            --enable-password-save \
                            --disable-plugins \
                            --enable-iproute2 IPROUTE=/sbin/ip \
