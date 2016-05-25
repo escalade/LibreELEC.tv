@@ -40,6 +40,10 @@ pre_configure_target() {
   make configure
 }
 
+make_target() {
+  make SYSROOT_PREFIX=$SYSROOT_PREFIX
+}
+
 configure_init() {
   : # reuse target
 }
