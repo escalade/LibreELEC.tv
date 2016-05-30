@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="craft-libretro"
-PKG_VERSION="5cbaf79"
+PKG_VERSION="2135ba9"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MAME"
