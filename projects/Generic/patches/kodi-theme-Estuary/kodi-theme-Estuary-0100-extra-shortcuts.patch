@@ -1,0 +1,21 @@
+--- a/1080i/Home.xml	2016-04-07 20:26:46.780304306 +0200
++++ b/1080i/Home.xml	2016-04-07 20:51:29.124300049 +0200
+@@ -1110,6 +1110,18 @@
+ 								<thumb>icons/defaulticons/DefaultAddonGame.png</thumb>
+ 								<property name="id">emulationstation</property>
+ 							</item>
++							<item>
++								<label>Chrome</label>
++								<onclick>XBMC.System.Exec(/usr/bin/chrome.sh)</onclick>
++								<thumb>icons/defaulticons/DefaultAddonWebSkin.png</thumb>
++								<property name="id">chrome</property>
++							</item>
++							<item>
++								<label>Spotify</label>
++								<onclick>XBMC.System.Exec(/usr/bin/spotify.sh)</onclick>
++								<thumb>icons/defaulticons/DefaultAddonMusic.png</thumb>
++								<property name="id">spotify</property>
++							</item>
+ 						</content>
+ 					</control>
+ 				</control>
