@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="mame-libretro"
-PKG_VERSION="bb828fa"
+PKG_VERSION="f3388c4"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MAME"
@@ -39,22 +39,33 @@ unpack() {
   mv $BUILD/mame-* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
-make_target() {
-  strip_gold
+pre_make_target() {
   strip_lto
+  strip_gold
 
-  LCPU=$TARGET_ARCH
-  PTR64=0
+  export OVERRIDE_CC="$CC"
+  export OVERRIDE_CXX="$CXX"
+  export OVERRIDE_LD="$CXX"
+}
 
-  if [ "$TARGET_ARCH" == "i386" ]; then
-    LCPU=x86
-  fi
-
-  if [ "$TARGET_ARCH" == "x86_64" ]; then
-    PTR64=1
-  fi
-
-  make REGENIE=1 VERBOSE=1 NOWERROR=1 PYTHON_EXECUTABLE=python2 CONFIG=libretro LIBRETRO_OS="unix" ARCH="" LIBRETRO_CPU="$LCPU" DISTRO="debian-stable" OVERRIDE_CC="$CC" OVERRIDE_CXX="$CXX" OVERRIDE_LD="$LD" CROSS_BUILD="" PTR64="$PTR64" TARGET="mame" SUBTARGET="arcade"
+make_target() {
+  case $PROJECT in
+    RPi)
+      make platform=armv6-hardfloat-arm1176jzf-s
+      ;;
+    RPi2)
+      make platform=armv7-neon-hardfloat-cortex-a7
+      ;;
+    imx6)
+      make platform=armv7-neon-hardfloat-cortex-a9
+      ;;
+    WeTek_Play)
+      make platform=armv7-neon-hardfloat-cortex-a9
+      ;;
+    Generic)
+      make -f Makefile.libretro
+      ;;
+  esac
 }
 
 makeinstall_target() {
