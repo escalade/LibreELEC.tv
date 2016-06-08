@@ -43,7 +43,7 @@
  crc32selftest: gen_crc32table.c crc32table.h crc32.c
  	@echo "    [TEST]    CRC32"
 -	$(Q) $(BUILD_CC) $(CFLAGS) -D CRC32_SELFTEST=1 crc32.c -o $@
-+	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -I$(SYSROOT_PREFIX)/usr/include -D CRC32_SELFTEST=1 crc32.c -o $@
++	$(Q) $(BUILD_CC) $(BUILD_CFLAGS) -I$(SYSROOT_PREFIX)/usr/include -D CRC32_SELFTEST=1 -D __ARM_PCS_VFP crc32.c -o $@
  	$(Q) ./$@
  
  # set up include/xfs header directory
