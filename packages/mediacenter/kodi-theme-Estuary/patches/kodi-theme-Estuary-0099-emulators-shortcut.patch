@@ -7,13 +7,13 @@
 +							<item>
 +								<label>RetroArch</label>
 +								<onclick>XBMC.System.Exec(/usr/bin/retroarch.sh)</onclick>
-+								<thumb>icons/defaulticons/DefaultAddonGame.png</thumb>
++								<thumb>DefaultAddonGame.png</thumb>
 +								<property name="id">retroarch</property>
 +							</item>
 +							<item>
 +								<label>Emulationstation</label>
 +								<onclick>XBMC.System.Exec(/usr/bin/emulationstation.sh)</onclick>
-+								<thumb>icons/defaulticons/DefaultAddonGame.png</thumb>
++								<thumb>DefaultAddonGame.png</thumb>
 +								<property name="id">emulationstation</property>
 +							</item>
  						</content>
