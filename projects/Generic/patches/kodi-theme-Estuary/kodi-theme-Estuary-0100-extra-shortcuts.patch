@@ -7,13 +7,13 @@
 +							<item>
 +								<label>Chrome</label>
 +								<onclick>XBMC.System.Exec(/usr/bin/chrome.sh)</onclick>
-+								<thumb>icons/defaulticons/DefaultAddonWebSkin.png</thumb>
++								<thumb>DefaultAddonWebSkin.png</thumb>
 +								<property name="id">chrome</property>
 +							</item>
 +							<item>
 +								<label>Spotify</label>
 +								<onclick>XBMC.System.Exec(/usr/bin/spotify.sh)</onclick>
-+								<thumb>icons/defaulticons/DefaultAddonMusic.png</thumb>
++								<thumb>DefaultAddonMusic.png</thumb>
 +								<property name="id">spotify</property>
 +							</item>
  						</content>
