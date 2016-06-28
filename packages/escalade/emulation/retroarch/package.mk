@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="retroarch"
-PKG_VERSION="02ad990"
+PKG_VERSION="158e461"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
@@ -33,6 +33,13 @@ PKG_LONGDESC="RetroArch is the reference frontend for the libretro API. Popular 
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+
+post_unpack() {
+  cd $ROOT/$PKG_BUILD
+  git clone --depth 1 https://github.com/KhronosGroup/SPIRV-Cross.git deps/SPIRV-Cross
+  git clone --depth 1 https://github.com/KhronosGroup/glslang.git deps/glslang/glslang
+  cd -
+}
 
 if [ "$OPENGLES_SUPPORT" = yes ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OPENGLES"
@@ -74,7 +81,7 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-vg \
                            --disable-xvideo \
                            --disable-al \
                            --disable-oss \
-                           --disable-vulkan \
+                           --enable-vulkan \
                            $RETROARCH_GL \
                            $RETROARCH_NEON \
                            --enable-fbo \
