@@ -53,6 +53,7 @@ fi
 XA_CONFIG="--disable-xa"
 for drv in $GRAPHIC_DRIVERS; do
   [ "$drv" = "vmware" ] && XA_CONFIG="--enable-xa"
+  [ "$drv" = "i965" ] && VULKAN="--with-vulkan-drivers=intel"
 done
 
 if [ "$OPENGLES_SUPPORT" = "yes" ]; then
@@ -60,7 +61,7 @@ if [ "$OPENGLES_SUPPORT" = "yes" ]; then
 else
   MESA_GLES="--disable-gles2"
 fi
- 
+
 PKG_CONFIGURE_OPTS_TARGET="CC_FOR_BUILD=$HOST_CC \
                            CXX_FOR_BUILD=$HOST_CXX \
                            CFLAGS_FOR_BUILD= \
@@ -106,6 +107,7 @@ PKG_CONFIGURE_OPTS_TARGET="CC_FOR_BUILD=$HOST_CC \
                            --with-osmesa-lib-name=OSMesa \
                            --with-gallium-drivers=$GALLIUM_DRIVERS \
                            --with-dri-drivers=$DRI_DRIVERS \
+                           $VULKAN \
                            --with-sysroot=$SYSROOT_PREFIX"
 
 pre_configure_target() {
