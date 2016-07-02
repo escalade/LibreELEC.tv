@@ -32,11 +32,10 @@ PKG_LONGDESC="Simple DirectMedia Layer is a cross-platform multimedia library de
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_HOST="--disable-video-opengl --disable-video-directfb --disable-cdrom --disable-oss --disable-alsatest --disable-pulseaudio --disable-pulseaudio-shared --disable-arts --disable-nas --disable-esd --disable-nas-shared --disable-diskaudio --disable-dummyaudio --disable-mintaudio --disable-video-x11 --disable-input-tslib" 
-PKG_CONFIGURE_OPTS_TARGET="X_CFLAGS= SYSROOT_PREFIX=$SYSROOT_PREFIX --disable-video-directfb --disable-cdrom --disable-oss --disable-alsatest --disable-pulseaudio --disable-pulseaudio-shared --disable-arts --disable-nas --disable-esd --disable-nas-shared --disable-diskaudio --disable-dummyaudio --disable-mintaudio --disable-input-tslib" 
+PKG_CONFIGURE_OPTS_TARGET="X_CFLAGS= SYSROOT_PREFIX=$SYSROOT_PREFIX --disable-video-directfb --disable-oss --disable-alsatest --disable-pulseaudio --disable-pulseaudio-shared --disable-arts --disable-nas --disable-esd --disable-nas-shared --disable-diskaudio --disable-dummyaudio --disable-mintaudio --disable-input-tslib" 
 
 if [[ "$PROJECT" =~ "RPi" ]]; then
-  PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-video-x11 --disable-video-opengl --enable-video-dispmanx"
+  PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-video-opengl --enable-video-dispmanx"
 else
   PKG_CONFIGURE_OPTS_TARGET="have_const_param_xdata32=yes $PKG_CONFIGURE_OPTS_TARGET"
 fi
