@@ -16,7 +16,7 @@
 #  along with LibreELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-PKG_NAME="retroarch-cores"
+PKG_NAME="buildbot-cores"
 PKG_VERSION="latest"
 PKG_REV="1"
 PKG_ARCH="any"
@@ -25,14 +25,10 @@ PKG_SITE="http://buildbot.libretro.com"
 PKG_DEPENDS_TARGET="toolchain retroarch"
 PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
-PKG_SHORTDESC="Retroarch emulator cores"
+PKG_SHORTDESC="libretro cores from buildbot.libretro.com"
 PKG_AUTORECONF="no"
 
 PKG_IS_ADDON="no"
-
-unpack() {
-  mkdir -p $ROOT/$PKG_BUILD
-}
 
 configure_target() {
   :
