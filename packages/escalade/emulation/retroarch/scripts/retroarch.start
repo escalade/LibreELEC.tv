@@ -10,17 +10,14 @@ export DISPLAY=:0.0
 pidof kodi.bin > /dev/null && KODI=1
 [ "$KODI" = "1" ] && systemctl stop kodi
 
-# Check if we have Intel KMS
-grep inteldrmfb /proc/fb > /dev/null && INTEL=1
-
-# Switch to virtual console if we have Intel KMS
-[ "$INTEL" = "1" ] && chvt 2
+# Switch to VT2
+[ ! -f /storage/.config/retroarch/no_kms ] && chvt 2
 
 # Launch RetroArch
 /usr/bin/retroarch "$@" > /tmp/retroarch.log 2>&1
 
-# Switch back to X
-[ "$INTEL" = "1" ] && chvt 1
+# Switch back to VT1
+[ ! -f /storage/.config/retroarch/no_kms ] && chvt 1
 
 # Restart Kodi
 [ "$KODI" = "1" ] && systemctl start kodi
