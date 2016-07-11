@@ -56,7 +56,7 @@ if [ "$AVAHI_DAEMON" = yes ]; then
 fi
 
 if [ "$OPENGLES" == "no" ]; then
-  RETROARCH_GL="--enable-kms"
+  RETROARCH_GL="--enable-kms --enable-vulkan"
 elif [[ "$PROJECT" =~ "RPi" ]]; then
   RETROARCH_GL="--enable-gles --disable-kms"
   CFLAGS="$CFLAGS -I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads \
@@ -81,7 +81,6 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-vg \
                            --disable-xvideo \
                            --disable-al \
                            --disable-oss \
-                           --enable-vulkan \
                            $RETROARCH_GL \
                            $RETROARCH_NEON \
                            --enable-fbo \
