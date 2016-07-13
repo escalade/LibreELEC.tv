@@ -39,7 +39,3 @@ make_target() {
      STRIP="$TARGET_STRIP" \
      -f makefile
 }
-
-makeinstall_target() {
-  : # nop
-}
