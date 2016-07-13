@@ -49,6 +49,11 @@ PKG_CONFIGURE_OPTS_TARGET="--enable-utp \
             --enable-daemon \
             --with-gnu-ld"
 
+post_makeinstall_target() {
+  mkdir -p $INSTALL/usr/config/transmission-daemon
+  cp $PKG_DIR/config/* $INSTALL/usr/config/transmission-daemon
+}
+
 addon() {
   mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/bin
   cp $PKG_BUILD/.$TARGET_NAME/daemon/transmission-daemon $ADDON_BUILD/$PKG_ADDON_ID/bin
