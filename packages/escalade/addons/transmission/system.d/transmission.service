@@ -1,14 +1,13 @@
 [Unit]
 Description=Transmission BT Client
-After=graphical.target
+Requires=network-online.service
+After=network-online.service
 
 [Service]
-Type=idle
-ExecStart=/usr/bin/transmission-daemon -f
-TimeoutStopSec=1
 Restart=always
-RestartSec=2
-StartLimitInterval=0
+RestartSec=10s
+TimeoutStartSec=0
+ExecStart=/usr/bin/transmission-daemon -f
 
 [Install]
-WantedBy=kodi.target
+WantedBy=multi-user.target
