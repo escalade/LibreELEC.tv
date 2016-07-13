@@ -1,0 +1,16 @@
+[Unit]
+Description=SABnzbd binary newsreader
+Requires=network-online.service
+After=network-online.servce
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+ExecStart=/opt/sabnzbd/SABnzbd.py \
+          -l 0 \
+          -b 0 \
+          -s 0.0.0.0 \
+          -f /storage/.config/sabnzbd
+[Install]
+WantedBy=multi-user.target
