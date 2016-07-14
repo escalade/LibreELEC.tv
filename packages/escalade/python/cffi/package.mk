@@ -23,7 +23,8 @@ PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://cffi.readthedocs.org"
 PKG_URL="https://bitbucket.org/cffi/cffi/get/release-$PKG_VERSION.tar.bz2"
-PKG_DEPENDS_TARGET="toolchain Python distutilscross:host pycparser"
+PKG_DEPENDS_TARGET="toolchain Python distutilscross:host pycparser libffi"
+PKG_DEPENDS_HOST="toolchain Python:host libffi:host"
 PKG_PRIORITY="optional"
 PKG_SECTION="python/devel"
 PKG_SHORTDESC="Foreign Function Interface for Python calling C code"
@@ -36,14 +37,27 @@ post_unpack() {
   mv $BUILD/cffi-* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
+pre_build_host() {
+  mkdir -p $PKG_BUILD/.$HOST_NAME
+  cp -RP $PKG_BUILD/* $PKG_BUILD/.$HOST_NAME
+}
+
+pre_build_target() {
+  mkdir -p $PKG_BUILD/.$TARGET_NAME
+  cp -RP $PKG_BUILD/* $PKG_BUILD/.$TARGET_NAME
+}
+
 pre_make_host() {
-  export PKG_CONFIG_PATH=$SYSROOT_PREFIX/usr/lib/pkgconfig
+  export CFLAGS="-I$ROOT/$TOOLCHAIN/include/python2.7 $CFLAGS"
+  export LDSHARED="$CC -shared"
+  cd .$HOST_NAME
 }
 
 pre_make_target() {
   export PYTHONXCPREFIX="$SYSROOT_PREFIX/usr"
   export LDFLAGS="$LDFLAGS -L$SYSROOT_PREFIX/usr/lib -L$SYSROOT_PREFIX/lib"
   export LDSHARED="$CC -shared"
+  cd .$TARGET_NAME
 }
 
 make_host() {
@@ -59,7 +73,7 @@ makeinstall_target() {
 }
 
 makeinstall_host() {
-  python setup.py install --root=$ROOT/$TOOLCHAIN --prefix=/usr
+  python setup.py install --prefix=$ROOT/$TOOLCHAIN
 }
 
 post_makeinstall_target() {
