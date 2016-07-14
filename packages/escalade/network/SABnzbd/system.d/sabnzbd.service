@@ -1,7 +1,7 @@
 [Unit]
 Description=SABnzbd binary newsreader
 Requires=network-online.service
-After=network-online.servce
+After=network-online.service
 
 [Service]
 Restart=always
