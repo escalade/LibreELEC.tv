@@ -23,7 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://sabnzbd.org/"
 PKG_URL="https://github.com/sabnzbd/sabnzbd/releases/download/$PKG_VERSION/$PKG_NAME-$PKG_VERSION-src.tar.gz"
-PKG_DEPENDS_TARGET="toolchain Python Cheetah yenc six par2cmdline unrar"
+PKG_DEPENDS_TARGET="toolchain Python Cheetah yenc six par2cmdline unrar pyOpenSSL"
 PKG_PRIORITY="optional"
 PKG_SECTION="service/downloadmanager"
 PKG_SHORTDESC="SABnzbd makes Usenet as simple and streamlined as possible by automating everything we can."
@@ -31,10 +31,6 @@ PKG_LONGDESC="SABnzbd makes Usenet as simple and streamlined as possible by auto
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
-
-if [ "$PROJECT" = "Generic" ]; then
-  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET pyOpenSSL"
-fi
 
 make_target() {
   : # nothing to do here
