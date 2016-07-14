@@ -23,7 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="https://github.com/pyca/cryptography"
 PKG_URL="https://github.com/pyca/cryptography/archive/$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain Python distutilscross:host cffi enum idna ipaddress pyasn1 six"
+PKG_DEPENDS_TARGET="toolchain Python distutilscross:host cffi:host cffi enum idna ipaddress pyasn1 six"
 PKG_PRIORITY="optional"
 PKG_SECTION="python/devel"
 PKG_SHORTDESC="Provides cryptographic recipes and primitives to Python developers"
@@ -36,7 +36,6 @@ PKG_MAINTAINER="unofficial.addon.pro"
 
 pre_make_target() {
   export PYTHONXCPREFIX="$SYSROOT_PREFIX/usr"
-  export LDFLAGS="$LDFLAGS -L$SYSROOT_PREFIX/usr/lib -L$SYSROOT_PREFIX/lib"
   export LDSHARED="$CC -shared"
 }
 
