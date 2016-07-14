@@ -1,0 +1,13 @@
+[Unit]
+Description=Sonarr PVR for newsgroup and bittorrent users
+Requires=network-online.service
+After=network-online.service
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+ExecStart=/usr/bin/mono /opt/sonarr/NzbDrone.exe -nobrowser
+
+[Install]
+WantedBy=multi-user.target
