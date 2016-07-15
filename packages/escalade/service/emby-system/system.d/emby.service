@@ -1,0 +1,13 @@
+[Unit]
+Description=Emby - streaming server
+Requires=network-online.service
+After=network-online.service
+
+[Service]
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+ExecStart=/usr/bin/mono /opt/emby/MediaBrowser.Server.Mono.exe -programdata /storage/.config/emby
+
+[Install]
+WantedBy=multi-user.target
