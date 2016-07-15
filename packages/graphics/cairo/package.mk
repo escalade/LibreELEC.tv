@@ -99,4 +99,5 @@ PKG_CONFIGURE_OPTS_TARGET="$PKG_CAIRO_CONFIG \
                            --enable-interpreter \
                            --disable-symbol-lookup \
                            --enable-some-floating-point \
+                           --disable-interpreter \
                            --with-gnu-ld"
