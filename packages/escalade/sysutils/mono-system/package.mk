@@ -18,7 +18,7 @@
 
 PKG_NAME="mono-system"
 PKG_VERSION="4.0.5.1"
-PKG_REV="100"
+PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MIT"
 PKG_SITE="http://www.mono-project.com"
@@ -56,6 +56,7 @@ pre_configure_target() {
 }
 
 makeinstall_target() {
+  export MAKEFLAGS="-j1"
   make -C "$ROOT/$PKG_BUILD/.$HOST_NAME" install DESTDIR="$INSTALL"
   make -C "$ROOT/$PKG_BUILD/.$TARGET_NAME" install DESTDIR="$INSTALL"
   rm -fr "$INSTALL/include"
