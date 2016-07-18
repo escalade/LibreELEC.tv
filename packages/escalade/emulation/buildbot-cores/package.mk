@@ -40,7 +40,7 @@ make_target() {
     wget -e robots=off -r -nH --cut-dirs=4 --no-parent --reject="index.html*" http://buildbot.libretro.com/nightly/linux/armhf/latest/
   elif [ "$PROJECT" = "Generic" ]; then
     wget -e robots=off -r -nH --cut-dirs=4 --no-parent --reject="index.html*" http://buildbot.libretro.com/nightly/linux/x86_64/latest/
-    rm -f mame201* mame2000* mame_* ume20* mess* fb_*
+    rm -f mame201* mame2000* mame_* ume20* mess* fb_* bsnes_[a-c,p]* puae* snes9x_lib* stella* dinothawr* virtual_jaguar*
   fi
   for a in *.zip; do unzip $a; done
 }
