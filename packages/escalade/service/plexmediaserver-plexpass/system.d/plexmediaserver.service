@@ -1,0 +1,15 @@
+[Unit]
+Description=Plex Media Server
+Requires=network-online.service
+After=network-online.service
+
+[Service]
+EnvironmentFile=/storage/.config/plexmediaserver.conf
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+ExecStart=/opt/plexmediaserver/Plex\x20Media\x20Server
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
