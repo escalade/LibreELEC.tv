@@ -57,6 +57,7 @@ fi
 
 if [ "$OPENGLES" == "no" ]; then
   RETROARCH_GL="--enable-kms --enable-vulkan"
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET mesa vulkan-loader"
 elif [[ "$PROJECT" =~ "RPi" ]]; then
   RETROARCH_GL="--enable-gles --disable-kms"
   CFLAGS="$CFLAGS -I$SYSROOT_PREFIX/usr/include/interface/vcos/pthreads \
@@ -77,7 +78,6 @@ CFLAGS="$CFLAGS -DLAKKA_PROJECT='\"$PROJECT.$TARGET_ARCH\"'"
 TARGET_CONFIGURE_OPTS=""
 PKG_CONFIGURE_OPTS_TARGET="--disable-vg \
                            --disable-sdl \
-                           --disable-x11 \
                            --disable-xvideo \
                            --disable-al \
                            --disable-oss \
