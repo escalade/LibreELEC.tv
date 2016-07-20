@@ -10,14 +10,18 @@ export DISPLAY=:0.0
 pidof kodi.bin > /dev/null && KODI=1
 [ "$KODI" = "1" ] && systemctl stop kodi
 
-# Switch to VT2
-[ ! -f /storage/.config/retroarch/no_kms ] && chvt 2
+# Switch to VT2 for kms
+if [ -f /storage/.config/retroarch/kms ]; then
+  sed -i -e "s/video_driver.*/video_driver = \"gl\"/" /storage/.config/retroarch/retroarch.cfg
+  chvt 2
+  export DISPLAY=
+fi
 
 # Launch RetroArch
 /usr/bin/retroarch "$@" > /tmp/retroarch.log 2>&1
 
 # Switch back to VT1
-[ ! -f /storage/.config/retroarch/no_kms ] && chvt 1
+[ -f /storage/.config/retroarch/kms ] && chvt 1
 
 # Restart Kodi
 [ "$KODI" = "1" ] && systemctl start kodi
