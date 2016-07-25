@@ -31,18 +31,15 @@ PKG_AUTORECONF="no"
 PKG_IS_ADDON="no"
 
 unpack() {
-  mkdir -p $ROOT/$PKG_BUILD
-}
-
-configure_target() {
-  :
+  mkdir -p $PKG_BUILD
 }
 
 make_target() {
-  rm -rf common retropie *.zip
+  rm -rf common retropie slang *.zip
   wget http://buildbot.libretro.com/assets/frontend/shaders_glsl.zip
   unzip -o -d common shaders_glsl.zip
   git clone --depth 1 https://github.com/RetroPie/common-shaders.git retropie
+  git clone --depth 1 https://github.com/libretro/slang-shaders.git slang
   find . -type f -exec chmod 644 {} \;
 }
 
@@ -50,4 +47,5 @@ makeinstall_target() {
   mkdir -p $INSTALL/usr/share/retroarch/shaders
   cp -R common/* $INSTALL/usr/share/retroarch/shaders
   cp -R retropie/retropie $INSTALL/usr/share/retroarch/shaders
+  cp -R slang/* $INSTALL/usr/share/retroarch/shaders
 }
