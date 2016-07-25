@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="emulationstation-theme-carbon"
-PKG_VERSION="f4d602"
+PKG_VERSION="1ed9747"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
