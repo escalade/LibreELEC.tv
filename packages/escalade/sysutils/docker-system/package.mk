@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="docker-system"
-PKG_VERSION="1.11.2"
+PKG_VERSION="1.12.0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_PROJECTS="Generic RPi RPi2"
@@ -79,7 +79,8 @@ configure_target() {
 
 make_target() {
   mkdir -p bin
-  $GOLANG build -v -o bin/docker -a -tags "$DOCKER_BUILDTAGS" -ldflags "$LDFLAGS" ./docker
+  $GOLANG build -v -o bin/docker -a -tags "$DOCKER_BUILDTAGS" -ldflags "$LDFLAGS" ./cmd/docker
+  $GOLANG build -v -o bin/dockerd -a -tags "$DOCKER_BUILDTAGS" -ldflags "$LDFLAGS" ./cmd/dockerd
 }
 
 makeinstall_target() {
@@ -89,12 +90,12 @@ makeinstall_target() {
   mkdir -p $INSTALL/usr/share/services
   ln -sf /storage/.config/docker $INSTALL/etc/docker
   cp bin/docker $INSTALL/usr/sbin
+  cp bin/dockerd $INSTALL/usr/sbin
   cp -R $PKG_DIR/config/* $INSTALL/usr/config
 
   # containerd
   cp -P $(get_build_dir containerd)/bin/containerd $INSTALL/usr/sbin/docker-containerd
   cp -P $(get_build_dir containerd)/bin/containerd-shim $INSTALL/usr/sbin/docker-containerd-shim
-  cp -P $(get_build_dir containerd)/bin/ctr $INSTALL/usr/sbin/docker-containerd-ctr
 
   # runc
   cp -P $(get_build_dir runc)/bin/runc $INSTALL/usr/sbin/docker-runc
