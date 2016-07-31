@@ -81,6 +81,7 @@ make_target() {
   mkdir -p bin
   $GOLANG build -v -o bin/docker -a -tags "$DOCKER_BUILDTAGS" -ldflags "$LDFLAGS" ./cmd/docker
   $GOLANG build -v -o bin/dockerd -a -tags "$DOCKER_BUILDTAGS" -ldflags "$LDFLAGS" ./cmd/dockerd
+  $GOLANG build -v -o bin/docker-proxy -a -ldflags "$LDFLAGS" ./vendor/src/github.com/docker/libnetwork/cmd/proxy
 }
 
 makeinstall_target() {
@@ -91,6 +92,7 @@ makeinstall_target() {
   ln -sf /storage/.config/docker $INSTALL/etc/docker
   cp bin/docker $INSTALL/usr/sbin
   cp bin/dockerd $INSTALL/usr/sbin
+  cp bin/docker-proxy $INSTALL/usr/sbin
   cp -R $PKG_DIR/config/* $INSTALL/usr/config
 
   # containerd
