@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="fba-libretro"
-PKG_VERSION="bd40280"
+PKG_VERSION="e7f7e1c"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Non-commercial"
