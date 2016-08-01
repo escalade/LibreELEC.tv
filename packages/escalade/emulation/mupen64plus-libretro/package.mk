@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="mupen64plus-libretro"
-PKG_VERSION="6f4824f"
+PKG_VERSION="41c40b8"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
