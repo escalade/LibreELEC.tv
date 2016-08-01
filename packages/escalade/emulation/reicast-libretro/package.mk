@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="reicast-libretro"
-PKG_VERSION="846bb24"
+PKG_VERSION="a7ff132"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
