@@ -17,13 +17,14 @@
 ################################################################################
 
 PKG_NAME="qemu"
-PKG_VERSION="2.5.1"
+PKG_VERSION="2.7.0-rc1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://wiki.qemu.org"
 PKG_URL="http://wiki.qemu-project.org/download/qemu-$PKG_VERSION.tar.bz2"
 PKG_DEPENDS_HOST="toolchain Python:host zlib:host glib:host"
+PKG_DEPENDS_TARGET="qemu:host"
 PKG_PRIORITY="optional"
 PKG_SECTION="tools"
 PKG_SHORTDESC="QEMU is a generic and open source machine emulator and virtualizer."
@@ -45,5 +46,20 @@ HOST_CONFIGURE_OPTS="--prefix=$ROOT/$TOOLCHAIN \
   --disable-werror \
   --disable-blobs \
   --disable-system \
-  --disable-user \
-  --disable-docs"
+  --disable-docs \
+  --disable-gcrypt \
+  --target-list=arm-linux-user"
+
+configure_target() {
+  :
+}
+
+make_target() {
+  :
+}
+
+makeinstall_target() {
+  mkdir -p $INSTALL/usr/bin
+  $STRIP ../.$HOST_NAME/arm-linux-user/qemu-arm
+  cp ../.$HOST_NAME/arm-linux-user/qemu-arm $INSTALL/usr/bin/qemu-arm-static
+}
