@@ -93,6 +93,7 @@ makeinstall_target() {
   cp bin/docker $INSTALL/usr/sbin
   cp bin/dockerd $INSTALL/usr/sbin
   cp bin/docker-proxy $INSTALL/usr/sbin
+  cp $PKG_DIR/scripts/* $INSTALL/usr/sbin
   cp -R $PKG_DIR/config/* $INSTALL/usr/config
 
   # containerd
