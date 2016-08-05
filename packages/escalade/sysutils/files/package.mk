@@ -45,4 +45,5 @@ makeinstall_target() {
       test -d $ROOT/files/$PROJECT && cp -PRv $ROOT/files/$PROJECT/* $INSTALL/
     ;;
   esac
+  test -d $ROOT/files/any && cp -PRv $ROOT/files/any/* $INSTALL/
 }
