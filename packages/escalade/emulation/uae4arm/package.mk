@@ -19,13 +19,13 @@
 ################################################################################
 
 PKG_NAME="uae4arm"
-PKG_VERSION="a33d65d"
+PKG_VERSION="1979520"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/Chips-fr/uae4arm-rpi.git"
 PKG_URL="https://github.com/Chips-fr/uae4arm-rpi/archive/$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain alsa-lib freetype zlib libX11 SDL SDL_image SDL_ttf SDL_gfx libpng guichan"
+PKG_DEPENDS_TARGET="toolchain alsa-lib freetype zlib libX11 SDL SDL_image SDL_ttf SDL_gfx libpng guichan flac mpg123"
 PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="uae4arm-rpi amiga emulator."
@@ -49,7 +49,7 @@ make_target() {
       make PLATFORM=rpi1 
       ;;
     RPi2)
-      make PLATFORM=gles CPU_FLAGS="-mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
+      make PLATFORM=gles
       ;;
   esac
 }
