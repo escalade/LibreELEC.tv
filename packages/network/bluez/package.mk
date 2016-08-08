@@ -74,6 +74,11 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/bin/bluemoon
   rm -rf $INSTALL/usr/bin/ciptool
   rm -rf $INSTALL/usr/share/dbus-1
+  cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
+  mkdir -p $INSTALL/usr/config/bluetooth
+  sed -e 's/^#Name\ =.*/Name\ =\ LibreELEC/' src/main.conf > $INSTALL/usr/config/bluetooth/main.conf
+  mkdir -p $INSTALL/etc/bluetooth
+  ln -sf /storage/.config/bluetooth/main.conf $INSTALL/etc/bluetooth/main.conf
 }
 
 post_install() {
