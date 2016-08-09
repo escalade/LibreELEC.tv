@@ -1,0 +1,14 @@
+[Unit]
+Description=Plex Media Server
+Requires=network-online.service
+After=network-online.service
+
+[Service]
+Restart=on-success
+RestartSec=10s
+TimeoutStartSec=0
+ExecStart=/usr/bin/runplex.sh
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
