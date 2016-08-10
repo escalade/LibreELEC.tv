@@ -18,13 +18,13 @@
 #  http://www.gnu.org/copyleft/gpl.html
 ################################################################################
 
-PKG_NAME="snes9x-next-libretro"
-PKG_VERSION="efa1eda"
+PKG_NAME="snes9x2010-libretro"
+PKG_VERSION="906065d"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Non-commercial"
-PKG_SITE="https://github.com/libretro/snes9x-next.git"
-PKG_URL="https://github.com/libretro/snes9x-next/archive/$PKG_VERSION.tar.gz"
+PKG_SITE="https://github.com/libretro/snes9x2010.git"
+PKG_URL="https://github.com/libretro/snes9x2010/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
@@ -34,9 +34,8 @@ PKG_LONGDESC="Optimized port/rewrite of SNES9x 1.52+ to Libretro."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/snes9x-next* $BUILD/$PKG_NAME-$PKG_VERSION
+post_unpack() {
+  mv $BUILD/snes9x2010-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
 make_target() {
@@ -45,5 +44,5 @@ make_target() {
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
-  cp snes9x_next_libretro.so $INSTALL/usr/lib/libretro/
+  cp snes9x2010_libretro.so $INSTALL/usr/lib/libretro/
 }
