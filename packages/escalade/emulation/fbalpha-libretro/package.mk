@@ -18,13 +18,13 @@
 #  http://www.gnu.org/copyleft/gpl.html
 ################################################################################
 
-PKG_NAME="fba-libretro"
-PKG_VERSION="e7f7e1c"
+PKG_NAME="fbalpha-libretro"
+PKG_VERSION="25ed7a6"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Non-commercial"
-PKG_SITE="https://github.com/libretro/libretro-fba"
-PKG_URL="https://github.com/libretro/libretro-fba/archive/$PKG_VERSION.tar.gz"
+PKG_SITE="https://github.com/libretro/fbalpha"
+PKG_URL="https://github.com/libretro/fbalpha/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
@@ -34,9 +34,8 @@ PKG_LONGDESC="Currently, FB Alpha supports games on Capcom CPS-1 and CPS-2 hardw
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/libretro-fba* $BUILD/$PKG_NAME-$PKG_VERSION
+post_unpack() {
+  mv $BUILD/fbalpha-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
 make_target() {
@@ -55,5 +54,5 @@ make_target() {
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
-  cp fba_libretro.so $INSTALL/usr/lib/libretro/
+  cp fbalpha_libretro.so $INSTALL/usr/lib/libretro/
 }
