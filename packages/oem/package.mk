@@ -56,6 +56,7 @@ OEM_EMU_COMMON=" \
   scraper \
   scummvm-libretro \
   snes9x2010-libretro \
+  tyrquake-libretro \
   yabause-libretro \
   vice"
 
