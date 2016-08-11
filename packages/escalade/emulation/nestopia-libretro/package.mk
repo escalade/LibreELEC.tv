@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="nestopia-libretro"
-PKG_VERSION="7bad48b"
+PKG_VERSION="4ac5d2a"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
@@ -34,9 +34,8 @@ PKG_LONGDESC="This project is a fork of the original Nestopia source code, plus 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/nestopia* $BUILD/$PKG_NAME-$PKG_VERSION
+post_unpack() {
+  mv $BUILD/nestopia-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
 make_target() {
