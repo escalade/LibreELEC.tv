@@ -43,7 +43,7 @@ OEM_EMU_COMMON=" \
   dosbox-sdl \
   ds4drv \
   emulationstation \
-  fba-libretro \
+  fbalpha-libretro \
   fuse-libretro \
   genesis-plus-gx-libretro \
   emulationstation \
