@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="core-info"
-PKG_VERSION="92a0dfa"
+PKG_VERSION="2133df2"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -34,9 +34,8 @@ PKG_LONGDESC="Super repo for other libretro projects. Fetches, builds and instal
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/libretro-super* $BUILD/$PKG_NAME-$PKG_VERSION
+post_unpack() {
+  mv $BUILD/libretro-super-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
 make_target() {
