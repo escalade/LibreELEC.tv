@@ -61,6 +61,10 @@ VICE menu = F12
 Retroarch menu = F1
 ```
 
+**Issues**
+
+Visit the [escalade/libreelec.tv issue queue](https://github.com/escalade/LibreELEC.tv/pulls) for issues pertaining to this specific fork. For everything else, see the [LibreELEC Forum](https://forum.libreelec.tv).
+
 Original README.md below.
 
 # LibreELEC
