@@ -33,6 +33,12 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 make_target() {
+  if [ ! "$OEM_APPS" = "no" -a "$PROJECT" = "Generic" ]; then
+    patch -p1 < $PKG_DIR/files/app-shortcuts.patch
+  fi
+  if [ ! "$OEM_EMU" = "no" ]; then
+    patch -p1 < $PKG_DIR/files/emu-shortcuts.patch
+  fi
   TexturePacker -input media/ \
                 -output Textures.xbt \
                 -dupecheck \
