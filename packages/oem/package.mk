@@ -32,6 +32,7 @@ PKG_AUTORECONF="no"
 
 OEM_APPS_COMMON=" \
   addons-to-image \
+  docker-containers \
   docker-system \
   NzbDrone \
   plexmediaserver-script \
