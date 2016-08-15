@@ -34,8 +34,18 @@ PKG_LONGDESC="Libretro port of NXEngine (Cave Story engine)"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
-  mv $BUILD/nxengine-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
+make_target() {
+  case $PROJECT in
+    RPi)
+      make CC=$TARGET_CC platform=rpi
+      ;;
+    RPi2)
+      make CC=$TARGET_CC platform=rpi2
+      ;;
+    Generic)
+      make CC=$TARGET_CC
+      ;;
+  esac
 }
 
 makeinstall_target() {
