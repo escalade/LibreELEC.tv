@@ -66,6 +66,7 @@ OEM_EMU_GENERIC=" \
   beetle-psx-libretro \
   craft-libretro \
   desmume-libretro \
+  dolphin \
   fs-uae \
   ppsspp-libretro \
   qemu \
