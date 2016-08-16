@@ -4,5 +4,9 @@
 
 pidof kodi.bin > /dev/null && KODI=1
 [ "$KODI" = "1" ] && systemctl stop kodi
-dolphin-emu-nogui "$@" > /tmp/dolphin.log 2>&1
+if [ $# -eq 0 ]; then
+  dolphin-emu > /tmp/dolphin.log 2>&1
+else
+  dolphin-emu-nogui "$@" > /tmp/dolphin.log 2>&1
+fi
 [ "$KODI" = "1" ] && systemctl start kodi
