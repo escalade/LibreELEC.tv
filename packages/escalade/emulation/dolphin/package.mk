@@ -42,5 +42,5 @@ configure_target() {
 post_makeinstall_target() {
   cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
   mkdir -p $INSTALL/usr/config/dolphin-emu
-  cp $PKG_DIR/config/* $INSTALL/usr/config/dolphin-emu/
+  cp -PR $PKG_DIR/config/* $INSTALL/usr/config/dolphin-emu/
 }
