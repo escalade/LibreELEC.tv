@@ -16,31 +16,23 @@
 #  along with LibreELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-PKG_NAME="yabause-libretro"
-PKG_VERSION="4262e79"
+PKG_NAME="beetle-saturn-libretro"
+PKG_VERSION="98c74e5"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
-PKG_SITE="https://github.com/libretro/yabause"
-PKG_URL="https://github.com/libretro/yabause/archive/$PKG_VERSION.tar.gz"
+PKG_SITE="https://github.com/libretro/beetle-saturn-libretro"
+PKG_URL="https://github.com/libretro/beetle-saturn-libretro/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
 PKG_SECTION="libretro"
-PKG_SHORTDESC="Port of Yabause to libretro."
-PKG_LONGDESC="Port of Yabause to libretro."
+PKG_SHORTDESC="Standalone port of Mednafen Saturn to libretro."
+PKG_LONGDESC="Standalone port of Mednafen Saturn to libretro."
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
-  mv $BUILD/yabause-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
-make_target() {
-  make -C libretro
-}
-
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
-  cp libretro/yabause_libretro.so $INSTALL/usr/lib/libretro/
+  cp mednafen_saturn_libretro.so $INSTALL/usr/lib/libretro/
 }

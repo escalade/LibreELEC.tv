@@ -61,7 +61,7 @@ OEM_EMU_COMMON=" \
   scummvm-libretro \
   snes9x2010-libretro \
   tyrquake-libretro \
-  yabause-libretro \
+  beetle-saturn-libretro \
   vice"
 
 OEM_EMU_GENERIC=" \
