@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="vulkan-loader"
-PKG_VERSION="f438484"
+PKG_VERSION="251fe80"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Apache 2.0"
