@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="mono-system"
-PKG_VERSION="4.0.5.1"
+PKG_VERSION="4.4.2.11"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MIT"
@@ -35,16 +35,20 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
 prefix="/usr"
-configure_opts="--prefix=$prefix         \
-                --bindir=$prefix/bin     \
-                --sysconfdir=$prefix/etc \
-                --disable-boehm          \
-                --without-mcs-docs"
-PKG_CONFIGURE_OPTS_HOST="$configure_opts --disable-libraries --enable-static"
-PKG_CONFIGURE_OPTS_TARGET="$configure_opts --disable-mcs-build"
+options="--build=$HOST_NAME \
+         --prefix=$prefix \
+         --bindir=$prefix/bin \
+         --sbindir=$prefix/sbin \
+         --sysconfdir=$prefix/etc \
+         --libexecdir=$prefix/lib \
+         --localstatedir=/var \
+         --disable-boehm \
+         --disable-libraries \
+         --without-mcs-docs"
 
-pre_configure_host() {
+configure_host() {
   cp -PR ../* .
+  ./configure $options --host=$HOST_NAME
 }
 
 makeinstall_host() {
@@ -52,14 +56,18 @@ makeinstall_host() {
 }
 
 pre_configure_target() {
+  strip_lto
+}
+
+configure_target() {
   cp -PR ../* .
+  ./configure $options --host=$TARGET_NAME \
+                       --disable-mcs-build
 }
 
 makeinstall_target() {
   export MAKEFLAGS="-j1"
   make -C "$ROOT/$PKG_BUILD/.$HOST_NAME" install DESTDIR="$INSTALL"
   make -C "$ROOT/$PKG_BUILD/.$TARGET_NAME" install DESTDIR="$INSTALL"
-  rm -fr "$INSTALL/include"
-  rm -fr "$INSTALL/share/man"
   $STRIP "$INSTALL/usr/bin/mono"
 }
