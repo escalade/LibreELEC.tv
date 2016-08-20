@@ -59,11 +59,11 @@ OEM_EMU_COMMON=" \
   scummvm-libretro \
   snes9x2010-libretro \
   tyrquake-libretro \
-  yabause-libretro \
   vice"
 
 OEM_EMU_GENERIC=" \
   beetle-psx-libretro \
+  beetle-saturn-libretro \
   craft-libretro \
   desmume-libretro \
   dolphin \
@@ -74,7 +74,8 @@ OEM_EMU_GENERIC=" \
 
 OEM_EMU_RPI=" \
   uae4arm \
-  pcsx_rearmed-libretro"
+  pcsx_rearmed-libretro \
+  yabause-libretro"
 
 if [ ! "$OEM_APPS" = "no" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OEM_APPS_COMMON"
