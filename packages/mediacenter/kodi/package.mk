@@ -321,6 +321,11 @@ pre_configure_target() {
   export CXXFLAGS="$CXXFLAGS $KODI_CXXFLAGS"
   export LIBS="$LIBS -lz"
 
+# disable optimization for arm to fix segmentation fault (http://forum.odroid.com/viewtopic.php?f=62&t=20345)
+  if [ "$ARCH" = "arm" -a "$OPTIMIZATIONS" = "normal" ]; then
+    export CXXFLAGS="`echo $CXXFLAGS | sed -e 's|-O2|-Os|'`"
+  fi
+
   export JSON_BUILDER=$ROOT/$TOOLCHAIN/bin/JsonSchemaBuilder
 
 # libdvd
