@@ -56,6 +56,7 @@ OEM_EMU_COMMON=" \
   nxengine-libretro \
   quicknes-libretro \
   prboom-libretro \
+  residualvm \
   retroarch \
   scraper \
   scummvm-libretro \
