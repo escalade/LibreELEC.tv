@@ -51,6 +51,7 @@ OEM_EMU_COMMON=" \
   mame2003-libretro \
   mgba-libretro \
   mupen64plus-libretro \
+  glupen64-libretro \
   nxengine-libretro \
   quicknes-libretro \
   prboom-libretro \
