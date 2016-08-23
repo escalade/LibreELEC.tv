@@ -89,3 +89,4 @@
 
   # Override some RetroArch playlist core assignation
     RA_PLAYLIST_CORES="${RA_PLAYLIST_CORES//pcsx_rearmed/mednafen_psx}"
+    RA_PLAYLIST_CORES="${RA_PLAYLIST_CORES//glupen64/mupen64plus}"
