@@ -34,6 +34,10 @@ PKG_LONGDESC="MAME - Multiple Arcade Machine Emulator"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
+pre_build_target() {
+  strip_lto
+}
+
 make_target() {
   make ARCH="" CC="$CC" NATIVE_CC="$CC" LD="$CC" -j 1
 }
