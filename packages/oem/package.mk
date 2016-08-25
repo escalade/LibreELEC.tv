@@ -42,6 +42,9 @@ OEM_APPS_COMMON=" \
   tcpdump \
   transmission"
 
+OEM_APPS_GENERIC=" \
+  qemu"
+
 OEM_EMU_COMMON=" \
   dosbox-sdl \
   ds4drv \
@@ -73,7 +76,6 @@ OEM_EMU_GENERIC=" \
   dolphin \
   fs-uae \
   ppsspp-libretro \
-  qemu \
   reicast-libretro"
 
 OEM_EMU_RPI=" \
@@ -83,6 +85,14 @@ OEM_EMU_RPI=" \
 
 if [ ! "$OEM_APPS" = "no" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OEM_APPS_COMMON"
+  case $PROJECT in
+    Generic)
+      PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OEM_APPS_GENERIC"
+      ;;
+    RPi*)
+      PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET $OEM_APPS_RPI"
+      ;;
+  esac
 fi
 
 if [ ! "$OEM_EMU" = "no" ]; then
