@@ -2,7 +2,15 @@
 
 . /etc/profile
 
+export DISPLAY=:0.0
+export SDL_AUDIODRIVER=alsa
+
+# Stop Kodi if it's running
 pidof kodi.bin > /dev/null && KODI=1
 [ "$KODI" = "1" ] && systemctl stop kodi
-residualvm "$@" > /tmp/residualvm.log 2>&1
+
+# Run ResidualVM fullscreen + any arguments
+residualvm -f "$@" > /tmp/residualvm.log 2>&1
+
+# Restart Kodi
 [ "$KODI" = "1" ] && systemctl start kodi
