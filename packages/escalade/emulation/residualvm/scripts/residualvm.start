@@ -2,7 +2,22 @@
 
 . /etc/profile
 
+export DISPLAY=:0.0
+export SDL_AUDIODRIVER=alsa
+
+# Hide mouse cursor (when idle for 2 seconds) if X is running
+pidof Xorg > /dev/null && X=1
+[ "$X" = "1" ] && unclutter -idle 2 -root &
+
+# Stop Kodi if it's running
 pidof kodi.bin > /dev/null && KODI=1
 [ "$KODI" = "1" ] && systemctl stop kodi
-residualvm "$@" > /tmp/residualvm.log 2>&1
+
+# Run ResidualVM fullscreen + any arguments
+residualvm -f "$@" > /tmp/residualvm.log 2>&1
+
+# Show cursor again
+[ "$X" = "1" ] && killall unclutter
+
+# Restart Kodi
 [ "$KODI" = "1" ] && systemctl start kodi
