@@ -6,11 +6,6 @@ i=0
 . /etc/profile
 cd /storage/.config/uae4arm
 
-# Link in data directory
-if [ ! -L data ]; then
-  ln -sf /usr/share/uae4arm/data .
-fi
-
 # Stop Kodi if we are launching outside Emulationstation
 pidof kodi.bin > /dev/null && KODI=1
 [ "$KODI" = "1" ] && systemctl stop kodi
