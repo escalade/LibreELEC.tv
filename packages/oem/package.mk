@@ -44,6 +44,7 @@ OEM_APPS_GENERIC=" \
   qemu"
 
 OEM_EMU_COMMON=" \
+  beetle-wswan-libretro \
   dosbox-sdl \
   ds4drv \
   emulationstation \
