@@ -58,15 +58,18 @@ configure_target() {
 
 post_makeinstall_target() {  
     mkdir -p $INSTALL/etc/emulationstation
-    mkdir -p $INSTALL/usr/config
+    mkdir -p $INSTALL/usr/config/emulationstation
+    mkdir -p $INSTALL/usr/lib/tmpfiles.d
     ln -s /storage/.config/emulationstation/es_systems.cfg $INSTALL/etc/emulationstation/
     cp $PKG_DIR/scripts/* $INSTALL/usr/bin
-    cp -R $PKG_DIR/config $INSTALL/usr/config/emulationstation
+    cp $PKG_DIR/files/emulationstation.conf $INSTALL/usr/config/emulationstation/
+    cp $PKG_DIR/files/es_input.cfg $INSTALL/usr/config/emulationstation/
+    cp $PKG_DIR/files/es_settings.cfg $INSTALL/usr/config/emulationstation/
     if [[ "$PROJECT" =~ "RPi" ]]; then
-      rm $INSTALL/usr/config/emulationstation/es_systems-generic.cfg
-      mv $INSTALL/usr/config/emulationstation/es_systems-rpi.cfg $INSTALL/usr/config/emulationstation/es_systems.cfg
+      cp $PKG_DIR/files/es_systems-rpi.cfg $INSTALL/usr/config/emulationstation/es_systems.cfg
+      cp $PKG_DIR/files/emulationstation-userdirs-rpi.conf $INSTALL/usr/lib/tmpfiles.d/emulationstation-userdirs.conf
     else
-      rm $INSTALL/usr/config/emulationstation/es_systems-rpi.cfg
-      mv $INSTALL/usr/config/emulationstation/es_systems-generic.cfg $INSTALL/usr/config/emulationstation/es_systems.cfg
+      cp $PKG_DIR/files/es_systems-generic.cfg $INSTALL/usr/config/emulationstation/es_systems.cfg
+      cp $PKG_DIR/files/emulationstation-userdirs-generic.conf $INSTALL/usr/lib/tmpfiles.d/emulationstation-userdirs.conf
     fi
 }
