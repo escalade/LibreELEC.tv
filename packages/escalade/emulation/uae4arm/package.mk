@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="uae4arm"
-PKG_VERSION="b5be69f"
+PKG_VERSION="a33d65d"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
@@ -42,7 +42,7 @@ make_target() {
       make PLATFORM=rpi1 
       ;;
     RPi2)
-      make PLATFORM=gles
+      make PLATFORM=rpi2
       ;;
   esac
 }
