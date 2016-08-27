@@ -60,7 +60,7 @@
  MORE_CFLAGS += -fexceptions -fpermissive
  
 -LDFLAGS +=  -lSDL -lpthread -lm -lz -lSDL_image -lpng -lrt -lxml2 -lSDL_ttf -lguichan_sdl -lguichan -L/opt/vc/lib 
-+LDFLAGS +=  -lSDL -lpthread -lm -lz -lSDL_image -lpng -lrt -lxml2 -lSDL_ttf -lguichan_sdl -lguichan -L$(SYSROOT_PREFIX)/usr/lib
++LDFLAGS +=  -lSDL -lpthread -lm -lz -lSDL_image -lpng -lrt -lxml2 -lSDL_ttf -lguichan_sdl -lguichan -ljpeg -lbcm_host -ldl -lfreetype -L$(SYSROOT_PREFIX)/usr/lib
  
  ifndef DEBUG
  MORE_CFLAGS += -O3 -fomit-frame-pointer
