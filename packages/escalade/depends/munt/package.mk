@@ -31,16 +31,11 @@ PKG_SHORTDESC="Software synthesizer capable of emulating Roland MT-32"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/$PKG_NAME-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
 configure_target() {
   cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_CONF \
         -DCMAKE_INSTALL_PREFIX=/usr \
         -Dmunt_WITH_MT32EMU_QT='FALSE' \
         -Dmunt_WITH_MT32EMU_SMF2WAV='FALSE' \
-        $EXTRA_CMAKE_OPTS \
+	-Dlibmt32emu_SHARED='FALSE' \
         ..
 }
