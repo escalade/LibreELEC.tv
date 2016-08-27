@@ -31,7 +31,7 @@ PKG_IS_ADDON="no"
 PKG_USE_CMAKE="no"
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_TARGET="SYSROOT_PREFIX=$SYSROOT_PREFIX --enable-shared --enable-static \
+PKG_CONFIGURE_OPTS_TARGET="--enable-shared --enable-static \
                            --enable-libc \
                            --enable-gcc-atomics \
                            --enable-atomic \
@@ -75,7 +75,9 @@ PKG_CONFIGURE_OPTS_TARGET="SYSROOT_PREFIX=$SYSROOT_PREFIX --enable-shared --enab
                            --disable-rpath \
                            --disable-render-d3d"
 
-
+pre_configure_target() {
+  export SYSROOT_PREFIX
+}
 
 if [ "$DISPLAYSERVER" = "x11" ]; then
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libX11 libXrandr"
