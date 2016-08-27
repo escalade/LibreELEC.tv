@@ -1,0 +1,10 @@
+#!/bin/sh
+
+. /etc/profile
+
+export SDL_AUDIODRIVER=alsa
+
+pidof kodi.bin > /dev/null && KODI=1
+[ "$KODI" = "1" ] && systemctl stop kodi
+dosbox "$@" > /tmp/dosbox.log 2>&1
+[ "$KODI" = "1" ] && systemctl start kodi
