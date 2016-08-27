@@ -39,10 +39,10 @@ make_target() {
   export SYSROOT_PREFIX=$SYSROOT_PREFIX
   case $PROJECT in
     RPi)
-      make PLATFORM=rpi1 
+      make PLATFORM=generic-sdl CPU_FLAGS="-mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
       ;;
     RPi2)
-      make PLATFORM=rpi2
+      make PLATFORM=generic-sdl CPU_FLAGS="-mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       ;;
   esac
 }
