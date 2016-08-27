@@ -1,0 +1,18 @@
+[Unit]
+Description=Unclutter hides the mouse pointer when you don't need it
+Requires=xorg.service
+After=xorg.service
+Before=windowmanager.service
+
+[Service]
+Environment=DISPLAY=:0
+Environment=HOME=/storage
+ExecStart=/usr/bin/unclutter -root
+KillMode=process
+Restart=always
+RestartSec=1
+StartLimitInterval=0
+TimeoutStopSec=1s
+
+[Install]
+WantedBy=graphical.target
