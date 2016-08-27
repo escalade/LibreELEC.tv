@@ -34,4 +34,5 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
+			   --disable-speex \
 			   --with-sdl-prefix=$SYSROOT_PREFIX/usr"
