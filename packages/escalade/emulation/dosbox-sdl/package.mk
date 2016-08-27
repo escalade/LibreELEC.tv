@@ -48,3 +48,7 @@ pre_make_target() {
   fi
   sed -i s/SVN/SDL/g config.h
 }
+
+post_makeinstall_target() {
+  cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
+}
