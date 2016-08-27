@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="uae4arm"
-PKG_VERSION="a33d65d"
+PKG_VERSION="b9ee437"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
@@ -36,6 +36,7 @@ post_unpack() {
 }
 
 make_target() {
+  strip_lto
   export SYSROOT_PREFIX=$SYSROOT_PREFIX
   case $PROJECT in
     RPi)
