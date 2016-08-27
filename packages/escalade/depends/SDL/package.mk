@@ -1,19 +1,19 @@
 ################################################################################
-#      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2014 Stephan Raue (stephan@openelec.tv)
+#      This file is part of LibreELEC - https://LibreELEC.tv
+#      Copyright (C) 2016 Team LibreELEC
 #
-#  OpenELEC is free software: you can redistribute it and/or modify
+#  LibreELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 2 of the License, or
 #  (at your option) any later version.
 #
-#  OpenELEC is distributed in the hope that it will be useful,
+#  LibreELEC is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with OpenELEC.  If not, see <http://www.gnu.org/licenses/>.
+#  along with LibreELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
 PKG_NAME="SDL"
@@ -32,7 +32,19 @@ PKG_LONGDESC="Simple DirectMedia Layer is a cross-platform multimedia library de
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_TARGET="X_CFLAGS= SYSROOT_PREFIX=$SYSROOT_PREFIX --disable-video-directfb --disable-oss --disable-alsatest --disable-pulseaudio --disable-pulseaudio-shared --disable-arts --disable-nas --disable-esd --disable-nas-shared --disable-diskaudio --disable-dummyaudio --disable-mintaudio --disable-input-tslib" 
+PKG_CONFIGURE_OPTS_TARGET="--disable-video-directfb \
+			   --disable-oss \
+			   --disable-alsatest \
+			   --disable-pulseaudio \
+			   --disable-pulseaudio-shared \
+			   --disable-arts \
+			   --disable-nas \
+			   --disable-esd \
+			   --disable-nas-shared \
+			   --disable-diskaudio \
+			   --disable-dummyaudio \
+			   --disable-mintaudio \
+			   --disable-input-tslib"
 
 if [[ "$PROJECT" =~ "RPi" ]]; then
   PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-video-opengl --enable-video-dispmanx"
@@ -40,8 +52,11 @@ else
   PKG_CONFIGURE_OPTS_TARGET="have_const_param_xdata32=yes $PKG_CONFIGURE_OPTS_TARGET"
 fi
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
+pre_configure_target() {
+  export SYSROOT_PREFIX
+}
+
+post_unpack() {
   mv $BUILD/SDL-1.2.15-raspberrypi* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
