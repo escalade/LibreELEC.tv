@@ -1,37 +1,6 @@
 --- a/Makefile	2016-03-25 11:10:45.833211198 +0100
 +++ b/Makefile	2016-03-25 11:11:02.609627159 +0100
-@@ -2,33 +2,23 @@
- 	PLATFORM = rpi2
- endif
- 
--ifeq ($(PLATFORM),rpi2)
--	CPU_FLAGS += -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
--	MORE_CFLAGS += -DCAPSLOCK_DEBIAN_WORKAROUND
--	LDFLAGS += -lbcm_host
--	DEFS += -DRASPBERRY
--	HAVE_NEON = 1
--	HAVE_DISPMANX = 1
--	USE_PICASSO96 = 1
--else ifeq ($(PLATFORM),rpi1)
-+ifeq ($(PLATFORM),rpi1)
- 	CPU_FLAGS += -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard
- 	MORE_CFLAGS += -DCAPSLOCK_DEBIAN_WORKAROUND
- 	LDFLAGS += -lbcm_host
--	HAVE_DISPMANX = 1
--	DEFS += -DRASPBERRY
-+	HAVE_GLES_DISPLAY = 1
-+	HAVE_NEON = 1
- else ifeq ($(PLATFORM),generic-sdl)
- 	HAVE_SDL_DISPLAY = 1
--else ifeq ($(PLATFORM),gles)
--	# For Raspberry Pi uncomment below line
--	#LDFLAGS += -lbcm_host
-+else ifeq ($(PLATFORM),rpi2)
-+	LDFLAGS += -lbcm_host
-+	CPU_FLAGS= -mcpu=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
- 	HAVE_GLES_DISPLAY = 1
- 	HAVE_NEON = 1
- endif
+@@ -32,8 +32,6 @@
  
  NAME   = uae4arm
  RM     = rm -f
@@ -40,16 +9,16 @@
  
  PROG   = $(NAME)
  
-@@ -36,7 +26,7 @@
- 
- PANDORA=1
+@@ -46,7 +44,7 @@
+ #GEN_PROFILE=1
+ #USE_PROFILE=1
  
 -SDL_CFLAGS = `sdl-config --cflags`
 +SDL_CFLAGS = `$(SYSROOT_PREFIX)/usr/bin/sdl-config --cflags`
  
  DEFS +=  `xml2-config --cflags`
  DEFS += -DCPU_arm -DARM_ASSEMBLY -DARMV6_ASSEMBLY -DGP2X -DPANDORA -DSIX_AXIS_WORKAROUND
-@@ -52,12 +42,12 @@
+@@ -62,13 +60,13 @@
  	DEFS += -DUSE_ARMNEON
  endif
  
@@ -59,12 +28,14 @@
  MORE_CFLAGS += -Isrc -Isrc/od-pandora -Isrc/gp2x -Isrc/threaddep -Isrc/menu -Isrc/include -Isrc/gp2x/menu -Wno-unused -Wno-format  -DGCCCONSTFUNC="__attribute__((const))"
  MORE_CFLAGS += -fexceptions -fpermissive
  
--LDFLAGS +=  -lSDL -lpthread -lm -lz -lSDL_image -lpng -lrt -lxml2 -lSDL_ttf -lguichan_sdl -lguichan -L/opt/vc/lib 
-+LDFLAGS +=  -lSDL -lpthread -lm -lz -lSDL_image -lpng -lrt -lxml2 -lSDL_ttf -lguichan_sdl -lguichan -ljpeg -lbcm_host -ldl -lfreetype -L$(SYSROOT_PREFIX)/usr/lib
+-LDFLAGS += -lSDL -lpthread -lm -lz -lSDL_image -lpng -lrt -lxml2 -lFLAC -lmpg123 -ldl
+-LDFLAGS += -lSDL_ttf -lguichan_sdl -lguichan -L/opt/vc/lib 
++LDFLAGS += -lSDL -lpthread -lm -lz -lSDL_image -lpng -lrt -lxml2 -lFLAC -lmpg123 -ldl -ljpeg -lfreetype -logg -lvorbis -L$(SYSROOT_PREFIX)/usr/lib
++LDFLAGS += -lSDL_ttf -lguichan_sdl -lguichan
  
  ifndef DEBUG
- MORE_CFLAGS += -O3 -fomit-frame-pointer
-@@ -202,7 +192,7 @@
+ MORE_CFLAGS += -Ofast -fomit-frame-pointer
+@@ -235,7 +233,7 @@
  OBJS += src/od-gles/gles_gfx.o
  MORE_CFLAGS += -I/opt/vc/include/
  MORE_CFLAGS += -DHAVE_GLES
