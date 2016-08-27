@@ -367,6 +367,10 @@ if [ "$1" = "release" -o "$1" = "mkimage" -o "$1" = "amlpkg" -o "$1" = "noobs" ]
   # cleanup release dir
   rm -rf $RELEASE_DIR
 
+  # clean up target directory
+  rm  $TARGET_IMG/$IMAGE_NAME.kernel
+  rm  $TARGET_IMG/$IMAGE_NAME.system
+
   # create WeTek Play (Amlogic) ZIP update and auto-install packages if requested
   if [ "$1" = "amlpkg" ]; then
     echo "Creating Amlogic ZIP update package"
