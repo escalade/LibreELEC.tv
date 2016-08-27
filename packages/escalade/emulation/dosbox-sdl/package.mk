@@ -31,8 +31,7 @@ PKG_SHORTDESC="DOSBox emulator"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
+post_unpack() {
   mv $BUILD/${PKG_NAME%-*}-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
