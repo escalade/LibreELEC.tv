@@ -35,7 +35,7 @@ $SCRIPTS/build kmod:host
 $SCRIPTS/build mtools:host
 $SCRIPTS/build populatefs:host
 
-BUILD_DATE=`date +%Y%m%d%H%M%S`
+BUILD_DATE=`date +%Y%m%d`
 
 GIT_HASH=$(git rev-parse HEAD)
 
@@ -46,7 +46,7 @@ if [ "$LIBREELEC_VERSION" = "devel" ]; then
   fi
   GIT_ABBREV=$(git log -1 --pretty=format:%h)
   DEVEL_VERSION=$LIBREELEC_VERSION
-  LIBREELEC_VERSION=$LIBREELEC_VERSION-$BUILD_DATE-r$GIT_BUILD-g$GIT_ABBREV
+  LIBREELEC_VERSION=$LIBREELEC_VERSION-$BUILD_DATE
   echo "$LIBREELEC_VERSION" > $BUILD/BUILD_FILENAME
 fi
 
