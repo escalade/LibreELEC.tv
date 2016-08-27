@@ -75,7 +75,8 @@ OEM_EMU_GENERIC=" \
   dolphin \
   fs-uae \
   ppsspp-libretro \
-  reicast-libretro"
+  reicast-libretro \
+  unclutter"
 
 OEM_EMU_RPI=" \
   uae4arm \
