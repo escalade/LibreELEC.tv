@@ -42,6 +42,10 @@ PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
                            --disable-opengl \
                            --with-sdl-prefix=$SYSROOT_PREFIX/usr"
 
+if [[ "$PROJECT" =~ "RPi" ]]; then
+  PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET ac_cv_lib_X11_main=no"
+fi
+
 pre_make_target() {
   if [[ "$PROJECT" =~ "RPi" ]]; then
     sed -i s/C_TARGETCPU.*/C_TARGETCPU\ ARMV7LE/g config.h
