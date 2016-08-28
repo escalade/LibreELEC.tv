@@ -23,7 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/vanfanel/SDL-1.2.15-raspberrypi.git"
 PKG_URL="https://github.com/vanfanel/SDL-1.2.15-raspberrypi/archive/$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain yasm:host alsa-lib libXext"
+PKG_DEPENDS_TARGET="toolchain yasm:host alsa-lib"
 PKG_PRIORITY="optional"
 PKG_SECTION="emulators/depends"
 PKG_SHORTDESC="libsdl: A cross-platform Graphic API"
@@ -47,8 +47,9 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-video-directfb \
 			   --disable-input-tslib"
 
 if [[ "$PROJECT" =~ "RPi" ]]; then
-  PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-video-opengl --enable-video-dispmanx"
+  PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-video-x11 --enable-video-dispmanx"
 else
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET libX11 libXext"
   PKG_CONFIGURE_OPTS_TARGET="have_const_param_xdata32=yes $PKG_CONFIGURE_OPTS_TARGET"
 fi
 
