@@ -65,12 +65,12 @@
 # setup build defaults
 ################################################################################
 
-  # Build optimizations (size/normal)
-    OPTIMIZATIONS="size"
-
   # Project CFLAGS
     PROJECT_CFLAGS=""
 
+<<<<<<< HEAD
+  # SquashFS compression method (gzip / lzo / xz)
+=======
   # LTO (Link Time Optimization) support
     LTO_SUPPORT="yes"
 
@@ -78,6 +78,7 @@
     GOLD_SUPPORT="yes"
 
   # SquashFS compression method (gzip / lzo / xz / lz4)
+>>>>>>> ee8fb345f9678556e036dc3ed57dcc8ba6105ad9
     SQUASHFS_COMPRESSION="lzo"
 
 ################################################################################

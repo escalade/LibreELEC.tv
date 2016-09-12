@@ -24,7 +24,11 @@ PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.transmissionbt.com/"
+<<<<<<< HEAD
+PKG_URL="https://github.com/transmission/transmission-releases/raw/master/$PKG_NAME-$PKG_VERSION.tar.xz"
+=======
 PKG_URL="http://download.transmissionbt.com/files/$PKG_NAME-$PKG_VERSION.tar.xz"
+>>>>>>> ee8fb345f9678556e036dc3ed57dcc8ba6105ad9
 PKG_DEPENDS_TARGET="toolchain zlib libressl curl libevent"
 PKG_PRIORITY="optional"
 PKG_SECTION="service/downloadmanager"

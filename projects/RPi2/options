@@ -69,6 +69,12 @@
 # setup build defaults
 ################################################################################
 
+<<<<<<< HEAD
+  # Project CFLAGS
+    PROJECT_CFLAGS=""
+
+  # SquashFS compression method (gzip / lzo / xz)
+=======
   # Build optimizations (size/normal)
     OPTIMIZATIONS="normal"
 
@@ -82,6 +88,7 @@
     GOLD_SUPPORT="yes"
 
   # SquashFS compression method (gzip / lzo / xz / lz4)
+>>>>>>> ee8fb345f9678556e036dc3ed57dcc8ba6105ad9
     SQUASHFS_COMPRESSION="lzo"
 
 
