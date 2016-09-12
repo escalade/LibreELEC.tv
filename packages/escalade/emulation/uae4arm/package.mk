@@ -17,7 +17,11 @@
 ################################################################################
 
 PKG_NAME="uae4arm"
+<<<<<<< HEAD
 PKG_VERSION="f87cd39"
+=======
+PKG_VERSION="b9ee437"
+>>>>>>> ee8fb345f9678556e036dc3ed57dcc8ba6105ad9
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
