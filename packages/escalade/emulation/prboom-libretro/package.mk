@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="prboom-libretro"
-PKG_VERSION="e328381"
+PKG_VERSION="b326bff"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
