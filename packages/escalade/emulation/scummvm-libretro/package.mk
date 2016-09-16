@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="scummvm-libretro"
-PKG_VERSION="2094f56"
+PKG_VERSION="b662fe1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
@@ -38,8 +38,7 @@ pre_configure_target() {
   strip_lto
 }
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
+post_unpack() {
   mv $BUILD/scummvm* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
@@ -48,12 +47,12 @@ configure_target() {
 }
 
 make_target() {
-  cd $ROOT/$PKG_BUILD
-  CXXFLAGS="$CXXFLAGS -DHAVE_POSIX_MEMALIGN=1"
-  make -C backends/platform/libretro/build/
+  CXXFLAGS="$CXXFLAGS -DHAVE_POSIX_MEMALIGN=1 -DUSE_FLAC -DUSE_MAD -DUSE_MT32EMU"
+  cd ../backends/platform/libretro/build/
+  make
 }
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
-  cp backends/platform/libretro/build/scummvm_libretro.so $INSTALL/usr/lib/libretro/
+  cp scummvm_libretro.so $INSTALL/usr/lib/libretro/
 }
