@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="SABnzbd"
-PKG_VERSION="1.1.0RC3"
+PKG_VERSION="1.1.0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
