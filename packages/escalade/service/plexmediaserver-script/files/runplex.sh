@@ -2,13 +2,22 @@
 
 . /etc/profile
 
-PLEXVER=1.0.3.2461-35f0caa
+export `wget -q -O - "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=plex-media-server" | grep -E '^pkgver='` || exit 1
+export `wget -q -O - "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=plex-media-server" | grep -E '^_pkgsum='` || exit 1
+PLEXVER=$pkgver-$_pkgsum
 
 export PLEX_MEDIA_SERVER_HOME=/storage/.cache/plex
 export PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR=/storage/.config
 export PLEX_MEDIA_SERVER_MAX_PLUGIN_PROCS=6
+export PLEX_MEDIA_SERVER_MAX_STACK_SIZE=10000
+export PLEX_MEDIA_SERVER_MAX_LOCK_MEM=3000
+export PLEX_MEDIA_SERVER_MAX_OPEN_FILES=4096
 export PLEX_MEDIA_SERVER_TMPDIR=$PLEX_MEDIA_SERVER_HOME/tmp
 export LD_LIBRARY_PATH=$PLEX_MEDIA_SERVER_HOME
+
+ulimit -l $PLEX_MEDIA_SERVER_MAX_LOCK_MEM
+ulimit -s $PLEX_MEDIA_SERVER_MAX_STACK_SIZE
+ulimit -n $PLEX_MEDIA_SERVER_MAX_OPEN_FILES
 
 install_plex() {
   mkdir -p /tmp/runplex ; cd /tmp/runplex
@@ -31,10 +40,6 @@ install_plex() {
 
 if [ ! -x $PLEX_MEDIA_SERVER_HOME ]; then
   install_plex $PLEXVER > /tmp/runplex.log 2>&1
-fi
-
-if [ -f $PLEX_MEDIA_SERVER_HOME/.update ]; then
-  install_plex `cat $PLEX_MEDIA_SERVER_HOME/.update` > /tmp/runplex.log 2>&1
 fi
 
 rm -rf $PLEX_MEDIA_SERVER_TMPDIR && mkdir -p $PLEX_MEDIA_SERVER_TMPDIR
