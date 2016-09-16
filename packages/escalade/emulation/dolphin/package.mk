@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="dolphin"
-PKG_VERSION="0015d2e"
+PKG_VERSION="4c004b6"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
