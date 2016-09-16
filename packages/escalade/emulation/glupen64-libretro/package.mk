@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="glupen64-libretro"
-PKG_VERSION="latest"
+PKG_VERSION="6baff60"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
@@ -35,8 +35,9 @@ pre_build_target() {
 }
 
 make_target() {
-  git clone --depth 1 --recursive https://github.com/loganmc10/GLupeN64.git
+  git clone --recursive https://github.com/loganmc10/GLupeN64.git
   cd GLupeN64
+  git reset --hard $PKG_VERSION
   case $PROJECT in
     RPi)
       make platform=rpi
