@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="NzbDrone"
-PKG_VERSION="2.0.0.4230"
+PKG_VERSION="2.0.0.4326"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
