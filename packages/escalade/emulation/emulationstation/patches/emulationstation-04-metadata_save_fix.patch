@@ -1,0 +1,65 @@
+From 0213bef499dd9e67286c33b56dcf1145cb54e132 Mon Sep 17 00:00:00 2001
+From: Jacob Karleskint <jacosoftx@hotmail.com>
+Date: Sat, 3 Sep 2016 15:45:52 -0500
+Subject: [PATCH] Checks if game has metadata
+
+Adds a function to metadata "isDefault()" which will return true if all
+metadata is still set to default values and false if any values are not
+set to default
+
+When saving, a game that has no metadata would also not be saved in the
+gamelist xml. so now it will just ignore looking for that game instead
+of looping through every node until it reaches the end of the tree.
+---
+ es-app/src/Gamelist.cpp | 6 ++++++
+ es-app/src/MetaData.cpp | 9 +++++++++
+ es-app/src/MetaData.h   | 2 ++
+ 3 files changed, 17 insertions(+)
+
+diff --git a/es-app/src/Gamelist.cpp b/es-app/src/Gamelist.cpp
+index 8f3db35..aeb8d05 100644
+--- a/es-app/src/Gamelist.cpp
++++ b/es-app/src/Gamelist.cpp
+@@ -215,6 +215,12 @@ void updateGamelist(SystemData* system)
+ 		{
+ 			const char* tag = ((*fit)->getType() == GAME) ? "game" : "folder";
+ 
++			// check if current file has metadata, if no, skip it as it wont be in the gamelist anyway.
++			if ((*fit)->metadata.isDefault()) {
++				++fit;
++				continue;
++			}
++
+ 			// check if the file already exists in the XML
+ 			// if it does, remove it before adding
+ 			for(pugi::xml_node fileNode = root.child(tag); fileNode; fileNode = fileNode.next_sibling(tag))
+diff --git a/es-app/src/MetaData.cpp b/es-app/src/MetaData.cpp
+index 2d5340b..76c82b9 100644
+--- a/es-app/src/MetaData.cpp
++++ b/es-app/src/MetaData.cpp
+@@ -133,3 +133,12 @@ boost::posix_time::ptime MetaDataList::getTime(const std::string& key) const
+ {
+ 	return string_to_ptime(get(key), "%Y%m%dT%H%M%S%F%q");
+ }
++
++bool MetaDataList::isDefault()
++{
++	for (int i = 1; i < mMap.size(); i++) {
++		if (mMap.at(gameDecls[i].key) != gameDecls[i].defaultValue) return false;
++	}
++
++	return true;
++}
+diff --git a/es-app/src/MetaData.h b/es-app/src/MetaData.h
+index 1143d92..d111cec 100644
+--- a/es-app/src/MetaData.h
++++ b/es-app/src/MetaData.h
+@@ -56,6 +56,8 @@ class MetaDataList
+ 	float getFloat(const std::string& key) const;
+ 	boost::posix_time::ptime getTime(const std::string& key) const;
+ 
++	bool isDefault();
++
+ 	inline MetaDataListType getType() const { return mType; }
+ 	inline const std::vector<MetaDataDecl>& getMDD() const { return getMDDByType(getType()); }
+ 
