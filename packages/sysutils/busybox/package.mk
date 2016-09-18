@@ -56,7 +56,7 @@ PKG_MAKE_OPTS_INIT="ARCH=$TARGET_ARCH \
 
 # XFS support
   if [ "$XFS_SUPPORT" = "yes" ] ; then
-    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET xfsprogs-dev"
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET xfsprogs"
   fi
 
 # nano text editor
