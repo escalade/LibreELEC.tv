@@ -52,7 +52,7 @@ fi
 
 # XFS support
   if [ "$XFS_SUPPORT" = "yes" ] ; then
-    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET xfsprogs-dev:init"
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET xfsprogs:init"
   fi
 
 post_install() {
