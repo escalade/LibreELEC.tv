@@ -46,5 +46,4 @@ PKG_CONFIGURE_OPTS_TARGET="--enable-bmp \
                            --enable-xcf \
                            --enable-xpm \
                            --enable-xv \
-			   --disable-shared \
                            --with-sdl-prefix=$SYSROOT_PREFIX/usr"
