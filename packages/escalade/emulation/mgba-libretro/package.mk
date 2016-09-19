@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="mgba-libretro"
-PKG_VERSION="c7617ea"
+PKG_VERSION="4675cb3"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MPLv2.0"
