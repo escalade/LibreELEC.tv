@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="fsuae-libretro"
-PKG_VERSION="5cf5880"
+PKG_VERSION="1be1f74"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
@@ -31,6 +31,12 @@ PKG_SHORTDESC="FS-UAE amiga emulator libretro core."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
+case $PROJECT in
+  RPi*)
+    PKG_CONFIGURE_OPTS_TARGET="--disable-jit --enable-neon"
+    ;;
+esac
+
 post_unpack() {
   mv $BUILD/libretro-fsuae* $BUILD/$PKG_NAME-$PKG_VERSION
 }
@@ -43,7 +49,7 @@ pre_configure_target() {
 }
 
 make_target() {
-  make CC=$CC gen
+  make CC=$HOST_CC CFLAGS= gen
   make CC=$CC
 }
 
