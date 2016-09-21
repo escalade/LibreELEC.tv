@@ -22,8 +22,9 @@
 amiga_model = A500
 kickstart_file = kick13.rom
 assume_refresh_rate = 50
+fullscreen = 1
 
-# Here or some additional options which can help if FS-UAE runs
+# Here are some additional options which can help if FS-UAE runs
 # too slow on your system:
 # 
 # accuracy = 0
