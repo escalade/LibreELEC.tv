@@ -26,7 +26,7 @@ PKG_URL="https://sourceforge.net/projects/vice-emu/files/development-releases/vi
 PKG_DEPENDS_TARGET="toolchain alsa-lib SDL libpng giflib zlib libvorbis libogg lame"
 PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
-PKG_SHORTDESC="vice emulator"
+PKG_SHORTDESC="VICE C64 emulator"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
@@ -55,4 +55,22 @@ post_makeinstall_target() {
   # copy over default config
   mkdir -p $INSTALL/etc
   cp $PKG_DIR/config/sdl-vicerc $INSTALL/etc/
+  # remove binaries
+  for bin in \
+    c1541 \
+    cartconv \
+    petcat \
+    vsid \
+    x128 \
+    x64dtv \
+    x64sc \
+    xcbm2 \
+    xcbm5x0 \
+    xpet \
+    xplus4 \
+    xscpu64 \
+    xvic
+  do
+    rm $INSTALL/usr/bin/$bin
+  done
  }
