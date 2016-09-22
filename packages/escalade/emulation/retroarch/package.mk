@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="retroarch"
-PKG_VERSION="8831d19"
+PKG_VERSION="d493273"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
@@ -72,8 +72,6 @@ fi
 if [[ "$TARGET_FPU" =~ "neon" ]]; then
   RETROARCH_NEON="--enable-neon"
 fi
-
-CFLAGS="$CFLAGS -DLAKKA_PROJECT='\"$PROJECT.$TARGET_ARCH\"'"
 
 TARGET_CONFIGURE_OPTS=""
 PKG_CONFIGURE_OPTS_TARGET="--disable-vg \
