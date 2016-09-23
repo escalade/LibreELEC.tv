@@ -1,0 +1,141 @@
+diff --git a/es-app/src/guis/GuiScraperMulti.cpp b/es-app/src/guis/GuiScraperMulti.cpp
+index 15548fd..3e46eff 100644
+--- a/es-app/src/guis/GuiScraperMulti.cpp
++++ b/es-app/src/guis/GuiScraperMulti.cpp
+@@ -24,6 +24,8 @@ GuiScraperMulti::GuiScraperMulti(Window* window, const std::queue<ScraperSearchP
+ 	addChild(&mBackground);
+ 	addChild(&mGrid);
+ 
++	mIsProcessing = true;
++
+ 	mTotalGames = mSearchQueue.size();
+ 	mCurrentGame = 0;
+ 	mTotalSuccessful = 0;
+@@ -146,6 +148,8 @@ void GuiScraperMulti::finish()
+ 
+ 	mWindow->pushGui(new GuiMsgBox(mWindow, ss.str(), 
+ 		"OK", [&] { delete this; }));
++
++	mIsProcessing = false;
+ }
+ 
+ std::vector<HelpPrompt> GuiScraperMulti::getHelpPrompts()
+diff --git a/es-core/src/GuiComponent.cpp b/es-core/src/GuiComponent.cpp
+index 10244e0..780e80b 100644
+--- a/es-core/src/GuiComponent.cpp
++++ b/es-core/src/GuiComponent.cpp
+@@ -8,7 +8,8 @@
+ #include "ThemeData.h"
+ 
+ GuiComponent::GuiComponent(Window* window) : mOpacity(255), mWindow(window), mParent(nullptr), 
+-	mPosition(Eigen::Vector3f::Zero()), mSize(Eigen::Vector2f::Zero()), mTransform(Eigen::Affine3f::Identity())
++	mPosition(Eigen::Vector3f::Zero()), mSize(Eigen::Vector2f::Zero()), mTransform(Eigen::Affine3f::Identity()),
++	mIsProcessing(false)
+ {
+ 	for(unsigned char i = 0; i < MAX_ANIMATIONS; i++)
+ 		mAnimationMap[i] = nullptr;
+@@ -341,3 +342,8 @@ HelpStyle GuiComponent::getHelpStyle()
+ {
+ 	return HelpStyle();
+ }
++
++bool GuiComponent::isProcessing() const
++{
++	return mIsProcessing;
++}
+diff --git a/es-core/src/GuiComponent.h b/es-core/src/GuiComponent.h
+index 08bc657..7eefbf6 100644
+--- a/es-core/src/GuiComponent.h
++++ b/es-core/src/GuiComponent.h
+@@ -91,6 +91,9 @@ public:
+ 	
+ 	virtual HelpStyle getHelpStyle();
+ 
++	// Returns true if the component is busy doing background processing (e.g. HTTP downloads)
++	bool isProcessing() const;
++
+ protected:
+ 	void renderChildren(const Eigen::Affine3f& transform) const;
+ 	void updateSelf(int deltaTime); // updates animations
+@@ -105,6 +108,8 @@ protected:
+ 	Eigen::Vector3f mPosition;
+ 	Eigen::Vector2f mSize;
+ 
++	bool mIsProcessing;
++
+ public:
+ 	const static unsigned char MAX_ANIMATIONS = 4;
+ 
+diff --git a/es-core/src/Window.cpp b/es-core/src/Window.cpp
+index 065be5c..1c570de 100644
+--- a/es-core/src/Window.cpp
++++ b/es-core/src/Window.cpp
+@@ -8,6 +8,7 @@
+ #include "Log.h"
+ #include "Settings.h"
+ 
++#include <algorithm>
+ #include <iostream>
+ #include <cstring>
+ #include <iomanip>
+@@ -205,11 +206,16 @@ void Window::render()
+ 	}
+ 
+ 	unsigned int screensaverTime = (unsigned int)Settings::getInstance()->getInt("ScreenSaverTime");
+-	if(mTimeSinceLastInput >= screensaverTime && screensaverTime != 0 && mAllowSleep)
++	if(mTimeSinceLastInput >= screensaverTime && screensaverTime != 0)
+ 	{
+-		// go to sleep
+-		mSleeping = true;
+-		onSleep();
++		renderScreenSaver();
++
++		if (!isProcessing() && mAllowSleep)
++		{
++			// go to sleep
++			mSleeping = true;
++			onSleep();
++		}
+ 	}
+ }
+ 
+@@ -329,12 +335,21 @@ void Window::setHelpPrompts(const std::vector<HelpPrompt>& prompts, const HelpSt
+ 
+ void Window::onSleep()
+ {
+-	Renderer::setMatrix(Eigen::Affine3f::Identity());
+-	unsigned char opacity = Settings::getInstance()->getString("ScreenSaverBehavior") == "dim" ? 0xA0 : 0xFF;
+-	Renderer::drawRect(0, 0, Renderer::getScreenWidth(), Renderer::getScreenHeight(), 0x00000000 | opacity);
+ }
+ 
+ void Window::onWake()
+ {
+ 
+ }
++
++bool Window::isProcessing()
++{
++	return count_if(mGuiStack.begin(), mGuiStack.end(), [](GuiComponent* c) { return c->isProcessing(); }) > 0;
++}
++
++void Window::renderScreenSaver()
++{
++	Renderer::setMatrix(Eigen::Affine3f::Identity());
++	unsigned char opacity = Settings::getInstance()->getString("ScreenSaverBehavior") == "dim" ? 0xA0 : 0xFF;
++	Renderer::drawRect(0, 0, Renderer::getScreenWidth(), Renderer::getScreenHeight(), 0x00000000 | opacity);
++}
+diff --git a/es-core/src/Window.h b/es-core/src/Window.h
+index 9e382a0..d5ce759 100644
+--- a/es-core/src/Window.h
++++ b/es-core/src/Window.h
+@@ -43,6 +43,10 @@ private:
+ 	void onSleep();
+ 	void onWake();
+ 
++	// Returns true if at least one component on the stack is processing
++	bool isProcessing();
++	void renderScreenSaver();
++
+ 	HelpComponent* mHelp;
+ 	ImageComponent* mBackgroundOverlay;
+ 
