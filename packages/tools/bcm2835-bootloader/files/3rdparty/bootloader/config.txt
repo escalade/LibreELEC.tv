@@ -57,6 +57,9 @@ hdmi_ignore_cec_init=1
 # Enable ALSA audio interface
   dtparam=audio=on
 
+# Disable rainbow splash on boot
+  disable_splash=1
+
 ################################################################################
 # License keys to enable GPU hardware decoding for various codecs
 # to obtain keys visit the shop at http://www.raspberrypi.com
