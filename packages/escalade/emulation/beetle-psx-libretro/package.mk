@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="beetle-psx-libretro"
-PKG_VERSION="89d29d0"
+PKG_VERSION="47cf3e5"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
@@ -34,7 +34,16 @@ PKG_LONGDESC="Standalone port of Mednafen PSX to libretro."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
+make_target() {
+  mkdir out
+  make
+  mv mednafen_psx_libretro.so out/
+  make clean
+  make HAVE_OPENGL=1
+  mv mednafen_psx_hw_libretro.so out/
+}
+
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
-  cp mednafen_psx_libretro.so $INSTALL/usr/lib/libretro/
+  cp out/* $INSTALL/usr/lib/libretro/
 }
