@@ -1,0 +1,11 @@
+language: cpp
+
+compiler: 
+    # - clang - Might add clang support in the future
+    - gcc 
+
+install:
+    - PROJECT=RPi2 ARCH=arm ./tools/download-tool 
+
+script:
+    - PROJECT=RPi2 ARCH=arm make release
