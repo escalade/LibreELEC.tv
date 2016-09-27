@@ -2,8 +2,8 @@ GCC_OPTIM="-O2"
 LD_OPTIM="-Wl,--as-needed"
 
 if [ "$LTO_SUPPORT" = yes ];then
-  GCC_OPTIM_LTO="-flto -ffat-lto-objects"
-  LD_OPTIM_LTO="-fuse-linker-plugin -flto"
+  GCC_OPTIM_LTO="-flto=$CONCURRENCY_MAKE_LEVEL -ffat-lto-objects"
+  LD_OPTIM_LTO="-fuse-linker-plugin -flto=$CONCURRENCY_MAKE_LEVEL"
 fi
 
 if [ "$GOLD_SUPPORT" = yes ];then
