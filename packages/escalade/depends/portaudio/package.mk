@@ -31,3 +31,4 @@ PKG_SHORTDESC="Portable cross-platform audio I/O"
 PKG_IS_ADDON="no"
 
 PKG_AUTORECONF="no"
+PKG_USE_CMAKE="no"
