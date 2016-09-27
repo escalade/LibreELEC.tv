@@ -31,13 +31,7 @@ PKG_SHORTDESC="Dolphin GameCube/Wii emulator"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-configure_target() {
-  cmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_CONF \
-        -DCMAKE_PREFIX_PATH=$SYSROOT_PREFIX/usr \
-        -DCMAKE_INSTALL_PREFIX=/usr \
-        -DPORTAUDIO_EXITCODE=0 \
-        ..
-}
+PKG_CMAKE_OPTS_TARGET="-DPORTAUDIO_EXITCODE=0"
 
 post_makeinstall_target() {
   cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
