@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="fsuae-libretro"
-PKG_VERSION="1be1f74"
+PKG_VERSION="7098440"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
