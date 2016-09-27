@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="beetle-saturn-libretro"
-PKG_VERSION="65b73eb"
+PKG_VERSION="8892d2d"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
