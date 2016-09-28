@@ -23,7 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/dolphin-emu/dolphin"
 PKG_URL="https://github.com/dolphin-emu/dolphin/archive/$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain cmake:host openal-soft libevdev gtk+ ffmpeg zlib bluez portaudio pulseaudio alsa-lib libogg libvorbis libSM"
+PKG_DEPENDS_TARGET="toolchain cmake:host openal-soft libevdev gtk+ ffmpeg zlib bluez portaudio pulseaudio alsa-lib libogg libvorbis libSM enet"
 PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="Dolphin GameCube/Wii emulator"
@@ -31,7 +31,7 @@ PKG_SHORTDESC="Dolphin GameCube/Wii emulator"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_CMAKE_OPTS_TARGET="-DPORTAUDIO_EXITCODE=0"
+PKG_CMAKE_OPTS_TARGET="-DPORTAUDIO_EXITCODE=0 -DENABLE_LTO=on -DUSE_SHARED_ENET=on"
 
 post_makeinstall_target() {
   cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
