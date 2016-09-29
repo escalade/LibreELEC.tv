@@ -1,0 +1,14 @@
+[Unit]
+Description=TigerVNC
+After=graphical.target
+
+[Service]
+Environment=DISPLAY=:0.0
+ExecStart=/usr/bin/x0vncserver -PasswordFile=/storage/.config/vncpasswd
+TimeoutStopSec=1
+Restart=always
+RestartSec=2
+StartLimitInterval=0
+
+[Install]
+WantedBy=kodi.target
