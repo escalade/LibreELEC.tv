@@ -37,16 +37,26 @@ post_unpack() {
 PKG_CMAKE_OPTS_TARGET="-DBUILD_WSI_XLIB_SUPPORT=On \
 		       -DBUILD_TESTS=Off \
 		       -DBUILD_LAYERS=Off \
-		       -DBUILD_DEMOS=Off \
+		       -DBUILD_DEMOS=On \
 		       -DBUILD_VKJSON=Off"
 
 pre_configure_target() {
   cd ..
   ./update_external_sources.sh
+  cd -
 }
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib
   cp -r loader/libvulkan.so* $INSTALL/usr/lib/
   cp -r loader/libvulkan.so* $SYSROOT_PREFIX/usr/lib/
+  mkdir -p $INSTALL/usr/bin
+  for bin in \
+    cube \
+    smoketest \
+    tri \
+    vulkaninfo
+  do
+    cp demos/$bin $INSTALL/usr/bin
+  done
 }
