@@ -42,6 +42,7 @@ OEM_APPS_COMMON=" \
   unfs3"
 
 OEM_APPS_GENERIC=" \
+  tigervnc \
   qemu"
 
 OEM_EMU_COMMON=" \
