@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of LibreELEC - http://www.libreelec.tv
-#      Copyright (C) 2009-2016 Lukas Rusak (lrusak@libreelec.tv)
+#      Copyright (C) 2016 Team LibreELEC
 #
 #  LibreELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="glupen64-libretro"
-PKG_VERSION="6baff60"
+PKG_VERSION="9baa0ab"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
@@ -30,14 +30,18 @@ PKG_SHORTDESC="mupen64plus + RSP-HLE + GLideN64 + libretro"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
+unpack() {
+  git clone --recursive https://github.com/loganmc10/GLupeN64.git $PKG_BUILD
+  cd $PKG_BUILD
+  git reset --hard $PKG_VERSION
+  cd $ROOT
+}
+
 pre_build_target() {
   strip_lto
 }
 
 make_target() {
-  git clone --recursive https://github.com/loganmc10/GLupeN64.git
-  cd GLupeN64
-  git reset --hard $PKG_VERSION
   case $PROJECT in
     RPi)
       make platform=rpi
