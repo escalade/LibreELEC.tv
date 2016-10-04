@@ -36,7 +36,7 @@ STAMP=$PKG_BUILD/.libreelec-unpack
 
 mkdir -p $BUILD
 
-[ ! -d "$SOURCES/$1" -a ! -d "$PKG_DIR/sources" ] && exit 0
+[ ! -d "$SOURCES/$1" -a ! -d "$PKG_DIR/sources" -a ! "$PKG_URL" = "custom" ] && exit 0
 
 STAMP_DEPENDS="$PKG_DIR $PKG_NEED_UNPACK $PROJECT_DIR/$PROJECT/patches/$PKG_NAME"
 [ -n "$DEVICE" ] && STAMP_DEPENDS="$STAMP_DEPENDS $PROJECT_DIR/$PROJECT/devices/$DEVICE/patches/$PKG_NAME"

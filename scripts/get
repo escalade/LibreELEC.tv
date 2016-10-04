@@ -27,7 +27,7 @@ if [ -z "$1" ]; then
   done
 fi
 
-if [ -n "$PKG_URL" -a -n "$PKG_SOURCE_NAME" ]; then
+if [ -n "$PKG_URL" -a -n "$PKG_SOURCE_NAME" -a ! "$PKG_URL" = "custom" ]; then
   mkdir -p $SOURCES/$1
 
   # Avoid concurrent downloads of the same package
