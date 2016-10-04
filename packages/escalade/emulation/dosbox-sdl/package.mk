@@ -17,22 +17,20 @@
 ################################################################################
 
 PKG_NAME="dosbox-sdl"
-PKG_VERSION="501eeaa"
+PKG_VERSION="4000"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.dosbox.com"
-PKG_URL="https://github.com/escalade/dosbox/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain alsa-lib SDL SDL_net SDL_sound munt libpng"
-PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="DOSBox emulator"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
-post_unpack() {
-  mv $BUILD/${PKG_NAME%-*}-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
+unpack() {
+  svn checkout -r $PKG_VERSION svn://svn.code.sf.net/p/dosbox/code-0/dosbox/trunk $PKG_BUILD
 }
 
 PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
