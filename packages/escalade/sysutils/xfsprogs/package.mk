@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of LibreELEC - http://www.libreelec.tv
-#      Copyright (C) 2009-2016 Lukas Rusak (lrusak@libreelec.tv)
+#      Copyright (C) 2016 Team LibreELEC
 #
 #  LibreELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,24 +23,19 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.xfs.org"
 PKG_URL="ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain util-linux"
+PKG_DEPENDS_TARGET="toolchain util-linux netbsd-curses"
 PKG_DEPENDS_INIT="xfsprogs"
-PKG_PRIORITY="optional"
 PKG_SECTION="tools"
 PKG_SHORTDESC="xfsprogs: Utilities for use with the xfs filesystem"
 PKG_IS_ADDON="no"
 
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_TARGET="--enable-shared=no --with-gnu-ld --host=$TARGET_NAME --build=$HOST_NAME"
+PKG_CONFIGURE_OPTS_TARGET="--enable-shared=no --with-gnu-ld --enable-readline=yes --enable-termcap=yes"
 
 pre_configure_target() {
   cd ..
   rm -rf .$TARGET_NAME
-}
-
-make_target() {
-  make HOST_CC=$HOST_CC
 }
 
 configure_init() {
@@ -49,10 +44,6 @@ configure_init() {
 
 make_init() {
   : # reuse target
-}
-
-post_makeinstall_target() {
-  rm -rf $INSTALL/usr/include
 }
 
 makeinstall_init() {
