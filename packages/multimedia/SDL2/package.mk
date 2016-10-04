@@ -17,11 +17,11 @@
 ################################################################################
 
 PKG_NAME="SDL2"
-PKG_VERSION="2.0.5"
+PKG_VERSION="321fdcc"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.libsdl.org/"
-PKG_URL="https://www.libsdl.org/release/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_URL="https://github.com/spurious/SDL-mirror/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain yasm:host alsa-lib systemd dbus"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="SDL2: A cross-platform Graphic API"
@@ -74,6 +74,10 @@ PKG_CONFIGURE_OPTS_TARGET="--enable-shared --enable-static \
                            --disable-clock_gettime \
                            --disable-rpath \
                            --disable-render-d3d"
+
+post_unpack() {
+  mv $BUILD/SDL-mirror-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
+}
 
 pre_configure_target() {
   export SYSROOT_PREFIX
