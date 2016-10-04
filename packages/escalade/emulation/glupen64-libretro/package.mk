@@ -17,11 +17,12 @@
 ################################################################################
 
 PKG_NAME="glupen64-libretro"
-PKG_VERSION="9baa0ab"
+PKG_VERSION="1cc75f9"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/loganmc10/GLupeN64"
+PKG_URL="custom"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
