@@ -22,7 +22,9 @@
 amiga_model = A500
 kickstart_file = kick13.rom
 assume_refresh_rate = 50
+video_sync = auto
 fullscreen = 1
+keep_aspect = 1
 
 # Here are some additional options which can help if FS-UAE runs
 # too slow on your system:
@@ -30,3 +32,4 @@ fullscreen = 1
 # accuracy = 0
 # video_sync = off
 # video_format = rgb565
+
