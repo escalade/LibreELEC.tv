@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="dosbox-libretro"
-PKG_VERSION="0a94dff"
+PKG_VERSION="dfe0f31"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
