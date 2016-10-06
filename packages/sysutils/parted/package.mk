@@ -23,7 +23,7 @@ PKG_LICENSE="GPL"
 PKG_SITE="http://www.gnu.org/software/parted/"
 PKG_URL="http://ftpmirror.gnu.org/parted/$PKG_NAME-$PKG_VERSION.tar.xz"
 PKG_DEPENDS_HOST="toolchain util-linux:host"
-PKG_DEPENDS_TARGET="toolchain util-linux parted:host"
+PKG_DEPENDS_TARGET="toolchain util-linux parted:host readline netbsd-curses"
 PKG_DEPENDS_INIT="toolchain util-linux:init parted"
 PKG_SECTION="system"
 PKG_SHORTDESC="parted: GNU partition editor"
@@ -34,7 +34,6 @@ PKG_AUTORECONF="no"
 
 PKG_CONFIGURE_OPTS_TARGET="--disable-device-mapper \
                            --disable-shared \
-                           --without-readline \
                            --disable-rpath \
                            --with-gnu-ld"
 
@@ -50,6 +49,9 @@ make_init() {
 
 makeinstall_init() {
   mkdir -p $INSTALL/sbin
+  mkdir -p $INSTALL/lib
     cp ../.$TARGET_NAME/parted/parted $INSTALL/sbin
     cp ../.$TARGET_NAME/partprobe/partprobe $INSTALL/sbin
+    cp $(get_build_dir readline)/.install_pkg/usr/lib/libreadline.so.6 $INSTALL/lib
+    cp $(get_build_dir netbsd-curses)/libterminfo/libterminfo.so $INSTALL/lib
 }
