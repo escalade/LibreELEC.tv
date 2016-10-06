@@ -22,8 +22,8 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://e2fsprogs.sourceforge.net/"
 PKG_URL="$SOURCEFORGE_SRC/$PKG_NAME/$PKG_NAME/1.42/$PKG_NAME-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain"
-PKG_DEPENDS_INIT="toolchain"
+PKG_DEPENDS_TARGET="toolchain util-linux"
+PKG_DEPENDS_INIT="e2fsprogs"
 PKG_SECTION="tools"
 PKG_SHORTDESC="e2fsprogs: Utilities for use with the ext2 filesystem"
 PKG_LONGDESC="The filesystem utilities for the EXT2 filesystem, including e2fsck, mke2fs, dumpe2fs, fsck, and others."
@@ -51,8 +51,8 @@ PKG_CONFIGURE_OPTS_TARGET="BUILD_CC=$HOST_CC \
                            --disable-jbd-debug \
                            --disable-blkid-debug \
                            --disable-testio-debug \
-                           --enable-libuuid \
-                           --enable-libblkid \
+                           --disable-libuuid \
+                           --disable-libblkid \
                            --disable-debugfs \
                            --disable-imager \
                            --enable-resizer \
