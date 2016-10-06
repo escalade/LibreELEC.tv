@@ -36,6 +36,7 @@ OEM_APPS_COMMON=" \
   docker-system \
   NzbDrone \
   plexmediaserver-script \
+  sdl-jstest \
   SABnzbd \
   tcpdump \
   transmission \
