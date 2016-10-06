@@ -66,9 +66,7 @@ pre_make_target() {
   MAKEFLAGS=-j1
 }
 
-PKG_CONFIGURE_OPTS_TARGET="--enable-static \
-                           --disable-shared \
-			   --enable-readline \
+PKG_CONFIGURE_OPTS_TARGET="--enable-readline \
                            --enable-threadsafe \
                            --enable-dynamic-extensions \
                            --with-gnu-ld"
