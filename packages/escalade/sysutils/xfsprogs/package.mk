@@ -17,13 +17,14 @@
 ################################################################################
 
 PKG_NAME="xfsprogs"
-PKG_VERSION="4.7.0"
+PKG_VERSION="4.8.0-rc3"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.xfs.org"
-PKG_URL="ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain util-linux netbsd-curses"
+PKG_URL="https://git.kernel.org/cgit/fs/xfs/xfsprogs-dev.git/snapshot/xfsprogs-dev-$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="xfsprogs-dev-$PKG_VERSION"
+PKG_DEPENDS_TARGET="toolchain util-linux readline"
 PKG_DEPENDS_INIT="xfsprogs"
 PKG_SECTION="tools"
 PKG_SHORTDESC="xfsprogs: Utilities for use with the xfs filesystem"
@@ -31,11 +32,10 @@ PKG_IS_ADDON="no"
 
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_TARGET="--enable-shared=no --with-gnu-ld --enable-readline=yes --enable-termcap=yes"
+PKG_CONFIGURE_OPTS_TARGET="--enable-shared=no --with-gnu-ld --enable-readline=yes"
 
 pre_configure_target() {
-  cd ..
-  rm -rf .$TARGET_NAME
+  make configure
 }
 
 configure_init() {
