@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="gtk+"
-PKG_VERSION="2.24.30"
+PKG_VERSION="2.24.31"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.gtk.org/"
