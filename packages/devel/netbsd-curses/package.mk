@@ -27,9 +27,10 @@ PKG_SHORTDESC="netbsd-libcurses portable edition"
 PKG_LONGDESC="netbsd-libcurses portable edition"
 
 make_target() {
-  make HOSTCC="$HOST_CC" PREFIX=/usr all-static
+  make HOSTCC="$HOST_CC" PREFIX=/usr all-dynamic
 }
 
 makeinstall_target() {
-  make HOSTCC="$HOST_CC" PREFIX=$SYSROOT_PREFIX/usr install-static
+  make PREFIX=$SYSROOT_PREFIX/usr install-dynamic
+  make PREFIX=$INSTALL/usr install-dynamic
 }
