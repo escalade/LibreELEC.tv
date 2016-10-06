@@ -52,3 +52,8 @@ pre_configure_target() {
   rm -rf .$TARGET_NAME
   export LIBS="-lcurses -lterminfo"
 }
+
+post_makeinstall_target() {
+  mkdir $INSTALL/bin
+  ln -sf /usr/bin/vim $INSTALL/bin/vi
+}
