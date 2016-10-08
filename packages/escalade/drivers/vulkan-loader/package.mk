@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="vulkan-loader"
-PKG_VERSION="fb13c2c"
+PKG_VERSION="a725882"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Apache 2.0"
@@ -54,7 +54,6 @@ makeinstall_target() {
   for bin in \
     cube \
     smoketest \
-    tri \
     vulkaninfo
   do
     cp demos/$bin $INSTALL/usr/bin
