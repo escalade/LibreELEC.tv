@@ -36,7 +36,7 @@ PKG_AUTORECONF="no"
 
 make_target() {
   mkdir out
-  make
+  make HAVE_OPENGL=0
   mv mednafen_psx_libretro.so out/
   make clean
   make HAVE_OPENGL=1
