@@ -51,11 +51,5 @@ makeinstall_target() {
   cp -r loader/libvulkan.so* $INSTALL/usr/lib/
   cp -r loader/libvulkan.so* $SYSROOT_PREFIX/usr/lib/
   mkdir -p $INSTALL/usr/bin
-  for bin in \
-    cube \
-    smoketest \
-    vulkaninfo
-  do
-    cp demos/$bin $INSTALL/usr/bin
-  done
+  cp demos/vulkaninfo $INSTALL/usr/bin
 }
