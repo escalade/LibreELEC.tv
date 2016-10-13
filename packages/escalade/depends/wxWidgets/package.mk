@@ -23,13 +23,15 @@ PKG_ARCH="any"
 PKG_LICENSE="wxWindows Licence"
 PKG_SITE="http://www.wxwidgets.org/"
 PKG_URL="https://github.com/wxWidgets/wxWidgets/archive/v$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain"
+PKG_DEPENDS_TARGET="toolchain gtk+ libSM"
 PKG_SECTION="depends"
 PKG_SHORTDESC="A cross-platform GUI and tools library for GTK, MS Windows, and MacOS."
 PKG_LONGDESC="A cross-platform GUI and tools library for GTK, MS Windows, and MacOS."
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+
+PKG_CONFIGURE_OPTS_TARGET="--disable-precomp-headers"
 
 post_makeinstall_target() {
   ln -sf $SYSROOT_PREFIX/usr/lib/wx/config/i686-libreelec-linux-gnu-gtk2-unicode-3.0 $SYSROOT_PREFIX/usr/bin/wx-config
