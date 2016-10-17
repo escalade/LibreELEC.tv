@@ -17,14 +17,13 @@
 ################################################################################
 
 PKG_NAME="glupen64-libretro"
-PKG_VERSION="fac6464"
+PKG_VERSION="e72887c"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/loganmc10/GLupeN64"
 PKG_URL="custom"
 PKG_DEPENDS_TARGET="toolchain"
-PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="mupen64plus + RSP-HLE + GLideN64 + libretro"
 
