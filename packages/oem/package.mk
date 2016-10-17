@@ -40,10 +40,12 @@ OEM_APPS_COMMON=" \
   SABnzbd \
   tcpdump \
   transmission \
+  ttf-tlwg \
   unfs3 \
   vim"
 
 OEM_APPS_GENERIC=" \
+  google-chrome \
   tigervnc \
   qemu"
 
