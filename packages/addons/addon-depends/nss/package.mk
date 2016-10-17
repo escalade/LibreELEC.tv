@@ -56,7 +56,7 @@ make_target() {
 
   make BUILD_OPT=1 $TARGET_USE_64 \
      NSPR_INCLUDE_DIR=$SYSROOT_PREFIX/usr/include/nspr \
-     USE_SYSTEM_ZLIB=1 ZLIB_LIBS=-lz \
+     USE_SYSTEM_ZLIB=1 ZLIB_LIBS=-lz NSS_USE_SYSTEM_SQLITE=1 \
      OS_TEST=$TARGET_ARCH \
      NSS_TESTS="dummy" \
      NSINSTALL=$ROOT/$TOOLCHAIN/bin/nsinstall \
@@ -70,6 +70,8 @@ makeinstall_target() {
   $STRIP dist/Linux*/lib/*.so
   cp -L dist/Linux*/lib/*.so $SYSROOT_PREFIX/usr/lib
   cp -L dist/Linux*/lib/libcrmf.a $SYSROOT_PREFIX/usr/lib
+  mkdir -p $INSTALL/usr/lib
+  cp -L dist/Linux*/lib/*.so $INSTALL/usr/lib
   mkdir -p $SYSROOT_PREFIX/usr/include/nss
   cp -RL dist/{public,private}/nss/* $SYSROOT_PREFIX/usr/include/nss
   cp -L dist/Linux*/lib/pkgconfig/nss.pc $SYSROOT_PREFIX/usr/lib/pkgconfig
