@@ -1,0 +1,27 @@
+#!/bin/sh
+
+. /etc/profile
+
+CHROME_HOME=/storage/.cache/app.chrome
+
+install_chrome() {
+  kodi-send --action="Notification(Chrome,This is the first time you are starting Chrome. It is being downloaded in the background...,13000)"
+  CHROME_VER=`curl -s https://dl.google.com/linux/chrome/rpm/stable/x86_64/repodata/other.xml.gz | gzip -df | awk -F\" '/pkgid/{ sub(".*-","",$4); print $4": "$10 }' | grep ^stable | awk '{ print $2; }'`
+  mkdir -p /tmp/chrome ; cd /tmp/chrome
+  wget -q http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_$CHROME_VER-1_amd64.deb || exit 1
+  ar -x *.deb && tar -Jxf data.tar.xz
+  mv opt/google/chrome $CHROME_HOME
+  cp usr/share/applications/google-chrome.desktop $CHROME_HOME/
+  cd ~ ; rm -rf /tmp/chrome
+}
+
+run_chrome() {
+  CHROME_USER_FLAGS="$(cat ~/.config/chrome-flags.conf)"
+  /opt/google/chrome/chrome $CHROME_USER_FLAGS "$@"
+}
+
+if [ ! -x $CHROME_HOME ]; then
+  install_chrome $CHROME_VER > /tmp/chrome.log 2>&1
+fi
+
+run_chrome "$@" > /tmp/chrome.log 2>&1
