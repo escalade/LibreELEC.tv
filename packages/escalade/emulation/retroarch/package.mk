@@ -1,32 +1,29 @@
 ################################################################################
-#      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2012 Stephan Raue (stephan@openelec.tv)
+#      This file is part of LibreELEC - http://www.libreelec.tv
+#      Copyright (C) 2016 Team LibreELEC
 #
-#  This Program is free software; you can redistribute it and/or modify
+#  LibreELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2, or (at your option)
-#  any later version.
+#  the Free Software Foundation, either version 2 of the License, or
+#  (at your option) any later version.
 #
-#  This Program is distributed in the hope that it will be useful,
+#  LibreELEC is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with OpenELEC.tv; see the file COPYING.  If not, write to
-#  the Free Software Foundation, 51 Franklin Street, Suite 500, Boston, MA 02110, USA.
-#  http://www.gnu.org/copyleft/gpl.html
+#  along with LibreELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
 PKG_NAME="retroarch"
-PKG_VERSION="f63c32d"
+PKG_VERSION="584d9a5"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/libretro/RetroArch.git"
-PKG_URL="https://github.com/libretro/RetroArch/archive/$PKG_VERSION.tar.gz"
+PKG_URL="custom"
 PKG_DEPENDS_TARGET="toolchain alsa-lib freetype zlib retroarch-assets core-info retroarch-joypad-autoconfig common-shaders libretro-database ffmpeg"
-PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="Reference frontend for the libretro API."
 PKG_LONGDESC="RetroArch is the reference frontend for the libretro API. Popular examples of implementations for this API includes videogame system emulators and game engines, but also more generalized 3D programs. These programs are instantiated as dynamic libraries. We refer to these as libretro cores."
@@ -34,11 +31,12 @@ PKG_LONGDESC="RetroArch is the reference frontend for the libretro API. Popular 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
-  cd $ROOT/$PKG_BUILD
-  git clone --depth 1 https://github.com/KhronosGroup/SPIRV-Cross.git deps/SPIRV-Cross
-  git clone --depth 1 https://github.com/KhronosGroup/glslang.git deps/glslang/glslang
-  cd -
+unpack() {
+  git clone --recursive https://github.com/libretro/RetroArch $PKG_BUILD
+  cd $PKG_BUILD
+  git reset --hard $PKG_VERSION
+  rm -rf .git
+  cd $ROOT
 }
 
 if [ "$OPENGLES_SUPPORT" = yes ]; then
@@ -86,11 +84,6 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-vg \
                            --host=$TARGET_NAME \
                            --enable-freetype"
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/RetroArch* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
 pre_configure_target() {
   strip_lto # workaround for https://github.com/libretro/RetroArch/issues/1078
   cd $ROOT/$PKG_BUILD
@@ -133,6 +126,8 @@ makeinstall_target() {
   echo 'system_directory = "/storage/roms/bios"' >> $INSTALL/etc/retroarch.cfg
   
   # Video
+  sed -i -e "s/# video_fullscreen = false/video_fullscreen = true/" $INSTALL/etc/retroarch.cfg
+  sed -i -e "s/# video_windowed_fullscreen = true/video_windowed_fullscreen = false/" $INSTALL/etc/retroarch.cfg
   sed -i -e "s/# video_smooth = true/video_smooth = false/" $INSTALL/etc/retroarch.cfg
   sed -i -e "s/# video_aspect_ratio_auto = false/video_aspect_ratio_auto = true/" $INSTALL/etc/retroarch.cfg
   sed -i -e "s/# video_threaded = false/video_threaded = true/" $INSTALL/etc/retroarch.cfg
