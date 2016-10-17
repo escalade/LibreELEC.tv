@@ -16,7 +16,7 @@
 #  along with LibreELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-PKG_NAME="tigervnc"
+PKG_NAME="tigervnc-system"
 PKG_VERSION="1.7.0"
 PKG_REV="1"
 PKG_ARCH="any"
@@ -31,6 +31,10 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 PKG_CMAKE_OPTS_TARGET="-DBUILD_VIEWER=off"
+
+post_unpack() {
+  mv $BUILD/tigervnc-$PKG_VERSION $BUILD/$PKG_NAME-$PKG_VERSION
+}
 
 post_makeinstall_target() {
   rm $INSTALL/usr/bin/vncserver
