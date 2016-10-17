@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="dolphin"
-PKG_VERSION="b314f70"
+PKG_VERSION="8f0083a"
 PKG_REV="1"
 PKG_ARCH="x86_64"
 PKG_LICENSE="GPLv2"
@@ -30,7 +30,7 @@ PKG_SHORTDESC="Dolphin GameCube/Wii emulator"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_CMAKE_OPTS_TARGET="-DPORTAUDIO_EXITCODE=0 -DENABLE_LTO=on -DUSE_SHARED_ENET=on"
+PKG_CMAKE_OPTS_TARGET="-DSYSTEM_PORTAUDIO_EXITCODE=0 -DENABLE_LTO=on -DUSE_SHARED_ENET=on"
 
 post_makeinstall_target() {
   cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
