@@ -17,12 +17,12 @@
 ################################################################################
 
 PKG_NAME="portaudio"
-PKG_VERSION="19_20140130"
+PKG_VERSION="190600_20161012"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.portaudio.com"
-PKG_URL="http://www.portaudio.com/archives/pa_stable_v$PKG_VERSION.tgz"
+PKG_URL="http://www.portaudio.com/archives/pa_rc_v190600_20161012.tgz"
 PKG_SOURCE_DIR="portaudio"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_PRIORITY="optional"
@@ -31,4 +31,3 @@ PKG_SHORTDESC="Portable cross-platform audio I/O"
 PKG_IS_ADDON="no"
 
 PKG_AUTORECONF="no"
-PKG_USE_CMAKE="no"
