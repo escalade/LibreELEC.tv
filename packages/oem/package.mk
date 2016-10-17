@@ -46,7 +46,7 @@ OEM_APPS_COMMON=" \
 
 OEM_APPS_GENERIC=" \
   google-chrome \
-  tigervnc \
+  tigervnc-system \
   qemu"
 
 OEM_EMU_COMMON=" \
