@@ -53,3 +53,7 @@ make_target() {
 makeinstall_target() {
   make install DESTDIR=$INSTALL SRC_SUBDIRS="gdk gtk modules"
 }
+
+post_makeinstall_target() {
+  echo gtk-font-name=\"Liberation Sans 12\" > $INSTALL/etc/gtk-2.0/gtkrc
+}
