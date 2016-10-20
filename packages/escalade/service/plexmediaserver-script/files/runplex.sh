@@ -6,7 +6,7 @@ export `wget -q -O - "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=pl
 export `wget -q -O - "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=plex-media-server" | grep -E '^_pkgsum='` || exit 1
 PLEXVER=$pkgver-$_pkgsum
 
-export PLEX_MEDIA_SERVER_HOME=/storage/.cache/plex
+export PLEX_MEDIA_SERVER_HOME=/storage/.cache/app.plex
 export PLEX_MEDIA_SERVER_APPLICATION_SUPPORT_DIR=/storage/.config
 export PLEX_MEDIA_SERVER_MAX_PLUGIN_PROCS=6
 export PLEX_MEDIA_SERVER_MAX_STACK_SIZE=10000
