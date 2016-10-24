@@ -26,7 +26,6 @@ PKG_URL="https://github.com/hadess/rtl8723bs/archive/$PKG_VERSION.tar.gz"
 PKG_SOURCE_DIR="rtl8723bs-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain linux"
 PKG_NEED_UNPACK="$LINUX_DEPENDS"
-PKG_PRIORITY="optional"
 PKG_SECTION="driver"
 PKG_SHORTDESC="Realtek RTL8723BS Linux driver"
 

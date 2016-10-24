@@ -22,7 +22,6 @@ PKG_REV="c094d0d"
 PKG_ARCH="any"
 PKG_LICENSE="Freemium"
 PKG_SITE="http://plex.tv"
-PKG_PRIORITY="optional"
 PKG_SECTION="service"
 PKG_SHORTDESC="Plex Media Server"
 

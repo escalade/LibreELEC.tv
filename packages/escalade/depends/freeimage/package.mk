@@ -25,7 +25,6 @@ PKG_SITE="http://freeimage.sourceforge.net/"
 PKG_URL="http://downloads.sourceforge.net/freeimage/FreeImage$PKG_VERSION.zip"
 PKG_SOURCE_DIR="FreeImage"
 PKG_DEPENDS_TARGET="toolchain"
-PKG_PRIORITY="optional"
 PKG_SECTION="emulators/depends"
 PKG_SHORTDESC="FreeImage library"
 

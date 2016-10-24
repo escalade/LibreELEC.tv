@@ -26,7 +26,6 @@ PKG_URL="https://github.com/lwfinger/rtl8723bu/archive/$PKG_VERSION.tar.gz"
 PKG_SOURCE_DIR="rtl8723bu-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain linux"
 PKG_NEED_UNPACK="$LINUX_DEPENDS"
-PKG_PRIORITY="optional"
 PKG_SECTION="driver"
 PKG_SHORTDESC="Realtek RTL8723BU Linux driver"
 

@@ -24,7 +24,6 @@ PKG_LICENSE="GPLv2"
 PKG_SITE="http://fs-uae.net"
 PKG_URL="https://github.com/libretro/libretro-fsuae/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain libmpeg2 openal-soft glib"
-PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="FS-UAE amiga emulator libretro core."
 

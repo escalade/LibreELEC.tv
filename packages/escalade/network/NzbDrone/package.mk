@@ -25,7 +25,6 @@ PKG_SITE="https://sonarr.tv"
 PKG_URL="http://update.sonarr.tv/v2/master/mono/$PKG_NAME.master.$PKG_VERSION.mono.tar.gz"
 PKG_SOURCE_DIR="NzbDrone"
 PKG_DEPENDS_TARGET="toolchain mono-system libmediainfo"
-PKG_PRIORITY="optional"
 PKG_SECTION="service/downloadmanager"
 PKG_SHORTDESC="Smart PVR for newsgroup and bittorrent users."
 

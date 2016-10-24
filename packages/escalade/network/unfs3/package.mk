@@ -26,7 +26,6 @@ PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/markusn/unfs3"
 PKG_URL="https://github.com/markusn/unfs3/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain flex"
-PKG_PRIORITY="optional"
 PKG_SECTION="network"
 PKG_SHORTDESC="UNFS3 server"
 

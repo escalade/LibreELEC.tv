@@ -24,7 +24,6 @@ PKG_LICENSE="OSS"
 PKG_SITE="https://github.com/sphaero/guichan.git"
 PKG_URL="https://github.com/sphaero/guichan/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain SDL"
-PKG_PRIORITY="optional"
 PKG_SECTION="emulators/depends"
 PKG_SHORTDESC="guichan GUI library"
 
