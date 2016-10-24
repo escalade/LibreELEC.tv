@@ -1,44 +1,39 @@
 ################################################################################
-#      This file is part of OpenELEC - http://www.openelec.tv
-#      Copyright (C) 2009-2012 Stephan Raue (stephan@openelec.tv)
+#      This file is part of LibreELEC - http://www.libreelec.tv
+#      Copyright (C) 2016 Team LibreELEC
 #
-#  This Program is free software; you can redistribute it and/or modify
+#  LibreELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2, or (at your option)
-#  any later version.
+#  the Free Software Foundation, either version 2 of the License, or
+#  (at your option) any later version.
 #
-#  This Program is distributed in the hope that it will be useful,
+#  LibreELEC is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with OpenELEC.tv; see the file COPYING.  If not, write to
-#  the Free Software Foundation, 51 Franklin Street, Suite 500, Boston, MA 02110, USA.
-#  http://www.gnu.org/copyleft/gpl.html
+#  along with LibreELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
 PKG_NAME="uae4arm-libretro"
-PKG_VERSION="43edf01"
+PKG_VERSION="d7f97a7"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MAME"
-PKG_SITE="https://github.com/r-type/uae4arm-libretro.git"
-PKG_URL="https://github.com/r-type/uae4arm-libretro/archive/$PKG_VERSION.tar.gz"
+PKG_SITE="https://github.com/repojohnray/libretro-uae4arm"
+PKG_URL="https://github.com/repojohnray/libretro-uae4arm/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
-PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="libretro uae4arm"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-
-make_target() {
-  make platform=rpi2 CC=$CC CXX=$CXX -j3
+post_unpack() {
+  mv $BUILD/libretro-uae4arm-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
-makeinstall_target() {
-  mkdir -p $INSTALL/usr/lib/libretro
-  cp uae4arm_libretro.so $INSTALL/usr/lib/libretro/
+make_target() {
+  make CC=$CC platform=rpi
 }
