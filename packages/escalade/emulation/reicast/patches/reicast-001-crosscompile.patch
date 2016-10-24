@@ -1,0 +1,24 @@
+--- a/shell/linux/Makefile	2016-10-19 14:52:48.475255047 +0200
++++ b/shell/linux/Makefile	2016-10-19 14:52:52.618746983 +0200
+@@ -122,8 +122,8 @@
+     MFLAGS += -marm -march=armv7-a -mtune=cortex-a9 -mfpu=neon -mfloat-abi=hard -funroll-loops
+     ASFLAGS += -march=armv7-a -mfpu=neon -mfloat-abi=softfp
+     CFLAGS += -D TARGET_BEAGLE -D TARGET_LINUX_ARMELv7 -DARM_HARDFP -fsingle-precision-constant
+-    INCS += -I/opt/vc/include/ -I/opt/vc/include/interface/vmcs_host/linux -I/opt/vc/include/interface/vcos/pthreads -I../linux-deps/include
+-    LIBS += -L/opt/vc/lib/  -L../linux-deps/lib -lbcm_host
++    INCS += -I$(SYSROOT_PREFIX)/usr/include -I$(SYSROOT_PREFIX)/usr/include/interface/vmcs_host/linux -I$(SYSROOT_PREFIX)/usr/include/interface/vcos/pthreads -I../linux-deps/include -I../linux-deps/include
++    LIBS += -L$(SYSROOT_PREFIX)/usr/lib/  -L../linux-deps/lib -lbcm_host
+     USE_GLES := 1
+ 
+ # BeagleBone Black
+@@ -213,8 +213,8 @@
+ endif
+ 
+ ifdef USE_SDL
+-    CXXFLAGS += `sdl2-config --cflags` -D USE_SDL
+-    LIBS += `sdl2-config --libs`
++    CXXFLAGS += `$(SYSROOT_PREFIX)/usr/bin/sdl2-config --cflags` -D USE_SDL
++    LIBS += `$(SYSROOT_PREFIX)/usr/bin/sdl2-config --libs`
+ endif
+ 
+ ifdef PGO_MAKE
