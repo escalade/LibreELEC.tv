@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="desmume-libretro"
-PKG_VERSION="3be0da9"
+PKG_VERSION="6505383"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
