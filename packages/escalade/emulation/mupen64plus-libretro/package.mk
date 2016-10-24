@@ -1,6 +1,6 @@
 ################################################################################
 #      This file is part of LibreELEC - http://www.libreelec.tv
-#      Copyright (C) 2009-2016 Lukas Rusak (lrusak@libreelec.tv)
+#      Copyright (C) 2016 Team LibreELEC
 #
 #  LibreELEC is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,22 +17,20 @@
 ################################################################################
 
 PKG_NAME="mupen64plus-libretro"
-PKG_VERSION="2b3e7ae"
+PKG_VERSION="71de5c8"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/mupen64plus-libretro"
 PKG_URL="https://github.com/libretro/mupen64plus-libretro/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
-PKG_PRIORITY="optional"
 PKG_SECTION="emulation"
-PKG_SHORTDESC="Libretro port of Mupen64 Plus."
+PKG_SHORTDESC="Libretro port of Mupen64 Plus"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 pre_configure_target() {
-  strip_gold
   strip_lto
 }
 
@@ -52,6 +50,7 @@ make_target() {
       ;;
     Generic)
       make WITH_DYNAREC=$TARGET_ARCH
+      make clean
       make WITH_DYNAREC=$TARGET_ARCH HAVE_VULKAN=1
       ;;
   esac
