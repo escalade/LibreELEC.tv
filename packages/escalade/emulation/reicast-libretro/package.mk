@@ -33,7 +33,7 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 post_unpack() {
-  mv $BUILD/reicast* $BUILD/$PKG_NAME-$PKG_VERSION
+  mv $BUILD/reicast-emulator-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
 make_target() {
