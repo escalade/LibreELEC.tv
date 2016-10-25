@@ -35,6 +35,7 @@ pre_configure_target() {
 }
 
 make_target() {
+  mkdir out
   case $PROJECT in
     RPi)
       make platform=rpi
@@ -50,13 +51,14 @@ make_target() {
       ;;
     Generic)
       make WITH_DYNAREC=$TARGET_ARCH
-      make clean
+      mv *.so out/
       make WITH_DYNAREC=$TARGET_ARCH HAVE_VULKAN=1
+      mv *.so out/
       ;;
   esac
 }
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
-  cp *.so $INSTALL/usr/lib/libretro/
+  cp out/*.so $INSTALL/usr/lib/libretro/
 }
