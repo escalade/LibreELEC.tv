@@ -35,7 +35,6 @@ pre_configure_target() {
 }
 
 make_target() {
-  mkdir out
   case $PROJECT in
     RPi)
       make platform=rpi
@@ -50,6 +49,7 @@ make_target() {
       make platform=armv7-neon-gles-cortex-a9
       ;;
     Generic)
+      mkdir out
       make WITH_DYNAREC=$TARGET_ARCH
       mv *.so out/
       make WITH_DYNAREC=$TARGET_ARCH HAVE_VULKAN=1
@@ -60,5 +60,5 @@ make_target() {
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
-  cp out/*.so $INSTALL/usr/lib/libretro/
+  cp `find . -name "*.so" | xargs echo` $INSTALL/usr/lib/libretro/
 }
