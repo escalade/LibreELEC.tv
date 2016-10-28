@@ -1,5 +1,5 @@
 [C64]
-SoundDeviceName="alsa"
+SoundDeviceName="sdl"
 SoundBufferSize=100
 AspectRatio="1.000000"
 SDLBitdepth=32
