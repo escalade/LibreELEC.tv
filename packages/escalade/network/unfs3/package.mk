@@ -19,12 +19,12 @@
 ################################################################################
 
 PKG_NAME="unfs3"
-PKG_VERSION="dca6a04"
+PKG_VERSION="497"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/markusn/unfs3"
-PKG_URL="https://github.com/markusn/unfs3/archive/$PKG_VERSION.tar.gz"
+PKG_URL="custom"
 PKG_DEPENDS_TARGET="toolchain flex"
 PKG_SECTION="network"
 PKG_SHORTDESC="UNFS3 server"
@@ -33,6 +33,10 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
 MAKEFLAGS="-j1"
+
+unpack() {
+  svn checkout -r $PKG_VERSION svn://svn.code.sf.net/p/unfs3/code/trunk $PKG_BUILD
+}
 
 post_install() {
   cp $PKG_DIR/config/exports $INSTALL/usr/config
