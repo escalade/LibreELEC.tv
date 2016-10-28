@@ -37,6 +37,7 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_prog_sdl_config=$SYSROOT_PREFIX/usr/bin/sdl-con
 			   --disable-catweasel \
 			   --enable-native-tools=$HOST_CC \
                            --enable-sdlui \
+			   --without-readline \
 			   --without-oss \
 			   --without-pulse"
 
