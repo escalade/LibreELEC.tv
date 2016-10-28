@@ -24,7 +24,7 @@ PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.transmissionbt.com/"
-PKG_URL="http://download.transmissionbt.com/files/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_URL="https://github.com/transmission/transmission-releases/raw/master/transmission-$PKG_VERSION.tar.xz"
 PKG_DEPENDS_TARGET="toolchain zlib libressl curl libevent"
 PKG_SECTION="service/downloadmanager"
 PKG_SHORTDESC="transmission: a fast, easy and free BitTorrent client"
@@ -35,18 +35,9 @@ PKG_ADDON_TYPE="xbmc.service"
 PKG_ADDON_PROVIDES=""
 PKG_ADDON_REPOVERSION="8.0"
 
-PKG_AUTORECONF="yes"
+PKG_AUTORECONF="no"
 
-PKG_MAINTAINER="unofficial.addon.pro"
-
-PKG_CONFIGURE_OPTS_TARGET="--enable-utp \
-            --enable-largefile \
-            --disable-nls \
-            --disable-cli \
-            --disable-mac \
-            --enable-lightweight \
-            --enable-daemon \
-            --with-gnu-ld"
+PGK_CMAKE_OPTS_TARGET="-DENABLE_CLI=On -DENABLE_LIGHTWEIGHT=On"
 
 post_makeinstall_target() {
   mkdir -p $INSTALL/usr/config/transmission-daemon
@@ -57,6 +48,9 @@ addon() {
   mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/bin
   cp $PKG_BUILD/.$TARGET_NAME/daemon/transmission-daemon $ADDON_BUILD/$PKG_ADDON_ID/bin
   cp $PKG_BUILD/.$TARGET_NAME/daemon/transmission-remote $ADDON_BUILD/$PKG_ADDON_ID/bin
+  cp $PKG_BUILD/.$TARGET_NAME/utils/transmission-create $ADDON_BUILD/$PKG_ADDON_ID/bin
+  cp $PKG_BUILD/.$TARGET_NAME/utils/transmission-edit $ADDON_BUILD/$PKG_ADDON_ID/bin
+  cp $PKG_BUILD/.$TARGET_NAME/utils/transmission-show $ADDON_BUILD/$PKG_ADDON_ID/bin
 
   mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/web
   cp -R $PKG_BUILD/web/* $ADDON_BUILD/$PKG_ADDON_ID/web
