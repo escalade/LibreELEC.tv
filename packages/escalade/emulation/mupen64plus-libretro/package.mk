@@ -52,6 +52,7 @@ make_target() {
       mkdir out
       make WITH_DYNAREC=$TARGET_ARCH
       mv *.so out/
+      make clean
       make WITH_DYNAREC=$TARGET_ARCH HAVE_VULKAN=1
       mv *.so out/
       ;;
