@@ -1,0 +1,208 @@
+From af73cef731e54bc6ee824567bbedbb40d57aa7c3 Mon Sep 17 00:00:00 2001
+From: Timo Sarawinski <t.sarawinski@gmail.com>
+Date: Sat, 15 Oct 2016 02:31:19 +0200
+Subject: [PATCH 1/5] added .gitignore
+
+---
+ .gitignore | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+ create mode 100644 .gitignore
+
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..3379631
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,8 @@
++*.o
++*.ko
++*.mod.c
++*.cmd
++modules.order
++Module.symvers
++.*.swp
++.tmp_versions
+
+From d7e6f262dcee5525563f74c57e4aefcb66f3ea98 Mon Sep 17 00:00:00 2001
+From: Timo Sarawinski <t.sarawinski@gmail.com>
+Date: Sat, 15 Oct 2016 02:43:56 +0200
+Subject: [PATCH 2/5] added README.md
+
+---
+ README.md | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index 2ae5164..3482234 100644
+--- a/README.md
++++ b/README.md
+@@ -1 +1,22 @@
+-# Realtek 8723bs Linux WIFI driver
++# Realtek 8723bs Linux WIFI driver with Support for Baytrail Tablets
++
++tested on Trekstor Surftab Wintron 10.1 
++
++To cross-compile for ARM (eg. for a @NextThing CHIP), do something like this:
++
++````
++make CONFIG_PLATFORM_ARM_SUNXI=y ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C /path/to/kernel_compile_O_dir M=$PWD CONFIG_RTL8723BS=m -j$(nproc)
++make CONFIG_PLATFORM_ARM_SUNXI=y ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C /path/to/kernel_compile_O_dir M=$PWD CONFIG_RTL8723BS=m INSTALL_MOD_PATH=/tmp/chiplinux modules_install
++```
++
++To compile for the host, do something like this:
++
++```
++sudo apt-get install build-essential linux-headers-generic git
++git clone https://github.com/muhviehstah/rtl8723bs.git
++cd rtl8723bs
++make
++sudo make install
++sudo depmod -a
++sudo modprobe 8723bs
++```
+
+From bd6f846f01c30178f165b80e139dc036abd01a06 Mon Sep 17 00:00:00 2001
+From: muhviehstah <t.sarawinski@gmail.com>
+Date: Sat, 15 Oct 2016 02:57:22 +0200
+Subject: [PATCH 3/5] Kernel 4.8 build fix
+
+fix for build on kernel 4.8
+code from ckuethe + final fixes to build proper.
+tested on archlinux with kernel version 4.8.1-1
+---
+ Makefile                      | 2 +-
+ include/rtw_wifi_regd.h       | 7 +++++++
+ os_dep/linux/ioctl_cfg80211.c | 9 +++++++++
+ os_dep/linux/ioctl_linux.c    | 2 +-
+ os_dep/linux/rtw_android.c    | 2 +-
+ 5 files changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 4071565..2725918 100755
+--- a/Makefile
++++ b/Makefile
+@@ -14,7 +14,7 @@ EXTRA_CFLAGS += -Wno-unused-parameter
+ EXTRA_CFLAGS += -Wno-unused-function
+ EXTRA_CFLAGS += -Wno-unused
+ #EXTRA_CFLAGS += -Wno-uninitialized
+-#EXTRA_CFLAGS += -Wno-error=date-time	# Fix compile error on gcc 4.9 and later
++EXTRA_CFLAGS += -Wno-error=date-time	# Fix compile error on gcc 4.9 and later
+ 
+ EXTRA_CFLAGS += -I$(src)/include
+ EXTRA_CFLAGS += -I$(src)/hal/phydm
+diff --git a/include/rtw_wifi_regd.h b/include/rtw_wifi_regd.h
+index aea6365..0a67614 100644
+--- a/include/rtw_wifi_regd.h
++++ b/include/rtw_wifi_regd.h
+@@ -7,6 +7,13 @@
+ #ifndef __RTW_WIFI_REGD_H__
+ #define __RTW_WIFI_REGD_H__
+ 
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0))
++#define ieee80211_band nl80211_band
++#define IEEE80211_BAND_2GHZ NL80211_BAND_2GHZ
++#define IEEE80211_BAND_5GHZ NL80211_BAND_5GHZ
++#define IEEE80211_NUM_BANDS NUM_NL80211_BANDS
++#endif
++
+ struct country_code_to_enum_rd {
+ 	u16 countrycode;
+ 	const char *iso_name;
+diff --git a/os_dep/linux/ioctl_cfg80211.c b/os_dep/linux/ioctl_cfg80211.c
+index 5b180b6..66b0870 100644
+--- a/os_dep/linux/ioctl_cfg80211.c
++++ b/os_dep/linux/ioctl_cfg80211.c
+@@ -2036,6 +2036,11 @@ static int cfg80211_rtw_change_iface(struct wiphy *wiphy,
+ void rtw_cfg80211_indicate_scan_done(_adapter *adapter, bool aborted)
+ {
+ 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(adapter);
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 8, 0))
++	struct cfg80211_scan_info info = {
++		.aborted = aborted
++	};
++#endif
+ 	_irqL	irqL;
+ 
+ 	_enter_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
+@@ -2051,7 +2056,11 @@ void rtw_cfg80211_indicate_scan_done(_adapter *adapter, bool aborted)
+ 		}
+ 		else
+ 		{
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 8, 0))
++			cfg80211_scan_done(pwdev_priv->scan_request, &info);
++#else
+ 			cfg80211_scan_done(pwdev_priv->scan_request, aborted);
++#endif
+ 		}
+ 
+ 		pwdev_priv->scan_request = NULL;
+diff --git a/os_dep/linux/ioctl_linux.c b/os_dep/linux/ioctl_linux.c
+index 22bb5c2..b1fb2b0 100644
+--- a/os_dep/linux/ioctl_linux.c
++++ b/os_dep/linux/ioctl_linux.c
+@@ -13855,7 +13855,7 @@ static int rtw_ioctl_standard_wext_private(struct net_device *dev, struct ifreq
+ static int rtw_ioctl_wext_private(struct net_device *dev, struct ifreq *rq)
+ {
+ #ifdef CONFIG_COMPAT
+-	if(is_compat_task())
++	if(in_compat_syscall())
+ 		return rtw_ioctl_compat_wext_private( dev, rq );
+ 	else
+ #endif // CONFIG_COMPAT
+diff --git a/os_dep/linux/rtw_android.c b/os_dep/linux/rtw_android.c
+index 8de7ff7..4a9fb7f 100644
+--- a/os_dep/linux/rtw_android.c
++++ b/os_dep/linux/rtw_android.c
+@@ -592,7 +592,7 @@ int rtw_android_priv_cmd(struct net_device *net, struct ifreq *ifr, int cmd)
+ 			goto exit;
+ 	}
+ #ifdef CONFIG_COMPAT
+-	if (is_compat_task()) {
++	if (in_compat_syscall()) {
+ 		/* User space is 32-bit, use compat ioctl */
+ 		compat_android_wifi_priv_cmd compat_priv_cmd;
+ 
+
+From 50c457625adb6c9f53eede4346f4e6122f7b8d23 Mon Sep 17 00:00:00 2001
+From: Timo Sarawinski <t.sarawinski@gmail.com>
+Date: Sat, 15 Oct 2016 18:22:11 +0200
+Subject: [PATCH 4/5] extra_cflags: changed -O1 to -O3
+
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 2725918..4e760f2 100755
+--- a/Makefile
++++ b/Makefile
+@@ -1,5 +1,5 @@
+ EXTRA_CFLAGS += $(USER_EXTRA_CFLAGS)
+-EXTRA_CFLAGS += -O1
++EXTRA_CFLAGS += -O3
+ #EXTRA_CFLAGS += -O3
+ #EXTRA_CFLAGS += -Wall
+ #EXTRA_CFLAGS += -Wextra
+
+From 9ea024081a23889ff45b80825c74cddc40d06bbb Mon Sep 17 00:00:00 2001
+From: Timo Sarawinski <t.sarawinski@gmail.com>
+Date: Sat, 15 Oct 2016 18:25:55 +0200
+Subject: [PATCH 5/5] changed default module path
+
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 4e760f2..897b413 100755
+--- a/Makefile
++++ b/Makefile
+@@ -919,7 +919,7 @@ ARCH ?= $(SUBARCH)
+ CROSS_COMPILE ?=
+ KVER  := $(shell uname -r)
+ KSRC := /lib/modules/$(KVER)/build
+-MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/
++MODDESTDIR := /lib/modules/$(KVER)/kernel/drivers/net/wireless/rtl8723bs/
+ INSTALL_PREFIX :=
+ endif
+ 
