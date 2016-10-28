@@ -103,8 +103,7 @@ post_configure_target() {
   $SED "s:CURL_OPENSSL_4:CURL_OPENSSL_3:" lib/libcurl.vers
 }
 
-post_makeinstall_target() {
-  rm -rf $INSTALL/usr/bin
-  mv $INSTALL/usr/lib/libcurl.so.4.4.0 $INSTALL/usr/lib/libcurl-compat.so
-  rm $INSTALL/usr/lib/libcurl.so*
+makeinstall_target() {
+  mkdir -p $INSTALL/usr/lib
+  cp lib/.libs/libcurl.so.4.4.0 $INSTALL/usr/lib/libcurl-compat.so
 }
