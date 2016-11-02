@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="reicast-libretro"
-PKG_VERSION="531e119"
+PKG_VERSION="3d6517f"
 PKG_REV="1"
 PKG_ARCH="x86_64 arm"
 PKG_LICENSE="GPLv2"
@@ -47,7 +47,6 @@ make_target() {
       make WITH_DYNAREC=x86_64
       ;;
   esac
-
 }
 
 makeinstall_target() {
