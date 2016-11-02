@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="scummvm-libretro"
-PKG_VERSION="b662fe1"
+PKG_VERSION="ecb2dc1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
