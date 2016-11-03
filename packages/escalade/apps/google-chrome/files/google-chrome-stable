@@ -24,4 +24,11 @@ if [ ! -x $CHROME_HOME ]; then
   install_chrome $CHROME_VER > /tmp/chrome.log 2>&1
 fi
 
+if [ -S /var/run/pulse/native -a ! -f /storage/.config/usepulse ]; then
+  systemctl stop pulseaudio
+  PULSE=1
+fi
+
 run_chrome "$@" > /tmp/chrome.log 2>&1
+
+[ "$PULSE" = "1" ] && systemctl start pulseaudio
