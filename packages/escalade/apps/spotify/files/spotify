@@ -23,4 +23,11 @@ if [ ! -x $SPOTIFY_HOME ]; then
   install_spotify > /tmp/spotify.log 2>&1
 fi
 
+if [ -S /var/run/pulse/native -a ! -f /storage/.config/usepulse ]; then
+  systemctl stop pulseaudio
+  PULSE=1
+fi
+
 run_spotify "$@" > /tmp/spotify.log 2>&1
+
+[ "$PULSE" = "1" ] && systemctl start pulseaudio
