@@ -40,7 +40,7 @@ post_unpack() {
 make_target() {
   case $PROJECT in
     RPi)
-      make -f makefile.libretro platform=rpi CC=$CC CXX=$CXX
+      make -f makefile.libretro platform=armv6 CC=$CC CXX=$CXX
       ;;
     RPi2)
       make -f makefile.libretro platform=rpi2 CC=$CC CXX=$CXX

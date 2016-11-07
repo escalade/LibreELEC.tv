@@ -44,11 +44,18 @@ configure_target() {
 
 make_target() {
   cd $ROOT/$PKG_BUILD
-  if [[ "$TARGET_FPU" =~ "neon" ]]; then
-    make -f Makefile.libretro HAVE_NEON=1 USE_DYNAREC=1 BUILTIN_GPU=neon
-  else
-    make -f Makefile.libretro USE_DYNAREC=1 BUILTIN_GPU=neon
-  fi
+  case $PROJECT in
+    RPi)
+      make -f Makefile.libretro
+      ;;
+    *)
+      if [[ "$TARGET_FPU" =~ "neon" ]]; then
+        make -f Makefile.libretro HAVE_NEON=1 USE_DYNAREC=1 BUILTIN_GPU=neon
+      else
+        make -f Makefile.libretro USE_DYNAREC=1 BUILTIN_GPU=neon
+      fi
+      ;;
+  esac
 }
 
 makeinstall_target() {
