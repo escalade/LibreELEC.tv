@@ -36,7 +36,7 @@ PKG_AUTORECONF="no"
 make_target() {
   case $PROJECT in
     RPi)
-      make CC=$CC platform=rpi
+      make CC=$CC platform=rpi1
       ;;
     RPi2)
       make CC=$CC platform=rpi2
