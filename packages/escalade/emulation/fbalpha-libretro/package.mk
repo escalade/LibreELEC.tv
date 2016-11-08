@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="fbalpha-libretro"
-PKG_VERSION="91a3ae1"
+PKG_VERSION="6d36b3a"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Non-commercial"
@@ -40,7 +40,7 @@ post_unpack() {
 make_target() {
   case $PROJECT in
     RPi)
-      make -f makefile.libretro platform=rpi CC=$CC CXX=$CXX
+      make -f makefile.libretro platform=armv CC=$CC CXX=$CXX
       ;;
     RPi2)
       make -f makefile.libretro platform=rpi2 CC=$CC CXX=$CXX
