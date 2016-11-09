@@ -36,7 +36,7 @@ make_target() {
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/bin
-  mkdir -p $INSTALL/usr/share/dstat
+  mkdir -p $INSTALL/usr/share
   cp dstat $INSTALL/usr/bin/
-  cp -R plugins $INSTALL/usr/share/dstat/
+  cp -R plugins $INSTALL/usr/share/dstat
 }
