@@ -35,6 +35,7 @@ OEM_APPS_COMMON=" \
   docker-system \
   dstat \
   htop \
+  nmon \
   NzbDrone \
   plexmediaserver-script \
   rsync \
