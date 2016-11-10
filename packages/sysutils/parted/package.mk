@@ -52,6 +52,6 @@ makeinstall_init() {
   mkdir -p $INSTALL/lib
     cp ../.$TARGET_NAME/parted/parted $INSTALL/sbin
     cp ../.$TARGET_NAME/partprobe/partprobe $INSTALL/sbin
-    cp $(get_build_dir readline)/.install_pkg/usr/lib/libreadline.so.6 $INSTALL/lib
+    cp $(get_build_dir readline)/.install_pkg/usr/lib/libreadline.so.? $INSTALL/lib
     cp $(get_build_dir netbsd-curses)/.install_pkg/usr/lib/libterminfo.so $INSTALL/lib
 }
