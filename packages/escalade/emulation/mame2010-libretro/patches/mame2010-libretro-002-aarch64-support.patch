@@ -1,0 +1,54 @@
+diff -Naur a/Makefile b/Makefile
+--- a/Makefile	2016-05-10 11:29:47.327664059 -0700
++++ b/Makefile	2016-05-10 12:17:03.192014526 -0700
+@@ -108,6 +108,9 @@
+ ifneq (,$(findstring ppc,$(ARCH)))
+ BIGENDIAN=1
+ endif
++ifneq (,$(findstring aarch64,$(PATH)))
++PTR64=1
++endif
+ 
+ # UNIX
+ ifeq ($(platform), unix)
+@@ -308,6 +311,17 @@
+    CFLAGS += -DARM
+ 	LIBS += -lstdc++ -lpthread
+ 
++# aarch64
++else ifneq (,$(findstring aarch64,$(platform)))
++   AARCH64_ENABLED = 1
++   EXTRA_RULES = 1
++   TARGETLIB := $(TARGET_NAME)_libretro.so
++   SHARED := -shared -Wl,--version-script=src/osd/retro/link.T
++   LDFLAGS += $(SHARED)
++   fpic = -fPIC
++   CC ?= g++
++   LIBS += -lstdc++ -lpthread
++
+ else ifeq ($(platform), wincross)
+    TARGETLIB := $(TARGET_NAME)_libretro.dll
+ 	TARGETOS = win32
+@@ -831,6 +845,10 @@
+ 	$(CC_AS) -c $(SRC)/osd/$(OSD)/libco/armeabi_asm.S -o $(LIBCOOBJ)/armeabi_asm.o
+ endif
+ 
++ifeq ($(AARCH64_ENABLED), 1)
++CFLAGS += -DAARCH64_ENABLED
++endif
++
+ $(OBJ)/%.o: $(SRC)/%.c | $(OSPREBUILD)
+ 	$(CC) $(CDEFS) $(CFLAGS) -c $< -o $@
+ 
+diff -Naur a/src/osd/retro/osinline.h b/src/osd/retro/osinline.h
+--- a/src/osd/retro/osinline.h	2015-11-25 10:20:46.000000000 -0800
++++ b/src/osd/retro/osinline.h	2016-05-10 12:11:55.327658072 -0700
+@@ -35,7 +35,7 @@
+ 
+ #endif
+ 
+-#if defined(ARM_ENABLED)
++#if defined(ARM_ENABLED) || defined(AARCH64_ENABLED)
+ 
+ #ifndef YieldProcessor
+ #define YieldProcessor() do {} while (0)
