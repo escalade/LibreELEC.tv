@@ -1,6 +1,7 @@
 [Unit]
 Description=TigerVNC
-After=graphical.target
+Requires=xorg.service
+After=xorg.service
 
 [Service]
 Environment=DISPLAY=:0.0
