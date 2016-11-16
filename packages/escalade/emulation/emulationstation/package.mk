@@ -23,6 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/Herdinger/EmulationStation.git"
 PKG_URL="https://github.com/Herdinger/EmulationStation/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="EmulationStation-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain SDL2 boost freetype curl cmake:host freeimage eigen emulationstation-theme-simple-dark emulationstation-theme-carbon"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="Emulationstation emulator frontend"
@@ -30,8 +31,8 @@ PKG_SHORTDESC="Emulationstation emulator frontend"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
-  mv $BUILD/EmulationStation* $BUILD/$PKG_NAME-$PKG_VERSION
+pre_configure_target() {
+  strip_gold
 }
 
 post_makeinstall_target() {  
