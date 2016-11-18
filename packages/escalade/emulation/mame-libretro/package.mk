@@ -19,12 +19,13 @@
 ################################################################################
 
 PKG_NAME="mame-libretro"
-PKG_VERSION="f3388c4"
+PKG_VERSION="eb83bd9"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MAME"
 PKG_SITE="https://github.com/libretro/mame"
 PKG_URL="https://github.com/libretro/mame/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="mame-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="MAME - Multiple Arcade Machine Emulator"
@@ -33,18 +34,8 @@ PKG_LONGDESC="MAME - Multiple Arcade Machine Emulator"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/mame-* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
 pre_make_target() {
   strip_lto
-  strip_gold
-
-  export OVERRIDE_CC="$CC"
-  export OVERRIDE_CXX="$CXX"
-  export OVERRIDE_LD="$CXX"
 }
 
 make_target() {
@@ -62,7 +53,8 @@ make_target() {
       make platform=armv7-neon-hardfloat-cortex-a9
       ;;
     Generic)
-      make -f Makefile.libretro
+      unset ARCH
+      make OSD="retro" verbose=1 RETRO=1 NOWERROR=1 OS="linux" TARGETOS="linux" CONFIG="libretro" NO_USE_MIDI="1" PTR64=1 TARGET=mame CC=$CC CXX=$CXX LD=$LD -j5
       ;;
   esac
 }
