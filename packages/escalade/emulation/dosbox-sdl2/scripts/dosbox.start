@@ -1,0 +1,15 @@
+#!/bin/sh
+
+. /etc/profile
+
+export SDL_AUDIODRIVER=alsa
+
+if [ ! -f /storage/.dosbox/dosbox-SDL2.conf ]; then
+  mkdir -p /storage/.dosbox
+  cp /etc/dosbox-SDL2.conf /storage/.dosbox/
+fi
+
+pidof kodi.bin > /dev/null && KODI=1
+[ "$KODI" = "1" ] && systemctl stop kodi
+dosbox "$@" > /tmp/dosbox.log 2>&1
+[ "$KODI" = "1" ] && systemctl start kodi

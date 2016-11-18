@@ -17,23 +17,19 @@
 ################################################################################
 
 PKG_NAME="dosbox-sdl2"
-PKG_VERSION="4db12e4"
+PKG_VERSION="825c0fa"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/duganchen/dosbox"
 PKG_URL="https://github.com/duganchen/dosbox/archive/$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 SDL2_net munt fluidsynth libpng glew"
+PKG_SOURCE_DIR="dosbox-$PKG_VERSION*"
+PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 SDL2_net munt libpng glew"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="DOSBox emulator SDL2 fork by duganchen"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
-
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/${PKG_NAME%-*}-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
-}
 
 PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
 			   --enable-core-inline \
@@ -47,4 +43,10 @@ pre_make_target() {
     sed -i s/C_TARGETCPU.*/C_TARGETCPU\ ARMV7LE/g config.h
   fi
   sed -i s/SVN/SDL2/g config.h
+}
+
+post_makeinstall_target() {
+  cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
+  mkdir -p $INSTALL/etc
+  cp $PKG_DIR/config/dosbox-SDL2.conf $INSTALL/etc/
 }
