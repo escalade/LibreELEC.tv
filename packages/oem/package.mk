@@ -55,7 +55,7 @@ OEM_APPS_GENERIC=" \
 
 OEM_EMU_COMMON=" \
   beetle-wswan-libretro \
-  dosbox-sdl \
+  dosbox-sdl2 \
   ds4drv \
   emulationstation \
   fbalpha-libretro \
