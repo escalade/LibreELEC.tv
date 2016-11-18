@@ -37,7 +37,6 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_prog_sdl_config=$SYSROOT_PREFIX/usr/bin/sdl-con
 			   --disable-catweasel \
 			   --enable-native-tools=$HOST_CC \
                            --enable-sdlui \
-			   --without-readline \
 			   --without-oss \
 			   --without-pulse"
 
@@ -72,5 +71,18 @@ post_makeinstall_target() {
     xvic
   do
     rm $INSTALL/usr/bin/$bin
+  done
+  # remove data files
+  for dir in \
+    C128 \
+    C64DTV \
+    CBM-II \
+    PET \
+    PLUS4 \
+    PRINTER \
+    SCPU64 \
+    VIC20
+  do
+    rm -rf $INSTALL/usr/lib/vice/$dir
   done
  }
