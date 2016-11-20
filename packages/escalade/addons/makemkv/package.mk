@@ -35,8 +35,6 @@ PKG_ADDON_REPOVERSION="8.0"
 
 PKG_AUTORECONF="no"
 
-PKG_MAINTAINER="unofficial.addon.pro"
-
 PKG_CONFIGURE_OPTS_TARGET="--disable-gui --enable-noec"
 
 post_unpack() {
@@ -73,4 +71,5 @@ addon() {
   cp $PKG_BUILD/out/libmakemkv.so.[0-9] $ADDON_BUILD/$PKG_ADDON_ID/lib
   cp $PKG_BUILD/out/libdriveio.so.[0-9] $ADDON_BUILD/$PKG_ADDON_ID/lib
   cp $PKG_BUILD/out/libmmbd.so.[0-9] $ADDON_BUILD/$PKG_ADDON_ID/lib
+  cp -PL $(get_build_dir libressl)/.install_pkg/usr/lib/libcrypto.so.?? $ADDON_BUILD/$PKG_ADDON_ID/lib
 }
