@@ -18,7 +18,7 @@ if [ -f /storage/.config/retroarch/kms ]; then
 fi
 
 # Launch RetroArch
-/usr/bin/retroarch "$@" > /tmp/retroarch.log 2>&1
+/usr/bin/retroarch -v "$@" > /tmp/retroarch.log 2>&1
 
 # Switch back to VT1
 [ -f /storage/.config/retroarch/kms ] && chvt 1
