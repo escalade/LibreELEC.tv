@@ -25,7 +25,8 @@ PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/scummvm"
 PKG_URL="https://github.com/libretro/scummvm/archive/$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain flac libmad"
+PKG_SOURCE_DIR="scummvm-$PKG_VERSION*"
+PKG_DEPENDS_TARGET="toolchain flac libmad munt"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="ScummVM with libretro backend."
 PKG_LONGDESC="ScummVM is a program which allows you to run certain classic graphical point-and-click adventure games, provided you already have their data files."
@@ -37,18 +38,26 @@ pre_configure_target() {
   strip_lto
 }
 
-post_unpack() {
-  mv $BUILD/scummvm* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
 configure_target() {
   :
 }
 
 make_target() {
-  CXXFLAGS="$CXXFLAGS -DHAVE_POSIX_MEMALIGN=1 -DUSE_FLAC -DUSE_MAD -DUSE_MT32EMU"
+  export CXXFLAGS="$CXXFLAGS -DHAVE_POSIX_MEMALIGN=1"
+  export LDFLAGS="$LDFLAGS -lmt32emu"
+  export ar="$AR cru"
   cd ../backends/platform/libretro/build/
-  make
+  case $PROJECT in
+    RPi)
+      make platform=armv6-hardfloat-arm1176jzf-s USE_FLAC=1 HAVE_MT32EMU=1
+      ;;
+    RPi2)
+      make platform=armv7-neon-hardfloat-cortex-a7 USE_FLAC=1 HAVE_MT32EMU=1
+      ;;
+    Generic)
+      make USE_FLAC=1 HAVE_MT32EMU=1
+      ;;
+  esac
 }
 
 makeinstall_target() {
