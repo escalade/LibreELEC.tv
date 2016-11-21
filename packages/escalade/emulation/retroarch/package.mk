@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="retroarch"
-PKG_VERSION="10d925e"
+PKG_VERSION="36fb6e1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
@@ -111,6 +111,7 @@ makeinstall_target() {
     cp $PKG_DIR/scripts/* $INSTALL/usr/bin
   
   # General configuration
+  sed -i -e "s/# savefile_directory =/savefile_directory = \/storage\/.config\/retroarch\/saves/" $INSTALL/etc/retroarch.cfg
   sed -i -e "s/# screenshot_directory =/screenshot_directory = \"\/storage\/screenshots\"/" $INSTALL/etc/retroarch.cfg
   sed -i -e "s/# libretro_directory =/libretro_directory = \"\/tmp\/cores\"/" $INSTALL/etc/retroarch.cfg
   sed -i -e "s/# libretro_info_path =/libretro_info_path = \"\/tmp\/cores\"/" $INSTALL/etc/retroarch.cfg
