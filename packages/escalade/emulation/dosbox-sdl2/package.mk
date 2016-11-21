@@ -24,7 +24,7 @@ PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/duganchen/dosbox"
 PKG_URL="https://github.com/duganchen/dosbox/archive/$PKG_VERSION.tar.gz"
 PKG_SOURCE_DIR="dosbox-$PKG_VERSION*"
-PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 SDL2_net munt libpng glew"
+PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 SDL2_net fluidsynth munt libpng glew"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="DOSBox emulator SDL2 fork by duganchen"
 
