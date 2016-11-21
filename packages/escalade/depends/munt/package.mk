@@ -32,4 +32,4 @@ PKG_AUTORECONF="no"
 
 PKG_CMAKE_OPTS_TARGET="-Dmunt_WITH_MT32EMU_QT=0 \
 		       -Dmunt_WITH_MT32EMU_SMF2WAV=0 \
-		       -Dlibmt32emu_SHARED=0"
+		       -Dlibmt32emu_SHARED=1"
