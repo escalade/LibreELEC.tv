@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="libgdiplus"
-PKG_VERSION="4.2"
+PKG_VERSION="ad14fdb"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/mono/libgdiplus"
@@ -32,7 +32,7 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 PKG_CONFIGURE_OPTS_TARGET="--enable-shared \
                            --with-libgif   \
-                           --with-libjpeg  \
+                           --with-libjpeg=$SYSROOT_PREFIX/usr \
                            --with-libtiff"
 
 pre_configure_target() {
