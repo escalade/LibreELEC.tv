@@ -1,0 +1,1573 @@
+From 1f3b71c2cb8c39383fb3dbdafa36d092de8af895 Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 31 May 2015 02:57:03 +0200
+Subject: [PATCH 01/19] CMakeLists.txt: Fix indentation
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ae7f1e7..3d4288d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -143,7 +143,7 @@ set(COMMON_LIBRARIES
+     ${Boost_LIBRARIES}
+     ${FREETYPE_LIBRARIES}
+     ${FreeImage_LIBRARIES}
+-	${SDL2_LIBRARY}
++    ${SDL2_LIBRARY}
+     ${CURL_LIBRARIES}
+     pugixml
+     nanosvg
+
+From bdf4242f04383ac6b514d7989a3b577b2122e40b Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 31 May 2015 02:57:39 +0200
+Subject: [PATCH 02/19] Add cec-keypresses.sh from
+ https://gist.github.com/bahamas10/6996290 (for initial testing)
+
+---
+ cec-keypresses.sh | 56 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+ create mode 100755 cec-keypresses.sh
+
+diff --git a/cec-keypresses.sh b/cec-keypresses.sh
+new file mode 100755
+index 0000000..781bc43
+--- /dev/null
++++ b/cec-keypresses.sh
+@@ -0,0 +1,56 @@
++#!/usr/bin/env bash
++#
++# react to cec keypresses in the jankiest way possible
++#
++# Author: Dave Eddy <dave@daveeddy.com>
++# Date: 10/15/2013
++# Licens: MIT
++# Tested on: Raspberry pi with libcec compiled from soure
++
++onright() {
++ 	echo 'right button pressed'
++}
++onleft() {
++	echo 'left button pressed'
++}
++ondown() {
++	echo 'down button pressed'
++}
++onup() {
++	echo 'up button pressed'
++}
++onselect() {
++	echo 'select button pressed'
++}
++onplay() {
++	echo 'play button pressed'
++}
++onpause() {
++	echo 'pause button pressed'
++}
++onforward() {
++	echo 'forward button pressed'
++}
++onbackward() {
++	echo 'back button pressed'
++}
++
++filter() {
++	perl -nle 'BEGIN{$|=1} /key pressed: (.*) \(.*\)/ && print $1'
++}
++
++echo as | cec-client | filter | \
++while read cmd; do
++	case "$cmd" in
++		right) onright;;
++		left) onleft;;
++		down) ondown;;
++		up) onup;;
++		select) onselect;;
++		play) onplay;;
++		pause) onpause;;
++		forward) onforward;;
++		backward) onbackward;;
++		*) echo "unrecognized button ($cmd)";;
++	esac
++done
+
+From da0bd0cf7ce3285a73f50faaa31f4e3f4aab077a Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 31 May 2015 02:58:07 +0200
+Subject: [PATCH 03/19] CMake/Packages: Add FindLibCEC.cmake
+
+---
+ CMake/Packages/FindLibCEC.cmake | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+ create mode 100644 CMake/Packages/FindLibCEC.cmake
+
+diff --git a/CMake/Packages/FindLibCEC.cmake b/CMake/Packages/FindLibCEC.cmake
+new file mode 100644
+index 0000000..f5e83d7
+--- /dev/null
++++ b/CMake/Packages/FindLibCEC.cmake
+@@ -0,0 +1,33 @@
++# - Try to find libCEC
++# Once done, this will define
++#
++#  LIBCEC_FOUND - system has libCEC
++#  LIBCEC_INCLUDE_DIRS - the libCEC include directories 
++#  LIBCEC_LIBRARIES - link these to use libCEC
++
++include(FindPkgMacros)
++findpkg_begin(LIBCEC)
++
++# Get path, convert backslashes as ${ENV_${var}}
++getenv_path(LIBCEC_HOME)
++
++# construct search paths
++set(LIBCEC_PREFIX_PATH ${LIBCEC_HOME} ${ENV_LIBCEC_HOME})
++create_search_paths(LIBCEC)
++
++# redo search if prefix path changed
++clear_if_changed(
++  LIBCEC_PREFIX_PATH
++  LIBCEC_LIBRARY_REL
++  LIBCEC_INCLUDE_DIR
++)
++
++use_pkgconfig(LIBCEC_PKGC libcec)
++
++find_path(LIBCEC_INCLUDE_DIR NAMES cec.h HINTS ${LIBCEC_INC_SEARCH_PATH} ${LIBCEC_PKGC_INCLUDE_DIRS})
++
++find_library(LIBCEC_LIBRARY_REL NAMES libcec.a HINTS ${LIBCEC_LIB_SEARCH_PATH} ${LIBCEC_PKGC_LIBDIR})
++
++make_library_set(LIBCEC_LIBRARY)
++
++findpkg_finish(LIBCEC)
+
+From ec82cefe7e1c09091e8d6b7b844a13adb544663b Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 31 May 2015 02:58:34 +0200
+Subject: [PATCH 04/19] CMake: Add libCEC as a dependency ("REQUIRED" for now,
+ should be optional later)
+
+---
+ CMakeLists.txt | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3d4288d..30f835c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -48,6 +48,7 @@ find_package(SDL2 REQUIRED)
+ find_package(Boost REQUIRED COMPONENTS system filesystem date_time locale)
+ find_package(Eigen3 REQUIRED)
+ find_package(CURL REQUIRED)
++find_package(LibCEC REQUIRED)
+ 
+ #add ALSA for Linux
+ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+@@ -96,6 +97,7 @@ set(COMMON_INCLUDE_DIRS
+     ${Boost_INCLUDE_DIRS}
+     ${EIGEN3_INCLUDE_DIR}
+     ${CURL_INCLUDE_DIR}
++    ${LIBCEC_INCLUDE_DIR}
+     ${CMAKE_CURRENT_SOURCE_DIR}/external
+     ${CMAKE_CURRENT_SOURCE_DIR}/es-core/src
+ )
+@@ -145,6 +147,7 @@ set(COMMON_LIBRARIES
+     ${FreeImage_LIBRARIES}
+     ${SDL2_LIBRARY}
+     ${CURL_LIBRARIES}
++    ${LIBCEC_LIBRARY}
+     pugixml
+     nanosvg
+ )
+
+From edb4a035d1cd07b2e815bd6495ce4e60aa66e502 Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 31 May 2015 02:59:02 +0200
+Subject: [PATCH 05/19] README: Build out-of-source, mention libCEC dependency
+
+---
+ README.md | 17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/README.md b/README.md
+index f6a51c2..6c3e50b 100644
+--- a/README.md
++++ b/README.md
+@@ -52,7 +52,7 @@ Building
+ 
+ EmulationStation uses some C++11 code, which means you'll need to use at least g++-4.7 on Linux, or VS2010 on Windows, to compile.
+ 
+-EmulationStation has a few dependencies. For building, you'll need CMake, SDL2, Boost (System, Filesystem, DateTime, Locale), FreeImage, FreeType, Eigen3, and cURL.  You also should probably install the `fonts-droid` package which contains fallback fonts for Chinese/Japanese/Korean characters, but ES will still work fine without it (this package is only used at run-time).
++EmulationStation has a few dependencies. For building, you'll need CMake, SDL2, Boost (System, Filesystem, DateTime, Locale), FreeImage, FreeType, Eigen3, libCEC, and cURL.  You also should probably install the `fonts-droid` package which contains fallback fonts for Chinese/Japanese/Korean characters, but ES will still work fine without it (this package is only used at run-time).
+ 
+ **On Debian/Ubuntu:**
+ All of this be easily installed with apt-get:
+@@ -63,12 +63,21 @@ sudo apt-get install libsdl2-dev libboost-system-dev libboost-filesystem-dev lib
+ Then, generate and build the Makefile with CMake:
+ ```bash
+ cd YourEmulationStationDirectory
+-cmake .
++mkdir build && cd build
++cmake ..
+ make
+ ```
+ 
+ **On the Raspberry Pi:**
+ 
++Short build instructions for Raspverry Pi 2:
++```bash
++cd YourEmulationStationDirectory
++mkdir build && cd build
++cmake -DCMAKE_CXX_COMPILER=g++-4.7 -DFREETYPE_INCLUDE_DIRS=/usr/include/freetype2 ..
++make
++```
++
+ Complete Raspberry Pi build instructions at [emulationstation.org](http://emulationstation.org/gettingstarted.html#install_rpi_standalone).
+ 
+ **On Windows:**
+@@ -85,7 +94,9 @@ Complete Raspberry Pi build instructions at [emulationstation.org](http://emulat
+ 
+ [cURL](http://curl.haxx.se/download.html) (you'll need to compile or get the pre-compiled DLL version)
+ 
+-(Remember to copy necessary .DLLs into the same folder as the executable: probably FreeImage.dll, freetype6.dll, SDL2.dll, libcurl.dll, and zlib1.dll. Exact list depends on if you built your libraries in "static" mode or not.)
++[libCEC](http://packages.pulse-eight.net/)
++
++(Remember to copy necessary .DLLs into the same folder as the executable: probably FreeImage.dll, freetype6.dll, SDL2.dll, libcurl.dll, libcec.dll, and zlib1.dll. Exact list depends on if you built your libraries in "static" mode or not.)
+ 
+ [CMake](http://www.cmake.org/cmake/resources/software.html) (this is used for generating the Visual Studio project)
+ 
+
+From e030cff3eceb578dcfd51928ce7d0de79a931b4d Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 31 May 2015 02:59:19 +0200
+Subject: [PATCH 06/19] CMake/Packages: Make FindLibCEC.cmake a bit more
+ flexible
+
+---
+ CMake/Packages/FindLibCEC.cmake | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/CMake/Packages/FindLibCEC.cmake b/CMake/Packages/FindLibCEC.cmake
+index f5e83d7..6e5ecfa 100644
+--- a/CMake/Packages/FindLibCEC.cmake
++++ b/CMake/Packages/FindLibCEC.cmake
+@@ -22,11 +22,15 @@ clear_if_changed(
+   LIBCEC_INCLUDE_DIR
+ )
+ 
++set(LIBCEC_LIBRARY_NAMES libcec.a libcec.dylib)
++
+ use_pkgconfig(LIBCEC_PKGC libcec)
+ 
++findpkg_framework(libCEC)
++
+ find_path(LIBCEC_INCLUDE_DIR NAMES cec.h HINTS ${LIBCEC_INC_SEARCH_PATH} ${LIBCEC_PKGC_INCLUDE_DIRS})
+ 
+-find_library(LIBCEC_LIBRARY_REL NAMES libcec.a HINTS ${LIBCEC_LIB_SEARCH_PATH} ${LIBCEC_PKGC_LIBDIR})
++find_library(LIBCEC_LIBRARY_REL NAMES ${LIBCEC_LIBRARY_NAMES} HINTS ${LIBCEC_LIB_SEARCH_PATH} ${LIBCEC_PKGC_LIBDIR})
+ 
+ make_library_set(LIBCEC_LIBRARY)
+ 
+
+From 4ebbbd11814bb48e5e998b8076dbe71e337f2cb7 Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 31 May 2015 03:13:53 +0200
+Subject: [PATCH 07/19] cec-keypresses.sh: Fix indentation
+
+---
+ cec-keypresses.sh | 44 ++++++++++++++++++++++----------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/cec-keypresses.sh b/cec-keypresses.sh
+index 781bc43..10b7d87 100755
+--- a/cec-keypresses.sh
++++ b/cec-keypresses.sh
+@@ -8,49 +8,49 @@
+ # Tested on: Raspberry pi with libcec compiled from soure
+ 
+ onright() {
+- 	echo 'right button pressed'
++    echo 'right button pressed'
+ }
+ onleft() {
+-	echo 'left button pressed'
++    echo 'left button pressed'
+ }
+ ondown() {
+-	echo 'down button pressed'
++    echo 'down button pressed'
+ }
+ onup() {
+-	echo 'up button pressed'
++    echo 'up button pressed'
+ }
+ onselect() {
+-	echo 'select button pressed'
++    echo 'select button pressed'
+ }
+ onplay() {
+-	echo 'play button pressed'
++    echo 'play button pressed'
+ }
+ onpause() {
+-	echo 'pause button pressed'
++    echo 'pause button pressed'
+ }
+ onforward() {
+-	echo 'forward button pressed'
++    echo 'forward button pressed'
+ }
+ onbackward() {
+-	echo 'back button pressed'
++    echo 'back button pressed'
+ }
+ 
+ filter() {
+-	perl -nle 'BEGIN{$|=1} /key pressed: (.*) \(.*\)/ && print $1'
++    perl -nle 'BEGIN{$|=1} /key pressed: (.*) \(.*\)/ && print $1'
+ }
+ 
+ echo as | cec-client | filter | \
+ while read cmd; do
+-	case "$cmd" in
+-		right) onright;;
+-		left) onleft;;
+-		down) ondown;;
+-		up) onup;;
+-		select) onselect;;
+-		play) onplay;;
+-		pause) onpause;;
+-		forward) onforward;;
+-		backward) onbackward;;
+-		*) echo "unrecognized button ($cmd)";;
+-	esac
++    case "$cmd" in
++        right) onright;;
++        left) onleft;;
++        down) ondown;;
++        up) onup;;
++        select) onselect;;
++        play) onplay;;
++        pause) onpause;;
++        forward) onforward;;
++        backward) onbackward;;
++        *) echo "unrecognized button ($cmd)";;
++    esac
+ done
+
+From e39bbffe7a12601495960d665ed3e8c7152316f7 Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sat, 13 Jun 2015 23:19:02 +0200
+Subject: [PATCH 08/19] Remove cec-keypresses.sh (not needed any more)
+
+---
+ cec-keypresses.sh | 56 -------------------------------------------------------
+ 1 file changed, 56 deletions(-)
+ delete mode 100755 cec-keypresses.sh
+
+diff --git a/cec-keypresses.sh b/cec-keypresses.sh
+deleted file mode 100755
+index 10b7d87..0000000
+--- a/cec-keypresses.sh
++++ /dev/null
+@@ -1,56 +0,0 @@
+-#!/usr/bin/env bash
+-#
+-# react to cec keypresses in the jankiest way possible
+-#
+-# Author: Dave Eddy <dave@daveeddy.com>
+-# Date: 10/15/2013
+-# Licens: MIT
+-# Tested on: Raspberry pi with libcec compiled from soure
+-
+-onright() {
+-    echo 'right button pressed'
+-}
+-onleft() {
+-    echo 'left button pressed'
+-}
+-ondown() {
+-    echo 'down button pressed'
+-}
+-onup() {
+-    echo 'up button pressed'
+-}
+-onselect() {
+-    echo 'select button pressed'
+-}
+-onplay() {
+-    echo 'play button pressed'
+-}
+-onpause() {
+-    echo 'pause button pressed'
+-}
+-onforward() {
+-    echo 'forward button pressed'
+-}
+-onbackward() {
+-    echo 'back button pressed'
+-}
+-
+-filter() {
+-    perl -nle 'BEGIN{$|=1} /key pressed: (.*) \(.*\)/ && print $1'
+-}
+-
+-echo as | cec-client | filter | \
+-while read cmd; do
+-    case "$cmd" in
+-        right) onright;;
+-        left) onleft;;
+-        down) ondown;;
+-        up) onup;;
+-        select) onselect;;
+-        play) onplay;;
+-        pause) onpause;;
+-        forward) onforward;;
+-        backward) onbackward;;
+-        *) echo "unrecognized button ($cmd)";;
+-    esac
+-done
+
+From 507d67ef2fac03d3cba544490e180cd39151727e Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sat, 13 Jun 2015 23:27:36 +0200
+Subject: [PATCH 09/19] CREDITS: Mention libCEC, add credits to myself
+
+---
+ CREDITS.md | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/CREDITS.md b/CREDITS.md
+index 49c70dd..dd2db51 100644
+--- a/CREDITS.md
++++ b/CREDITS.md
+@@ -4,6 +4,8 @@ Programming
+ UI Art & Design
+ 	Nils Bonenberger
+ 
++libCEC Support
++	Ismail "CeRiAl" Khatib
+ 
+ Libraries
+ =========
+@@ -29,8 +31,11 @@ Boost
+ nanosvg
+ 	https://github.com/memononen/nanosvg
+ 
++libCEC
++	http://www.pulse-eight.net/
++
+ Resources
+ =========
+ 
+ Open Sans font
+-	http://www.google.com/fonts/specimen/Open+Sans
+\ No newline at end of file
++	http://www.google.com/fonts/specimen/Open+Sans
+
+From 662af77e1425225957337339396001bd7092ec2c Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sat, 13 Jun 2015 23:29:19 +0200
+Subject: [PATCH 10/19] README: Add libcec-dev to "apt-get install"
+ commandline, fix typo
+
+---
+ README.md | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/README.md b/README.md
+index 6c3e50b..68a170e 100644
+--- a/README.md
++++ b/README.md
+@@ -57,7 +57,7 @@ EmulationStation has a few dependencies. For building, you'll need CMake, SDL2,
+ **On Debian/Ubuntu:**
+ All of this be easily installed with apt-get:
+ ```bash
+-sudo apt-get install libsdl2-dev libboost-system-dev libboost-filesystem-dev libboost-date-time-dev libboost-locale-dev libfreeimage-dev libfreetype6-dev libeigen3-dev libcurl4-openssl-dev libasound2-dev libgl1-mesa-dev build-essential cmake fonts-droid
++sudo apt-get install libsdl2-dev libboost-system-dev libboost-filesystem-dev libboost-date-time-dev libboost-locale-dev libfreeimage-dev libfreetype6-dev libeigen3-dev libcec-dev libcurl4-openssl-dev libasound2-dev libgl1-mesa-dev build-essential cmake fonts-droid
+ ```
+ 
+ Then, generate and build the Makefile with CMake:
+@@ -70,7 +70,7 @@ make
+ 
+ **On the Raspberry Pi:**
+ 
+-Short build instructions for Raspverry Pi 2:
++Short build instructions for Raspberry Pi 2:
+ ```bash
+ cd YourEmulationStationDirectory
+ mkdir build && cd build
+
+From c927c6a26244cbba8b1176860d736d51641fa375 Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sat, 13 Jun 2015 23:33:15 +0200
+Subject: [PATCH 11/19] ES-App/Main: Add code to handle our new custom
+ SDL_Event (for CEC)
+
+---
+ es-app/src/main.cpp | 38 ++++++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 16 deletions(-)
+
+diff --git a/es-app/src/main.cpp b/es-app/src/main.cpp
+index b8616de..67bbd5d 100644
+--- a/es-app/src/main.cpp
++++ b/es-app/src/main.cpp
+@@ -315,29 +315,35 @@ int main(int argc, char* argv[])
+ 
+ 	int lastTime = SDL_GetTicks();
+ 	bool running = true;
++	Uint32 CecEventType = InputManager::getInstance()->getCecEventType();
+ 
+ 	while(running)
+ 	{
+ 		SDL_Event event;
+ 		while(SDL_PollEvent(&event))
+ 		{
+-			switch(event.type)
++			if(CecEventType != ((Uint32)-1) && event.type == CecEventType)
+ 			{
+-				case SDL_JOYHATMOTION:
+-				case SDL_JOYBUTTONDOWN:
+-				case SDL_JOYBUTTONUP:
+-				case SDL_KEYDOWN:
+-				case SDL_KEYUP:
+-				case SDL_JOYAXISMOTION:
+-				case SDL_TEXTINPUT:
+-				case SDL_TEXTEDITING:
+-				case SDL_JOYDEVICEADDED:
+-				case SDL_JOYDEVICEREMOVED:
+-					InputManager::getInstance()->parseEvent(event, &window);
+-					break;
+-				case SDL_QUIT:
+-					running = false;
+-					break;
++				InputManager::getInstance()->parseEvent(event, &window);
++			}else{
++				switch(event.type)
++				{
++					case SDL_JOYHATMOTION:
++					case SDL_JOYBUTTONDOWN:
++					case SDL_JOYBUTTONUP:
++					case SDL_KEYDOWN:
++					case SDL_KEYUP:
++					case SDL_JOYAXISMOTION:
++					case SDL_TEXTINPUT:
++					case SDL_TEXTEDITING:
++					case SDL_JOYDEVICEADDED:
++					case SDL_JOYDEVICEREMOVED:
++						InputManager::getInstance()->parseEvent(event, &window);
++						break;
++					case SDL_QUIT:
++						running = false;
++						break;
++				}
+ 			}
+ 		}
+ 
+
+From a641f4d6007f50a2fae59f7f5ce4a3fb3c6b5da0 Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sat, 13 Jun 2015 23:40:38 +0200
+Subject: [PATCH 12/19] ES-Core/InputConfig: Add new InputType "TYPE_CEC", add
+ method to translate CEC-keycodes to strings
+
+---
+ es-core/src/InputConfig.cpp |   4 +
+ es-core/src/InputConfig.h   | 283 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 287 insertions(+)
+
+diff --git a/es-core/src/InputConfig.cpp b/es-core/src/InputConfig.cpp
+index 489e3c2..f4f13f3 100644
+--- a/es-core/src/InputConfig.cpp
++++ b/es-core/src/InputConfig.cpp
+@@ -17,6 +17,8 @@ std::string inputTypeToString(InputType type)
+ 		return "axis";
+ 	case TYPE_BUTTON:
+ 		return "button";
++	case TYPE_CEC:
++		return "cec_key";
+ 	case TYPE_HAT:
+ 		return "hat";
+ 	case TYPE_KEY:
+@@ -32,6 +34,8 @@ InputType stringToInputType(const std::string& type)
+ 		return TYPE_AXIS;
+ 	if(type == "button")
+ 		return TYPE_BUTTON;
++	if(type == "cec_key")
++		return TYPE_CEC;
+ 	if(type == "hat")
+ 		return TYPE_HAT;
+ 	if(type == "key")
+diff --git a/es-core/src/InputConfig.h b/es-core/src/InputConfig.h
+index 3a07729..2c5c6e6 100644
+--- a/es-core/src/InputConfig.h
++++ b/es-core/src/InputConfig.h
+@@ -5,14 +5,19 @@
+ #include <map>
+ #include <vector>
+ #include <string>
++#include <cectypes.h>
++#include <cec.h>
++#include <SDL.h>
+ #include <sstream>
+ 
+ #define DEVICE_KEYBOARD -1
++#define DEVICE_CEC -2
+ 
+ enum InputType
+ {
+ 	TYPE_AXIS,
+ 	TYPE_BUTTON,
++	TYPE_CEC,
+ 	TYPE_HAT,
+ 	TYPE_KEY,
+ 	TYPE_COUNT
+@@ -53,6 +58,279 @@ struct Input
+ 		return "neutral?";
+ 	}
+ 
++	std::string getCecKeyName(int keycode)
++	{
++		/* from cectypes.h */
++		switch (keycode)
++		{
++			case CEC::CEC_USER_CONTROL_CODE_SELECT:
++				return "Select";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_UP:
++				return "Up";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_DOWN:
++				return "Down";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_LEFT:
++				return "Left";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_RIGHT:
++				return "Right";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_RIGHT_UP:
++				return "Right-Up";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_RIGHT_DOWN:
++				return "Right-Down";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_LEFT_UP:
++				return "Left-Up";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_LEFT_DOWN:
++				return "Left-Down";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_ROOT_MENU:
++				return "Root-Menu";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_SETUP_MENU:
++				return "Setup-Menu";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_CONTENTS_MENU:
++				return "Contents-Menu";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_FAVORITE_MENU:
++				return "Favorite-Menu";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_EXIT:
++				return "Exit";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_TOP_MENU:
++				return "Top-Menu";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_DVD_MENU:
++				return "DVD-Menu";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER_ENTRY_MODE:
++				return "Number-Entry Mode";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER11:
++				return "Number 11";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER12:
++				return "Number 12";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER0:
++				return "Number 0";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER1:
++				return "Number 1";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER2:
++				return "Number 2";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER3:
++				return "Number 3";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER4:
++				return "Number 4";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER5:
++				return "Number 5";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER6:
++				return "Number 6";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER7:
++				return "Number 7";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER8:
++				return "Number 8";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NUMBER9:
++				return "Number 9";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_DOT:
++				return "Dot";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_ENTER:
++				return "Enter";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_CLEAR:
++				return "Clear";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_NEXT_FAVORITE:
++				return "Next Favorite";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_CHANNEL_UP:
++				return "Channel-Up";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_CHANNEL_DOWN:
++				return "Channel-Down";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PREVIOUS_CHANNEL:
++				return "Previous Channel";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_SOUND_SELECT:
++				return "Sound Select";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_INPUT_SELECT:
++				return "Input Select";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_DISPLAY_INFORMATION:
++				return "Display Information";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_HELP:
++				return "Help";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PAGE_UP:
++				return "Page-Up";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PAGE_DOWN:
++				return "Page-Down";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_POWER:
++				return "Power";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_VOLUME_UP:
++				return "Volume-Up";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_VOLUME_DOWN:
++				return "Volume-Down";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_MUTE:
++				return "Mute";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PLAY:
++				return "Play";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_STOP:
++				return "Stop";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PAUSE:
++				return "Pause";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_RECORD:
++				return "Record";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_REWIND:
++				return "Rewind";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_FAST_FORWARD:
++				return "Fast-Forward";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_EJECT:
++				return "Eject";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_FORWARD:
++				return "Forward";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_BACKWARD:
++				return "Backward";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_STOP_RECORD:
++				return "Stop-Record";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PAUSE_RECORD:
++				return "Pause-Record";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_ANGLE:
++				return "Angle";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_SUB_PICTURE:
++				return "Sub-Picture";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_VIDEO_ON_DEMAND:
++				return "Video-On-Demand";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_ELECTRONIC_PROGRAM_GUIDE:
++				return "Electronic Program Guide";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_TIMER_PROGRAMMING:
++				return "Timer Programming";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_INITIAL_CONFIGURATION:
++				return "Initial Configuration";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_SELECT_BROADCAST_TYPE:
++				return "Broadcast Type";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_SELECT_SOUND_PRESENTATION:
++				return "Sound Presentation";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PLAY_FUNCTION:
++				return "Play-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PAUSE_PLAY_FUNCTION:
++				return "Pause-Play-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_RECORD_FUNCTION:
++				return "Record-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_PAUSE_RECORD_FUNCTION:
++				return "Pause-Record-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_STOP_FUNCTION:
++				return "Stop-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_MUTE_FUNCTION:
++				return "Mute-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_RESTORE_VOLUME_FUNCTION:
++				return "Restore-Volume-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_TUNE_FUNCTION:
++				return "Tune-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_SELECT_MEDIA_FUNCTION:
++				return "Select-Media-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_SELECT_AV_INPUT_FUNCTION:
++				return "Select-AV-Input-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_SELECT_AUDIO_INPUT_FUNCTION:
++				return "Select-Audio-Input-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_POWER_TOGGLE_FUNCTION:
++				return "Power-Toggle-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_POWER_OFF_FUNCTION:
++				return "Power-Off-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_POWER_ON_FUNCTION:
++				return "Power-On-Function";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_F1_BLUE:
++				return "F1-Blue";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_F2_RED:
++				return "F2-Red";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_F3_GREEN:
++				return "F3-Green";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_F4_YELLOW:
++				return "F4-Yellow";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_F5:
++				return "F5";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_DATA:
++				return "Data";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_AN_RETURN:
++				return "AN-Return";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_AN_CHANNELS_LIST:
++				return "AN-Channels-List";
++				break;
++			case CEC::CEC_USER_CONTROL_CODE_UNKNOWN:
++			default:
++				return "UNKNOWN";
++				break;
++		}
++	}
++
+ 	std::string string()
+ 	{
+ 		std::stringstream stream;
+@@ -70,6 +348,9 @@ struct Input
+ 			case TYPE_KEY:
+ 				stream << "Key " << SDL_GetKeyName((SDL_Keycode)id);
+ 				break;
++			case TYPE_CEC:
++				stream << "Key " << getCecKeyName(id);
++				break;
+ 			default:
+ 				stream << "Input to string error";
+ 				break;
+@@ -92,6 +373,8 @@ class InputConfig
+ 	inline const std::string& getDeviceName() { return mDeviceName; }
+ 	inline const std::string& getDeviceGUIDString() { return mDeviceGUID; }
+ 
++	static std::string getCecKeyName(int keycode);
++
+ 	//Returns true if Input is mapped to this name, false otherwise.
+ 	bool isMappedTo(const std::string& name, Input input);
+ 
+
+From 93eafb0ad793facc834e7d6fb8380a1ec3a5b95d Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 14 Jun 2015 00:01:20 +0200
+Subject: [PATCH 13/19] ES-Core/InputManager: Add support for CEC-devices
+
+---
+ es-core/src/InputManager.cpp | 303 ++++++++++++++++++++++++++++++++++---------
+ es-core/src/InputManager.h   |  15 +++
+ 2 files changed, 258 insertions(+), 60 deletions(-)
+
+diff --git a/es-core/src/InputManager.cpp b/es-core/src/InputManager.cpp
+index c7f2a0c..af9bad1 100644
+--- a/es-core/src/InputManager.cpp
++++ b/es-core/src/InputManager.cpp
+@@ -10,6 +10,45 @@
+ #include <boost/filesystem.hpp>
+ 
+ #define KEYBOARD_GUID_STRING "-1"
++#define CEC_GUID_STRING "-2"
++
++//using namespace CEC;
++using namespace std;
++//using namespace PLATFORM;
++
++#define CEC_CONFIG_VERSION CEC::CEC_CLIENT_VERSION_CURRENT;
++
++#include <cecloader.h>
++
++/*
++class CReconnect : public PLATFORM::CThread
++{
++public:
++	static CReconnect& Get(void)
++	{
++		static CReconnect _instance;
++		return _instance;
++	}
++
++	virtual ~CReconnect(void) {}
++
++	void* Process(void)
++	{
++		if(gParser)
++		{
++			gParser->Close();
++			if(!gParser->Open(gStrPort.c_str()))
++			{
++				LOG(LogInfo) << "Failed to reconnect\n";
++			}
++		}
++		return NULL;
++	}
++
++private:
++	CReconnect(void) {}
++};
++*/
+ 
+ // SO HEY POTENTIAL POOR SAP WHO IS TRYING TO MAKE SENSE OF ALL THIS (by which I mean my future self)
+ // There are like four distinct IDs used for joysticks (crazy, right?)
+@@ -43,6 +82,46 @@ InputManager* InputManager::getInstance()
+ 	return mInstance;
+ }
+ 
++Uint32 InputManager::getCecEventType() { return CecEventType; }
++
++int InputManager::CecKeyPress(void *UNUSED(cbParam), const CEC::cec_keypress key)
++{
++	bool* keyPressed = new bool(true);
++	SDL_Event* event = new SDL_Event();
++	Uint32 CecEventType = InputManager::getInstance()->getCecEventType();
++
++	if (key.duration > 0)
++		*keyPressed = false;
++
++	event->type = CecEventType;
++	event->user.code = key.keycode;
++	event->user.data1 = keyPressed;
++	event->user.data2 = NULL;
++
++	SDL_PushEvent(event);
++
++	return 0;
++}
++
++int InputManager::CecAlert(void *UNUSED(cbParam), const CEC::libcec_alert type, const CEC::libcec_parameter UNUSED(param))
++{
++	/*
++	switch (type)
++	{
++		case CEC::CEC_ALERT_CONNECTION_LOST:
++			if (!CReconnect::Get().IsRunning())
++			{
++				LOG(LogInfo) << "Connection lost - trying to reconnect\n";
++				CReconnect::Get().CreateThread(false);
++			}
++			break;
++		default:
++			break;
++	}
++	*/
++	return 0;
++}
++
+ void InputManager::init()
+ {
+ 	if(initialized())
+@@ -62,12 +141,76 @@ void InputManager::init()
+ 
+ 	mKeyboardInputConfig = new InputConfig(DEVICE_KEYBOARD, "Keyboard", KEYBOARD_GUID_STRING);
+ 	loadInputConfig(mKeyboardInputConfig);
++
++	// try to register a custom SDL_Event for CEC-keypresses
++	CecEventType = (Uint32)-1;
++	CecEventType = SDL_RegisterEvents(CEC::CEC_USER_CONTROL_CODE_MAX);
++	if(CecEventType != ((Uint32)-1)) {
++		// try to initialize libcec
++		gConfig.Clear();
++		gCallbacks.Clear();
++		snprintf(gConfig.strDeviceName, 13, "EmuStation");
++		gConfig.clientVersion		= CEC_CONFIG_VERSION;
++		gConfig.bActivateSource		= 0;
++		gCallbacks.CBCecKeyPress	= &CecKeyPress;
++		gCallbacks.CBCecAlert		= &CecAlert;
++		gConfig.callbacks			= &gCallbacks;
++
++		gConfig.deviceTypes.Add(CEC::CEC_DEVICE_TYPE_PLAYBACK_DEVICE);
++
++		/*
++		// set the primary device type
++		gConfig.deviceTypes.Clear();
++		gConfig.deviceTypes.Add(config.deviceTypes[0]);
++		*/
++
++		gParser = LibCecInitialise(&gConfig);
++		if(!gParser)
++		{
++			LOG(LogInfo) << "Could not load libcec.so";
++
++			if(gParser)
++				UnloadLibCec(gParser);
++		}else{
++			std::string gStrPort = getConfigPath();
++
++			// init video on targets that need this
++			gParser->InitVideoStandalone();
++
++			LOG(LogInfo) << "CEC Parser created - libCEC version " << gParser->ToString((CEC::cec_server_version)gConfig.serverVersion);
++
++			CEC::cec_adapter devices[10];
++			uint8_t iDevicesFound = gParser->FindAdapters(devices, 10, NULL);
++			if(iDevicesFound <= 0)
++			{
++				LOG(LogInfo) << "No CEC devices found";
++				UnloadLibCec(gParser);
++			}else{
++				LOG(LogInfo) << std::endl << " path:     " << devices[0].path << std::endl <<
++					" com port: " << devices[0].comm << std::endl << std::endl;
++				gStrPort = devices[0].comm;
++			}
++
++			LOG(LogInfo) << "Opening a connection to the CEC adapter...";
++
++			if(!gParser->Open(gStrPort.c_str()))
++			{
++				LOG(LogInfo) << "Unable to open the device on port " << gStrPort;
++				UnloadLibCec(gParser);
++			}
++
++			gParser->SetActiveSource();
++
++			mCECInputConfig = new InputConfig(DEVICE_CEC, "CEC-Device", CEC_GUID_STRING);
++			loadInputConfig(mCECInputConfig);
++		}
++	}
+ }
+ 
+ void InputManager::addJoystickByDeviceIndex(int id)
+ {
+ 	assert(id >= 0 && id < SDL_NumJoysticks());
+-	
++
+ 	// open joystick & add to our list
+ 	SDL_Joystick* joy = SDL_JoystickOpen(id);
+ 	assert(joy);
+@@ -148,6 +291,15 @@ void InputManager::deinit()
+ 		mKeyboardInputConfig = NULL;
+ 	}
+ 
++	if(mCECInputConfig != NULL)
++	{
++		delete mCECInputConfig;
++		mCECInputConfig = NULL;
++	}
++
++	gParser->Close();
++	UnloadLibCec(gParser);
++
+ 	SDL_JoystickEventState(SDL_DISABLE);
+ 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+ }
+@@ -157,6 +309,8 @@ int InputManager::getButtonCountByDevice(SDL_JoystickID id)
+ {
+ 	if(id == DEVICE_KEYBOARD)
+ 		return 120; //it's a lot, okay.
++	else if(id == DEVICE_CEC)
++		return (int)CEC::CEC_USER_CONTROL_CODE_MAX;
+ 	else
+ 		return SDL_JoystickNumButtons(mJoysticks[id]);
+ }
+@@ -165,6 +319,8 @@ InputConfig* InputManager::getInputConfigByDevice(int device)
+ {
+ 	if(device == DEVICE_KEYBOARD)
+ 		return mKeyboardInputConfig;
++	else if(device == DEVICE_CEC)
++		return mCECInputConfig;
+ 	else
+ 		return mInputConfigs[device];
+ }
+@@ -172,72 +328,93 @@ InputConfig* InputManager::getInputConfigByDevice(int device)
+ bool InputManager::parseEvent(const SDL_Event& ev, Window* window)
+ {
+ 	bool causedEvent = false;
+-	switch(ev.type)
+-	{
+-	case SDL_JOYAXISMOTION:
+-		//if it switched boundaries
+-		if((abs(ev.jaxis.value) > DEADZONE) != (abs(mPrevAxisValues[ev.jaxis.which][ev.jaxis.axis]) > DEADZONE))
+-		{
+-			int normValue;
+-			if(abs(ev.jaxis.value) <= DEADZONE)
+-				normValue = 0;
+-			else
+-				if(ev.jaxis.value > 0)
+-					normValue = 1;
+-				else
+-					normValue = -1;
+-
+-			window->input(getInputConfigByDevice(ev.jaxis.which), Input(ev.jaxis.which, TYPE_AXIS, ev.jaxis.axis, normValue, false));
+-			causedEvent = true;
+-		}
+ 
+-		mPrevAxisValues[ev.jaxis.which][ev.jaxis.axis] = ev.jaxis.value;
+-		return causedEvent;
+-
+-	case SDL_JOYBUTTONDOWN:
+-	case SDL_JOYBUTTONUP:
+-		window->input(getInputConfigByDevice(ev.jbutton.which), Input(ev.jbutton.which, TYPE_BUTTON, ev.jbutton.button, ev.jbutton.state == SDL_PRESSED, false));
+-		return true;
+-
+-	case SDL_JOYHATMOTION:
+-		window->input(getInputConfigByDevice(ev.jhat.which), Input(ev.jhat.which, TYPE_HAT, ev.jhat.hat, ev.jhat.value, false));
+-		return true;
++	if(CecEventType != ((Uint32)-1) && ev.type == CecEventType)
++	{
++		bool* keyPressed = (bool*)ev.user.data1;
+ 
+-	case SDL_KEYDOWN:
+-		if(ev.key.keysym.sym == SDLK_BACKSPACE && SDL_IsTextInputActive())
++		if(*keyPressed)
+ 		{
+-			window->textInput("\b");
++			/*
++			if(ev.key.repeat)
++				return false;
++			*/
++			window->input(getInputConfigByDevice(DEVICE_CEC), Input(DEVICE_CEC, TYPE_CEC, ev.user.code, 1, false));
++			delete keyPressed;
++			return true;
++		}else{
++			window->input(getInputConfigByDevice(DEVICE_CEC), Input(DEVICE_CEC, TYPE_CEC, ev.user.code, 0, false));
++			delete keyPressed;
++			return true;
+ 		}
+-
+-		if(ev.key.repeat)
+-			return false;
+-
+-		if(ev.key.keysym.sym == SDLK_F4)
++	}else{
++		switch(ev.type)
+ 		{
+-			SDL_Event* quit = new SDL_Event();
+-			quit->type = SDL_QUIT;
+-			SDL_PushEvent(quit);
++		case SDL_JOYAXISMOTION:
++			//if it switched boundaries
++			if((abs(ev.jaxis.value) > DEADZONE) != (abs(mPrevAxisValues[ev.jaxis.which][ev.jaxis.axis]) > DEADZONE))
++			{
++				int normValue;
++				if(abs(ev.jaxis.value) <= DEADZONE)
++					normValue = 0;
++				else
++					if(ev.jaxis.value > 0)
++						normValue = 1;
++					else
++						normValue = -1;
++
++				window->input(getInputConfigByDevice(ev.jaxis.which), Input(ev.jaxis.which, TYPE_AXIS, ev.jaxis.axis, normValue, false));
++				causedEvent = true;
++			}
++
++			mPrevAxisValues[ev.jaxis.which][ev.jaxis.axis] = ev.jaxis.value;
++			return causedEvent;
++
++		case SDL_JOYBUTTONDOWN:
++		case SDL_JOYBUTTONUP:
++			window->input(getInputConfigByDevice(ev.jbutton.which), Input(ev.jbutton.which, TYPE_BUTTON, ev.jbutton.button, ev.jbutton.state == SDL_PRESSED, false));
++			return true;
++
++		case SDL_JOYHATMOTION:
++			window->input(getInputConfigByDevice(ev.jhat.which), Input(ev.jhat.which, TYPE_HAT, ev.jhat.hat, ev.jhat.value, false));
++			return true;
++
++		case SDL_KEYDOWN:
++			if(ev.key.keysym.sym == SDLK_BACKSPACE && SDL_IsTextInputActive())
++			{
++				window->textInput("\b");
++			}
++
++			if(ev.key.repeat)
++				return false;
++
++			if(ev.key.keysym.sym == SDLK_F4)
++			{
++				SDL_Event* quit = new SDL_Event();
++				quit->type = SDL_QUIT;
++				SDL_PushEvent(quit);
++				return false;
++			}
++
++			window->input(getInputConfigByDevice(DEVICE_KEYBOARD), Input(DEVICE_KEYBOARD, TYPE_KEY, ev.key.keysym.sym, 1, false));
++			return true;
++
++		case SDL_KEYUP:
++			window->input(getInputConfigByDevice(DEVICE_KEYBOARD), Input(DEVICE_KEYBOARD, TYPE_KEY, ev.key.keysym.sym, 0, false));
++			return true;
++
++		case SDL_TEXTINPUT:
++			window->textInput(ev.text.text);
++			break;
++
++		case SDL_JOYDEVICEADDED:
++			addJoystickByDeviceIndex(ev.jdevice.which); // ev.jdevice.which is a device index
++			return true;
++
++		case SDL_JOYDEVICEREMOVED:
++			removeJoystickByJoystickID(ev.jdevice.which); // ev.jdevice.which is an SDL_JoystickID (instance ID)
+ 			return false;
+ 		}
+-
+-		window->input(getInputConfigByDevice(DEVICE_KEYBOARD), Input(DEVICE_KEYBOARD, TYPE_KEY, ev.key.keysym.sym, 1, false));
+-		return true;
+-
+-	case SDL_KEYUP:
+-		window->input(getInputConfigByDevice(DEVICE_KEYBOARD), Input(DEVICE_KEYBOARD, TYPE_KEY, ev.key.keysym.sym, 0, false));
+-		return true;
+-
+-	case SDL_TEXTINPUT:
+-		window->textInput(ev.text.text);
+-		break;
+-
+-	case SDL_JOYDEVICEADDED:
+-		addJoystickByDeviceIndex(ev.jdevice.which); // ev.jdevice.which is a device index
+-		return true;
+-
+-	case SDL_JOYDEVICEREMOVED:
+-		removeJoystickByJoystickID(ev.jdevice.which); // ev.jdevice.which is an SDL_JoystickID (instance ID)
+-		return false;
+ 	}
+ 
+ 	return false;
+@@ -425,6 +602,9 @@ int InputManager::getNumConfiguredDevices()
+ 	if(mKeyboardInputConfig->isConfigured())
+ 		num++;
+ 
++	if(mCECInputConfig->isConfigured())
++		num++;
++
+ 	return num;
+ }
+ 
+@@ -433,6 +613,9 @@ std::string InputManager::getDeviceGUIDString(int deviceId)
+ 	if(deviceId == DEVICE_KEYBOARD)
+ 		return KEYBOARD_GUID_STRING;
+ 
++	if(deviceId == DEVICE_CEC)
++		return CEC_GUID_STRING;
++
+ 	auto it = mJoysticks.find(deviceId);
+ 	if(it == mJoysticks.end())
+ 	{
+diff --git a/es-core/src/InputManager.h b/es-core/src/InputManager.h
+index a083e90..1a81761 100644
+--- a/es-core/src/InputManager.h
++++ b/es-core/src/InputManager.h
+@@ -1,5 +1,9 @@
+ #pragma once
+ 
++#define UNUSED(x) UNUSED_ ## x __attribute__((unused))
++
++#include <cectypes.h>
++#include <cec.h>
+ #include <SDL.h>
+ #include <vector>
+ #include <map>
+@@ -23,6 +27,16 @@ class InputManager
+ 	std::map<SDL_JoystickID, SDL_Joystick*> mJoysticks;
+ 	std::map<SDL_JoystickID, InputConfig*> mInputConfigs;
+ 	InputConfig* mKeyboardInputConfig;
++	InputConfig* mCECInputConfig;
++
++	std::string gStrPort;
++	CEC::ICECAdapter* gParser;
++	CEC::ICECCallbacks gCallbacks;
++	CEC::libcec_configuration gConfig;
++	Uint32 CecEventType;
++
++	static int CecKeyPress(void*, CEC::cec_keypress);
++	static int CecAlert(void *cbParam, const CEC::libcec_alert type, const CEC::libcec_parameter param);
+ 
+ 	std::map<SDL_JoystickID, int*> mPrevAxisValues;
+ 
+@@ -48,6 +62,7 @@ class InputManager
+ 	int getNumJoysticks();
+ 	int getButtonCountByDevice(int deviceId);
+ 	int getNumConfiguredDevices();
++	Uint32 getCecEventType();
+ 
+ 	std::string getDeviceGUIDString(int deviceId);
+ 
+
+From 3f842b25ca7f5e05f8cf266403e3cf3221caef22 Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 14 Jun 2015 00:03:30 +0200
+Subject: [PATCH 14/19] ES-Core/GUIs/GuiDetectDevice: Add "TYPE_CEC" as an
+ allowed inputType
+
+---
+ es-core/src/guis/GuiDetectDevice.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/es-core/src/guis/GuiDetectDevice.cpp b/es-core/src/guis/GuiDetectDevice.cpp
+index 55f97da..03a1c4c 100644
+--- a/es-core/src/guis/GuiDetectDevice.cpp
++++ b/es-core/src/guis/GuiDetectDevice.cpp
+@@ -80,7 +80,7 @@ bool GuiDetectDevice::input(InputConfig* config, Input input)
+ 		return true;
+ 	}
+ 
+-	if(input.type == TYPE_BUTTON || input.type == TYPE_KEY)
++	if(input.type == TYPE_BUTTON || input.type == TYPE_CEC || input.type == TYPE_KEY)
+ 	{
+ 		if(input.value && mHoldingConfig == NULL)
+ 		{
+
+From 988a5a8fbd2466af692188bf7c0807198d460568 Mon Sep 17 00:00:00 2001
+From: CeRiAl <ikhatib@gmail.com>
+Date: Sun, 14 Jun 2015 00:52:28 +0200
+Subject: [PATCH 15/19] ES-Core/InputManager: Clean up the logging
+
+---
+ es-core/src/InputManager.cpp | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/es-core/src/InputManager.cpp b/es-core/src/InputManager.cpp
+index af9bad1..af1d715 100644
+--- a/es-core/src/InputManager.cpp
++++ b/es-core/src/InputManager.cpp
+@@ -177,7 +177,7 @@ void InputManager::init()
+ 			// init video on targets that need this
+ 			gParser->InitVideoStandalone();
+ 
+-			LOG(LogInfo) << "CEC Parser created - libCEC version " << gParser->ToString((CEC::cec_server_version)gConfig.serverVersion);
++			LOG(LogInfo) << "Initialized libCEC version " << gParser->ToString((CEC::cec_server_version)gConfig.serverVersion);
+ 
+ 			CEC::cec_adapter devices[10];
+ 			uint8_t iDevicesFound = gParser->FindAdapters(devices, 10, NULL);
+@@ -186,8 +186,7 @@ void InputManager::init()
+ 				LOG(LogInfo) << "No CEC devices found";
+ 				UnloadLibCec(gParser);
+ 			}else{
+-				LOG(LogInfo) << std::endl << " path:     " << devices[0].path << std::endl <<
+-					" com port: " << devices[0].comm << std::endl << std::endl;
++				LOG(LogInfo) << "Added CEC device " << devices[0].path << " (com port: " << devices[0].comm << ")";
+ 				gStrPort = devices[0].comm;
+ 			}
+ 
+
+From 8334e7b9c586f5ad964cf696143e7c65237e827e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tobias=20G=C3=B6bel?= <goebel@fh-swf.de>
+Date: Fri, 10 Jun 2016 13:30:15 +0200
+Subject: [PATCH 16/19] Fixed build with libCEC 3 (credits to
+ https://github.com/fkmclane/overlay/blob/master/media-tv/plex-home-theater/files/libcec.patch)
+
+---
+ es-core/src/InputManager.cpp | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/es-core/src/InputManager.cpp b/es-core/src/InputManager.cpp
+index af1d715..532a8e5 100644
+--- a/es-core/src/InputManager.cpp
++++ b/es-core/src/InputManager.cpp
+@@ -16,7 +16,11 @@
+ using namespace std;
+ //using namespace PLATFORM;
+ 
+-#define CEC_CONFIG_VERSION CEC::CEC_CLIENT_VERSION_CURRENT;
++#ifdef _LIBCEC_VERSION_CURRENT
++  #define CEC_CONFIG_VERSION _LIBCEC_VERSION_CURRENT;
++#else
++  #define CEC_CONFIG_VERSION CEC::CEC_CLIENT_VERSION_CURRENT;
++#endif
+ 
+ #include <cecloader.h>
+ 
+@@ -176,8 +180,11 @@ void InputManager::init()
+ 
+ 			// init video on targets that need this
+ 			gParser->InitVideoStandalone();
+-
++#if CEC_LIB_VERSION_MAJOR >= 3
++			LOG(LogInfo) << "Initialized libCEC version " << gParser->VersionToString(gConfig.serverVersion).c_str();
++#else
+ 			LOG(LogInfo) << "Initialized libCEC version " << gParser->ToString((CEC::cec_server_version)gConfig.serverVersion);
++#endif
+ 
+ 			CEC::cec_adapter devices[10];
+ 			uint8_t iDevicesFound = gParser->FindAdapters(devices, 10, NULL);
+
+From 046c6248716184b21b203e6c478478456843b5e6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tobias=20G=C3=B6bel?= <goebel@fh-swf.de>
+Date: Fri, 10 Jun 2016 15:45:57 +0200
+Subject: [PATCH 17/19] added ${CMAKE_DL_LIBS} to libraries in CMakeLists.txt
+
+---
+ CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 30f835c..ce94865 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -147,6 +147,7 @@ set(COMMON_LIBRARIES
+     ${FreeImage_LIBRARIES}
+     ${SDL2_LIBRARY}
+     ${CURL_LIBRARIES}
++    ${CMAKE_DL_LIBS}
+     ${LIBCEC_LIBRARY}
+     pugixml
+     nanosvg
+
+From cdc8f0a70ba101adf6fc5229d1af4e74dd893458 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tobias=20G=C3=B6bel?= <goebel@fh-swf.de>
+Date: Fri, 10 Jun 2016 15:49:20 +0200
+Subject: [PATCH 18/19] Fix SegFault when no CEC adapter is found
+
+---
+ es-core/src/InputManager.cpp | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/es-core/src/InputManager.cpp b/es-core/src/InputManager.cpp
+index 532a8e5..4fbe820 100644
+--- a/es-core/src/InputManager.cpp
++++ b/es-core/src/InputManager.cpp
+@@ -195,18 +195,17 @@ void InputManager::init()
+ 			}else{
+ 				LOG(LogInfo) << "Added CEC device " << devices[0].path << " (com port: " << devices[0].comm << ")";
+ 				gStrPort = devices[0].comm;
+-			}
+-
++			
+ 			LOG(LogInfo) << "Opening a connection to the CEC adapter...";
+ 
+-			if(!gParser->Open(gStrPort.c_str()))
+-			{
+-				LOG(LogInfo) << "Unable to open the device on port " << gStrPort;
+-				UnloadLibCec(gParser);
++				if(!gParser->Open(gStrPort.c_str()))
++				{
++					LOG(LogInfo) << "Unable to open the device on port " << gStrPort;
++					UnloadLibCec(gParser);
++				} else {
++				gParser->SetActiveSource();
++				}
+ 			}
+-
+-			gParser->SetActiveSource();
+-
+ 			mCECInputConfig = new InputConfig(DEVICE_CEC, "CEC-Device", CEC_GUID_STRING);
+ 			loadInputConfig(mCECInputConfig);
+ 		}
+
+From 24f484ccdc50f6ba09c3a2ebe9f47c014d984211 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Tobias=20G=C3=B6bel?= <goebel@fh-swf.de>
+Date: Wed, 22 Jun 2016 12:23:32 +0200
+Subject: [PATCH 19/19] fixed crash on exit because of to early unloaded libcec
+
+---
+ es-core/src/InputManager.cpp | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/es-core/src/InputManager.cpp b/es-core/src/InputManager.cpp
+index 4fbe820..56df047 100644
+--- a/es-core/src/InputManager.cpp
++++ b/es-core/src/InputManager.cpp
+@@ -172,9 +172,6 @@ void InputManager::init()
+ 		if(!gParser)
+ 		{
+ 			LOG(LogInfo) << "Could not load libcec.so";
+-
+-			if(gParser)
+-				UnloadLibCec(gParser);
+ 		}else{
+ 			std::string gStrPort = getConfigPath();
+ 
+@@ -191,7 +188,6 @@ void InputManager::init()
+ 			if(iDevicesFound <= 0)
+ 			{
+ 				LOG(LogInfo) << "No CEC devices found";
+-				UnloadLibCec(gParser);
+ 			}else{
+ 				LOG(LogInfo) << "Added CEC device " << devices[0].path << " (com port: " << devices[0].comm << ")";
+ 				gStrPort = devices[0].comm;
+@@ -201,7 +197,6 @@ void InputManager::init()
+ 				if(!gParser->Open(gStrPort.c_str()))
+ 				{
+ 					LOG(LogInfo) << "Unable to open the device on port " << gStrPort;
+-					UnloadLibCec(gParser);
+ 				} else {
+ 				gParser->SetActiveSource();
+ 				}
+@@ -302,8 +297,10 @@ void InputManager::deinit()
+ 		mCECInputConfig = NULL;
+ 	}
+ 
+-	gParser->Close();
+-	UnloadLibCec(gParser);
++	if(gParser) {
++		gParser->Close();
++		UnloadLibCec(gParser);
++	}
+ 
+ 	SDL_JoystickEventState(SDL_DISABLE);
+ 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
