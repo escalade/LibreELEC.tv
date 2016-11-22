@@ -44,20 +44,10 @@ configure_target() {
 
 make_target() {
   export CXXFLAGS="$CXXFLAGS -DHAVE_POSIX_MEMALIGN=1"
-  export LDFLAGS="$LDFLAGS -lmt32emu"
+  export LDFLAGS="$LDFLAGS -lmt32emu -lFLAC"
   export ar="$AR cru"
   cd ../backends/platform/libretro/build/
-  case $PROJECT in
-    RPi)
-      make platform=armv6-hardfloat-arm1176jzf-s USE_FLAC=1 HAVE_MT32EMU=1
-      ;;
-    RPi2)
-      make platform=armv7-neon-hardfloat-cortex-a7 USE_FLAC=1 HAVE_MT32EMU=1
-      ;;
-    Generic)
-      make USE_FLAC=1 HAVE_MT32EMU=1
-      ;;
-  esac
+  make USE_FLAC=1 HAVE_MT32EMU=1
 }
 
 makeinstall_target() {
