@@ -17,12 +17,13 @@
 ################################################################################
 
 PKG_NAME="fsuae-libretro"
-PKG_VERSION="da2577e"
+PKG_VERSION="1a2b8b7"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="http://fs-uae.net"
 PKG_URL="https://github.com/libretro/libretro-fsuae/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="libretro-fsuae-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain libmpeg2 openal-soft glib"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="FS-UAE amiga emulator libretro core."
@@ -35,10 +36,6 @@ case $PROJECT in
     PKG_CONFIGURE_OPTS_TARGET="--disable-jit --enable-neon"
     ;;
 esac
-
-post_unpack() {
-  mv $BUILD/libretro-fsuae* $BUILD/$PKG_NAME-$PKG_VERSION
-}
 
 pre_configure_target() {
   cd $ROOT/$BUILD/$PKG_NAME-$PKG_VERSION
