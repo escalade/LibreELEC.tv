@@ -141,7 +141,7 @@ LABEL live
 
 LABEL run
   KERNEL /$KERNEL_NAME
-  APPEND boot=UUID=$UUID_SYSTEM disk=UUID=$UUID_STORAGE portable quiet
+  APPEND boot=UUID=$UUID_SYSTEM disk=UUID=$UUID_STORAGE portable quiet tty
 EOF
 
   if [ "$PROJECT" = Virtual ]; then
