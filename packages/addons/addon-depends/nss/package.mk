@@ -50,6 +50,8 @@ post_makeinstall_host() {
 }
 
 make_target() {
+  strip_lto
+  strip_gold
   cd $ROOT/$PKG_BUILD/nss
 
   [ "$TARGET_ARCH" = "x86_64" ] && TARGET_USE_64="USE_64=1"
