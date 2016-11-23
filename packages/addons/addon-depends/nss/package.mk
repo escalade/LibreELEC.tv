@@ -19,12 +19,12 @@
 ################################################################################
 
 PKG_NAME="nss"
-PKG_VERSION="3.22.3"
-PKG_REV="2"
+PKG_VERSION="3.27.1"
+PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Mozilla Public License"
 PKG_SITE="http://ftp.mozilla.org/"
-PKG_URL="http://ftp.mozilla.org/pub/security/nss/releases/NSS_3_22_3_RTM/src/nss-3.22.3-with-nspr-4.12.tar.gz"
+PKG_URL="http://ftp.mozilla.org/pub/security/nss/releases/NSS_3_27_1_RTM/src/nss-3.27.1-with-nspr-4.13.tar.gz"
 PKG_DEPENDS_TARGET="toolchain nss:host nspr zlib"
 PKG_SECTION="security"
 PKG_SHORTDESC="The Network Security Services (NSS) package is a set of libraries designed to support cross-platform development of security-enabled client and server applications"
@@ -51,6 +51,8 @@ post_makeinstall_host() {
 }
 
 make_target() {
+  strip_lto
+  strip_gold
   cd $ROOT/$PKG_BUILD/nss
 
   [ "$TARGET_ARCH" = "x86_64" ] && TARGET_USE_64="USE_64=1"
