@@ -1,13 +1,40 @@
 --- a/es-app/src/guis/GuiMenu.cpp	2016-03-25 09:27:17.720479960 +0100
 +++ b/es-app/src/guis/GuiMenu.cpp	2016-03-25 09:33:38.602015649 +0100
-@@ -211,59 +211,9 @@
+@@ -209,62 +209,40 @@
+ 			mWindow->pushGui(new GuiDetectDevice(mWindow, false, nullptr));
+ 	});
  
- 	addEntry("QUIT", 0x777777FF, true, 
+-	addEntry("QUIT", 0x777777FF, true, 
++	if(Settings::getInstance()->getBool("FrontEnd"))
++	{
++	addEntry("REBOOT", 0x777777FF, true, 
  		[this] {
 -			auto s = new GuiSettings(mWindow, "QUIT");
 -			
--			Window* window = mWindow;
--
+ 			Window* window = mWindow;
++			window->pushGui(new GuiMsgBox(window, "REALLY REBOOT?", "YES", 
++			[] { 
++				return system("shutdown -r now");
++			}, "NO", nullptr));
++		});
++	addEntry("SHUTDOWN", 0x777777FF, true, 
++		[this] {
++			Window* window = mWindow;
++			window->pushGui(new GuiMsgBox(window, "REALLY SHUTDOWN?", "YES", 
++			[] { 
++				return system("shutdown -h now");
++			}, "NO", nullptr));
++		});
++	addEntry("SUSPEND", 0x777777FF, true, 
++		[this] {
++			Window* window = mWindow;
++			window->pushGui(new GuiMsgBox(window, "REALLY SUSPEND?", "YES", 
++			[] { 
++				return system("/usr/lib/systemd/systemd-sleep suspend");
++			}, "NO", nullptr));
++		});
++	}
+ 
 -			ComponentListRow row;
 -			row.makeAcceptInputHandler([window] {
 -				window->pushGui(new GuiMsgBox(window, "REALLY RESTART?", "YES",
@@ -47,9 +74,9 @@
 -				row.makeAcceptInputHandler([window] {
 -					window->pushGui(new GuiMsgBox(window, "REALLY QUIT?", "YES", 
 -					[] { 
- 						SDL_Event ev;
- 						ev.type = SDL_QUIT;
- 						SDL_PushEvent(&ev);
+-						SDL_Event ev;
+-						ev.type = SDL_QUIT;
+-						SDL_PushEvent(&ev);
 -					}, "NO", nullptr));
 -				});
 -				row.addElement(std::make_shared<TextComponent>(window, "QUIT EMULATIONSTATION", Font::get(FONT_SIZE_MEDIUM), 0x777777FF), true);
@@ -57,6 +84,36 @@
 -			}
 -
 -			mWindow->pushGui(s);
- 	});
+-	});
++	addEntry("QUIT", 0x777777FF, true, 
++		[this] {
++			SDL_Event ev;
++			ev.type = SDL_QUIT;
++			SDL_PushEvent(&ev);
++		});
  
  	mVersion.setFont(Font::get(FONT_SIZE_SMALL));
+ 	mVersion.setColor(0xC6C6C6FF);
+--- a/es-app/src/main.cpp	2016-11-26 00:01:31.329201733 +0000
++++ b/es-app/src/main.cpp	2016-11-26 00:02:53.175867880 +0000
+@@ -54,9 +54,9 @@
+ 		}else if(strcmp(argv[i], "--draw-framerate") == 0)
+ 		{
+ 			Settings::getInstance()->setBool("DrawFramerate", true);
+-		}else if(strcmp(argv[i], "--no-exit") == 0)
++		}else if(strcmp(argv[i], "--frontend") == 0)
+ 		{
+-			Settings::getInstance()->setBool("ShowExit", false);
++			Settings::getInstance()->setBool("FrontEnd", true);
+ 		}else if(strcmp(argv[i], "--no-splash") == 0)
+         {
+             Settings::getInstance()->setBool("SplashScreen", false);
+@@ -105,7 +105,7 @@
+ 				"--gamelist-only			skip automatic game search, only read from gamelist.xml\n"
+ 				"--ignore-gamelist		ignore the gamelist (useful for troubleshooting)\n"
+ 				"--draw-framerate		display the framerate\n"
+-				"--no-exit			don't show the exit option in the menu\n"
++				"--frontend			show shutdown options\n"
+ 				"--no-splash			don't show the splash screen\n"
+ 				"--config-directory [path]			use path as config directory\n"
+ 				"--debug				more logging, show console on Windows\n"
