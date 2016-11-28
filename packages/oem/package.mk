@@ -36,10 +36,10 @@ OEM_APPS_COMMON=" \
   dstat \
   htop \
   nmon \
-  NzbDrone \
   plexmediaserver-script \
   rsync \
   sdl-jstest \
+  sonarr \
   SABnzbd \
   tcpdump \
   transmission \
