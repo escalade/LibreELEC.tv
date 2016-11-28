@@ -16,13 +16,13 @@
 #  along with LibreELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-PKG_NAME="NzbDrone"
-PKG_VERSION="2.0.0.4326"
+PKG_NAME="sonarr"
+PKG_VERSION="2.0.0.4409"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://sonarr.tv"
-PKG_URL="http://update.sonarr.tv/v2/master/mono/$PKG_NAME.master.$PKG_VERSION.mono.tar.gz"
+PKG_URL="http://update.sonarr.tv/v2/master/mono/NzbDrone.master.$PKG_VERSION.mono.tar.gz"
 PKG_SOURCE_DIR="NzbDrone"
 PKG_DEPENDS_TARGET="toolchain mono-system libmediainfo"
 PKG_SECTION="service/downloadmanager"
