@@ -47,7 +47,7 @@ fi
 
 # BTRFS support
   if [ "$BTRFS_SUPPORT" = "yes" ] ; then
-    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET zlib:init btrfs-progs:init"
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET btrfs-progs-system:init"
   fi
 
 # XFS support
