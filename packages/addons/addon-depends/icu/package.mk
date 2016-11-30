@@ -31,14 +31,6 @@ PKG_LONGDESC="International Components for Unicode library"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_HOST="--enable-static --disable-shared"
-
-PKG_CONFIGURE_OPTS_TARGET="--enable-static \
-                           --disable-shared \
-                           --with-cross-build=$ROOT/$PKG_BUILD/.$HOST_NAME"
+PKG_CONFIGURE_OPTS_TARGET="--with-cross-build=$ROOT/$PKG_BUILD/.$HOST_NAME"
 
 PKG_CONFIGURE_SCRIPT="source/configure"
-
-post_makeinstall_target() {
-  rm -rf $INSTALL
-}
