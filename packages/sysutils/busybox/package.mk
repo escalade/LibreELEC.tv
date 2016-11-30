@@ -51,7 +51,7 @@ PKG_MAKE_OPTS_INIT="ARCH=$TARGET_ARCH \
 
 # BTRFS support
   if [ "$BTRFS_SUPPORT" = "yes" ] ; then
-    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET btrfs-progs"
+    PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET btrfs-progs-system"
   fi
 
 # XFS support
