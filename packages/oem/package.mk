@@ -35,7 +35,7 @@ OEM_APPS_COMMON=" \
   docker-system \
   dstat \
   htop \
-  nmon \
+  nmon-system \
   plexmediaserver-script \
   rsync \
   sdl-jstest \
