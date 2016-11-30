@@ -16,15 +16,16 @@
 #  along with LibreELEC.  If not, see <http://www.gnu.org/licenses/>.
 ################################################################################
 
-PKG_NAME="btrfs-progs"
+PKG_NAME="btrfs-progs-system"
 PKG_VERSION="v4.8.4"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/kdave/btrfs-progs"
 PKG_URL="https://www.kernel.org/pub/linux/kernel/people/kdave/btrfs-progs/btrfs-progs-$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="btrfs-progs-$PKG_VERSION"
 PKG_DEPENDS_TARGET="toolchain e2fsprogs util-linux zlib lzo"
-PKG_DEPENDS_INIT="btrfs-progs"
+PKG_DEPENDS_INIT="btrfs-progs-system zlib:init"
 PKG_PRIORITY="optional"
 PKG_SECTION="tools"
 PKG_SHORTDESC="f2fs-tools: Utilities for use with the f2fs filesystem"
