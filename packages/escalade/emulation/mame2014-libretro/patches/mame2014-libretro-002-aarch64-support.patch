@@ -31,12 +31,3 @@ diff -Naur a/Makefile b/Makefile
  # Windows cross compiler
  else ifeq ($(platform), wincross)
  	TARGETLIB := $(TARGET_NAME)_libretro.dll
-@@ -557,7 +580,7 @@
- 
- # CFLAGS is defined based on C or C++ targets
- # (remember, expansion only happens when used, so doing it here is ok)
--CFLAGS = $(CCOMFLAGS) $(CPPONLYFLAGS)
-+CFLAGS += $(CCOMFLAGS) $(CPPONLYFLAGS)
- 
- # we compile C-only to C89 standard with GNU extensions
- # we compile C++ code to C++98 standard with GNU extensions
