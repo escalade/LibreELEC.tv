@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="reicast"
-PKG_VERSION="d8a7212"
+PKG_VERSION="ed47c72"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
