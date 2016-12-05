@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="reicast-libretro"
-PKG_VERSION="3d6517f"
+PKG_VERSION="ed47c72"
 PKG_REV="1"
 PKG_ARCH="x86_64 arm"
 PKG_LICENSE="GPLv2"
