@@ -25,10 +25,14 @@ if [ ! -x $CHROME_HOME ]; then
 fi
 
 if [ -S /var/run/pulse/native -a ! -f /storage/.config/usepulse ]; then
+  kodifreeze.sh freeze muteonly
   systemctl stop pulseaudio
-  PULSE=1
+  NOPULSE=1
 fi
 
 run_chrome "$@" > /tmp/chrome.log 2>&1
 
-[ "$PULSE" = "1" ] && systemctl start pulseaudio
+if [ "$NOPULSE" = "1" ]; then
+  systemctl start pulseaudio
+  kodifreeze.sh unfreeze muteonly
+fi
