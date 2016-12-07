@@ -1,14 +1,11 @@
 #!/bin/sh
 
-DISPLAY=:0.0
+. /etc/profile
+
 MAX_DRIVES=20
 i=0
 
-. /etc/profile
-
-# Stop Kodi if we are launching outside Emulationstation
-pidof kodi.bin > /dev/null && KODI=1
-[ "$KODI" = "1" ] && systemctl stop kodi
+kodifreeze.sh freeze
 
 # Change refresh rate to 50Hz
 xrandr -r 50
@@ -52,5 +49,4 @@ rm -rf "$TMP_DIR"
 # Change back refresh rate
 xrandr -r 60
 
-# Start Kodi if we are launching outside Emulationstation
-[ "$KODI" = "1" ] && systemctl start kodi
+kodifreeze.sh unfreeze

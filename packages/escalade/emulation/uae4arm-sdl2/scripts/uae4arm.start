@@ -6,9 +6,7 @@ i=0
 . /etc/profile
 cd /storage/.config/uae4arm
 
-# Stop Kodi if we are launching outside Emulationstation
-pidof kodi.bin > /dev/null && KODI=1
-[ "$KODI" = "1" ] && systemctl stop kodi
+kodifreeze.sh freeze
 
 # Change refresh rate to 50Hz
 tvservice -e "CEA 31"
@@ -53,7 +51,5 @@ fi
 
 # Change back refresh rate
 tvservice -e "CEA 16"
-sleep 1
 
-# Start Kodi if we are launching outside Emulationstation
-[ "$KODI" = "1" ] && systemctl start kodi
+kodifreeze.sh unfreeze

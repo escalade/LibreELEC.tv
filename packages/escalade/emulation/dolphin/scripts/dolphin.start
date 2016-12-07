@@ -2,7 +2,8 @@
 
 . /etc/profile
 
-pidof kodi.bin > /dev/null && KODI=1
-[ "$KODI" = "1" ] && systemctl stop kodi
+kodifreeze.sh freeze
+
 dolphin-emu "$@"> /tmp/dolphin.log 2>&1
-[ "$KODI" = "1" ] && systemctl start kodi
+
+kodifreeze.sh unfreeze

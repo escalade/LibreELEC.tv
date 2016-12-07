@@ -9,7 +9,6 @@ if [ ! -f /storage/.dosbox/dosbox-SDL2.conf ]; then
   cp /etc/dosbox-SDL2.conf /storage/.dosbox/
 fi
 
-pidof kodi.bin > /dev/null && KODI=1
-[ "$KODI" = "1" ] && systemctl stop kodi
+kodifreeze.sh freeze
 dosbox "$@" > /tmp/dosbox.log 2>&1
-[ "$KODI" = "1" ] && systemctl start kodi
+kodifreeze.sh unfreeze
