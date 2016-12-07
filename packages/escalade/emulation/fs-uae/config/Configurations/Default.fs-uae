@@ -25,6 +25,7 @@ assume_refresh_rate = 50
 video_sync = auto
 fullscreen = 1
 keep_aspect = 1
+scanlines = 1
 
 # Here are some additional options which can help if FS-UAE runs
 # too slow on your system:
