@@ -9,4 +9,4 @@ kodifreeze.sh freeze
 # Run ResidualVM fullscreen + any arguments
 residualvm -f "$@" > /tmp/residualvm.log 2>&1
 
-kodifreeze.sh unfreeze
+pidof emulationstation > /dev/null 2>&1 || kodifreeze.sh unfreeze

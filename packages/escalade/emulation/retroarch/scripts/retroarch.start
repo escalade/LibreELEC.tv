@@ -17,4 +17,4 @@ fi
 # Switch back to VT1
 [ -f /storage/.config/retroarch/kms ] && chvt 1
 
-kodifreeze.sh unfreeze
+pidof emulationstation > /dev/null 2>&1 || kodifreeze.sh unfreeze

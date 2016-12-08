@@ -52,4 +52,4 @@ fi
 # Change back refresh rate
 tvservice -e "CEA 16"
 
-kodifreeze.sh unfreeze
+pidof emulationstation > /dev/null 2>&1 || kodifreeze.sh unfreeze
