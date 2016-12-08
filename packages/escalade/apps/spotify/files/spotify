@@ -8,8 +8,10 @@ install_spotify() {
   kodi-send --action="Notification(Spotify,This is the first time you are starting Spotify. It is being downloaded in the background...,13000)"
   export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^pkgver='` || exit 1
   export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^_anotherpkgver='` || exit 1
+  export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^source_x86_64='` || exit 1
+  export url=`echo $source_x86_64 | sed s:\$\{pkgver\}:$pkgver: | sed s:\$\{_anotherpkgver\}:$_anotherpkgver: | cut -d \" -f 2`
   mkdir -p /tmp/spotify ; cd /tmp/spotify
-  wget -q http://repository.spotify.com/pool/non-free/s/spotify-client/spotify-client_$pkgver$_anotherpkgver-22_amd64.deb || exit 1
+  wget -q $url || exit 1
   ar -x *.deb && tar -zxf data.tar.gz
   mv usr/share/spotify $SPOTIFY_HOME
   cd ~ ; rm -rf /tmp/spotify
