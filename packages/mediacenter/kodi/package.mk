@@ -251,6 +251,10 @@ pre_configure_target() {
   strip_gold
 
   export LIBS="$LIBS -lz -lterminfo"
+  # disable optimization for arm to fix segmentation fault (http://forum.odroid.com/viewtopic.php?f=62&t=20345)
+    if [ "$ARCH" = "arm" ]; then
+      export CXXFLAGS="`echo $CXXFLAGS | sed -e 's|-O2|-Os|'`"
+    fi
 }
 
 post_makeinstall_target() {
