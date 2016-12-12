@@ -55,7 +55,7 @@ pre_configure_target() {
 
 post_makeinstall_target() {
   mkdir $INSTALL/bin
-  ln -sf /usr/bin/vim $INSTALL/bin/vi
+  ln -sf /usr/bin/vim $INSTALL/usr/bin/vi
   rm -rf $INSTALL/usr/share/vim*/doc
   rm -rf $INSTALL/usr/share/vim*/lang
   rm -rf $INSTALL/usr/share/vim*/spell
