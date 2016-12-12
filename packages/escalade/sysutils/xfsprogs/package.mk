@@ -32,7 +32,11 @@ PKG_IS_ADDON="no"
 
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_TARGET="--enable-shared=no --with-gnu-ld --enable-readline=yes"
+PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
+			   --exec-prefix=/ \
+			   --enable-shared=no \
+			   --with-gnu-ld \
+			   --enable-readline=yes"
 
 pre_configure_target() {
   make configure
@@ -48,7 +52,7 @@ make_init() {
 
 makeinstall_init() {
   mkdir -p $INSTALL/sbin
-  cp ../.install_pkg/sbin/xfs_repair $INSTALL/sbin
-  cp ../.install_pkg/sbin/fsck.xfs $INSTALL/sbin
-  cp ../.install_pkg/sbin/mkfs.xfs $INSTALL/sbin
+  cp ../.install_pkg/usr/sbin/xfs_repair $INSTALL/sbin
+  cp ../.install_pkg/usr/sbin/fsck.xfs $INSTALL/sbin
+  cp ../.install_pkg/usr/sbin/mkfs.xfs $INSTALL/sbin
 }
