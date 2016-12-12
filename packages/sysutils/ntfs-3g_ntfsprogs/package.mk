@@ -30,7 +30,8 @@ PKG_LONGDESC="The NTFS-3G_ntfsprogs driver is an open source, freely available N
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
 
-PKG_CONFIGURE_OPTS_TARGET="--exec-prefix=/usr/ \
+PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
+			   --exec-prefix=/usr \
                            --disable-dependency-tracking \
                            --disable-library \
                            --enable-posix-acls \
@@ -44,4 +45,5 @@ post_makeinstall_target() {
   mkdir -p $INSTALL/usr/sbin
     ln -sf /usr/bin/ntfs-3g $INSTALL/usr/sbin/mount.ntfs
     ln -sf /usr/sbin/mkntfs $INSTALL/usr/sbin/mkfs.ntfs
+  rm -rf $INSTALL/sbin
 }
