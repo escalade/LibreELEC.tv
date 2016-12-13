@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="beetle-psx-libretro"
-PKG_VERSION="ce412d5"
+PKG_VERSION="f12cc2f"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
