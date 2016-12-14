@@ -23,6 +23,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/vanfanel/SDL-1.2.15-raspberrypi.git"
 PKG_URL="https://github.com/vanfanel/SDL-1.2.15-raspberrypi/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="SDL-1.2.15-raspberrypi-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain yasm:host alsa-lib"
 PKG_SECTION="emulators/depends"
 PKG_SHORTDESC="libsdl: A cross-platform Graphic API"
@@ -43,7 +44,9 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-video-directfb \
 			   --disable-diskaudio \
 			   --disable-dummyaudio \
 			   --disable-mintaudio \
-			   --disable-input-tslib"
+			   --disable-input-tslib \
+			   --disable-rpath \
+			   --with-gnu-ld"
 
 if [[ "$PROJECT" =~ "RPi" ]]; then
   PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --disable-video-x11 --enable-video-dispmanx"
@@ -56,14 +59,9 @@ pre_configure_target() {
   export SYSROOT_PREFIX
 }
 
-post_unpack() {
-  mv $BUILD/SDL-1.2.15-raspberrypi* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
 post_makeinstall_target() {
   mkdir -p $ROOT/$TOOLCHAIN/bin
-    cp $SYSROOT_PREFIX/usr/bin/sdl-config $ROOT/$TOOLCHAIN/bin
-    $SED "s:\(['=\" ]\)/usr:\\1$SYSROOT_PREFIX/usr:g" $SYSROOT_PREFIX/usr/bin/sdl-config
-
+  $SED "s:\(['=\" ]\)/usr:\\1$SYSROOT_PREFIX/usr:g" $SYSROOT_PREFIX/usr/bin/sdl-config
+  $SED "s:echo\ \-L/usr.*:echo\ \-lSDL:g" $SYSROOT_PREFIX/usr/bin/sdl-config
   rm -rf $INSTALL/usr/bin
 }
