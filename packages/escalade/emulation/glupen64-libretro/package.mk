@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="glupen64-libretro"
-PKG_VERSION="19cf32a"
+PKG_VERSION="e770c79"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
