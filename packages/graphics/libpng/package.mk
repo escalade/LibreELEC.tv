@@ -32,7 +32,7 @@ PKG_IS_ADDON="no"
 PKG_USE_CMAKE="no"
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_TARGET="ac_cv_lib_z_zlibVersion=yes"
+PKG_CONFIGURE_OPTS_TARGET="--enable-static ac_cv_lib_z_zlibVersion=yes"
 
 PKG_CONFIGURE_OPTS_HOST="--enable-static --disable-shared"
 
