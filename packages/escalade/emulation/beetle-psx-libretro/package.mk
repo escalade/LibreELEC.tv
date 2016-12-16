@@ -36,10 +36,10 @@ PKG_AUTORECONF="no"
 make_target() {
   mkdir out
   make HAVE_OPENGL=0
-  mv mednafen_psx_libretro.so out/
+  mv *.so out/
   make clean
-  make HAVE_OPENGL=1
-  mv mednafen_psx_hw_libretro.so out/
+  make HAVE_HW=1
+  mv *.so out/
 }
 
 makeinstall_target() {
