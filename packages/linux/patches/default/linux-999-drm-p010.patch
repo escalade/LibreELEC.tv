@@ -1,0 +1,33 @@
+From a01aa22c071fb1632f6dc11c219653501692f651 Mon Sep 17 00:00:00 2001
+From: fritsch <peter.fruehberger@gmail.com>
+Date: Fri, 16 Dec 2016 22:28:32 +0100
+Subject: [PATCH] DRM: Update FOURCC to get p1010 support
+
+---
+ include/uapi/drm/drm_fourcc.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/include/uapi/drm/drm_fourcc.h b/include/uapi/drm/drm_fourcc.h
+index a5890bf..e6ab638 100644
+--- a/include/uapi/drm/drm_fourcc.h
++++ b/include/uapi/drm/drm_fourcc.h
+@@ -41,10 +41,16 @@ extern "C" {
+ /* 8 bpp Red */
+ #define DRM_FORMAT_R8		fourcc_code('R', '8', ' ', ' ') /* [7:0] R */
+ 
++/* 16 bpp Red */
++#define DRM_FORMAT_R16		fourcc_code('R', '1', '6', ' ') /* [15:0] R */
++
+ /* 16 bpp RG */
+ #define DRM_FORMAT_RG88		fourcc_code('R', 'G', '8', '8') /* [15:0] R:G 8:8 little endian */
+ #define DRM_FORMAT_GR88		fourcc_code('G', 'R', '8', '8') /* [15:0] G:R 8:8 little endian */
+ 
++/* 32 bpp GR */
++#define DRM_FORMAT_GR16		fourcc_code('G', 'R', '1', '6') /* [31:0] G:R 16:16 little endian */
++
+ /* 8 bpp RGB */
+ #define DRM_FORMAT_RGB332	fourcc_code('R', 'G', 'B', '8') /* [7:0] R:G:B 3:3:2 */
+ #define DRM_FORMAT_BGR233	fourcc_code('B', 'G', 'R', '8') /* [7:0] B:G:R 2:3:3 */
+-- 
+2.7.4
+
