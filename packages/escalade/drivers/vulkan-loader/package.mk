@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="vulkan-loader"
-PKG_VERSION="03359bf"
+PKG_VERSION="d57a1e0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Apache 2.0"
@@ -35,7 +35,9 @@ PKG_CMAKE_OPTS_TARGET="-DBUILD_WSI_XLIB_SUPPORT=On \
 		       -DBUILD_TESTS=Off \
 		       -DBUILD_LAYERS=Off \
 		       -DBUILD_DEMOS=On \
-		       -DBUILD_VKJSON=Off"
+		       -DBUILD_VKJSON=Off \
+		       -DBUILD_WSI_WAYLAND_SUPPORT=Off \
+		       -DBUILD_WSI_MIR_SUPPORT=Off"
 
 pre_configure_target() {
   cd ..
