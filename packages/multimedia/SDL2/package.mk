@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="SDL2"
-PKG_VERSION="1886965"
+PKG_VERSION="951286c"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.libsdl.org/"
