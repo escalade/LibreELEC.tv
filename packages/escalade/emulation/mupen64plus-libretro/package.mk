@@ -54,12 +54,12 @@ make_target() {
       mv *.so out/
       make clean
       make WITH_DYNAREC=$TARGET_ARCH HAVE_OPENGL=0 HAVE_PARALLEL_ONLY=1
-      mv *.so out/
+      mv out/*.so .
       ;;
   esac
 }
 
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
-  cp out/* $INSTALL/usr/lib/libretro/
+  cp *.so $INSTALL/usr/lib/libretro/
 }
