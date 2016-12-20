@@ -24,12 +24,16 @@ PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/duganchen/dosbox"
 PKG_URL="https://github.com/duganchen/dosbox/archive/$PKG_VERSION.tar.gz"
 PKG_SOURCE_DIR="dosbox-$PKG_VERSION*"
-PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 SDL2_net fluidsynth munt libpng glew"
+PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 SDL2_net fluidsynth munt libpng"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="DOSBox emulator SDL2 fork by duganchen"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="yes"
+
+if [ "$PROJECT" = "Generic" ]; then
+  PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET glew"
+fi
 
 PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
 			   --enable-core-inline \
