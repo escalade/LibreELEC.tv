@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="libcurl-compat"
-PKG_VERSION="7.51.0"
+PKG_VERSION="7.52.0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MIT"
