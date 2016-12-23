@@ -310,7 +310,7 @@ dashes="==========================="
     exit 1
   fi
 
-  if [ \( -z "$DEVICE" -a -d "$PROJECT_DIR/$PROJECT/devices" \) -o \( -n "$DEVICE" -a ! -d "$PROJECT_DIR/$PROJECT/devices/$DEVICE" \) ]; then
+  if [ -n "$DEVICE" -a ! -d "$PROJECT_DIR/$PROJECT/devices/$DEVICE" ]; then
     check_device="$check_device\n $dashes$dashes$dashes"
     check_device="$check_device\n ERROR: You need to specify a valid device for the $PROJECT project"
     check_device="$check_device\n $dashes$dashes$dashes"
