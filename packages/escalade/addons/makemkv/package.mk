@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="makemkv"
-PKG_VERSION="1.10.2"
+PKG_VERSION="1.10.4"
 PKG_REV="0"
 PKG_ARCH="x86_64"
 PKG_LICENSE="OSS"
