@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="fbalpha-libretro"
-PKG_VERSION="6d36b3a"
+PKG_VERSION="eabd66a"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Non-commercial"
