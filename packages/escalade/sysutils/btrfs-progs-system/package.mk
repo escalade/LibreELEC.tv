@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="btrfs-progs-system"
-PKG_VERSION="v4.8.4"
+PKG_VERSION="v4.9"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
