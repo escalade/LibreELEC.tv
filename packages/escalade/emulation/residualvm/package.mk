@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="residualvm"
-PKG_VERSION="27cb3aa"
+PKG_VERSION="36145d3"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
@@ -42,7 +42,6 @@ TARGET_CONFIGURE_OPTS="--prefix=/usr \
 		       --disable-debug \
 		       --enable-opengl-shaders \
 		       $GLEW \
-		       --enable-safedisc \
 		       --enable-release \
 		       --enable-vkeybd \
 		       --enable-keymapper \
