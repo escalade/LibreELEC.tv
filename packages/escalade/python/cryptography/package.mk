@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="cryptography"
-PKG_VERSION="1.4"
+PKG_VERSION="1.7.1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
