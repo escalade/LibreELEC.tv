@@ -17,12 +17,13 @@
 ################################################################################
 
 PKG_NAME="pycparser"
-PKG_VERSION="2.14"
+PKG_VERSION="2.17"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
-PKG_SITE="https://github.com/phihag/ipaddress"
-PKG_URL="http://pypi.python.org/packages/source/p/pycparser/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_SITE="https://github.com/eliben/pycparser"
+PKG_URL="https://github.com/eliben/pycparser/archive/release_v$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="pycparser-release_v$PKG_VERSION"
 PKG_DEPENDS_TARGET="toolchain Python distutilscross:host"
 PKG_SECTION="python/devel"
 PKG_SHORTDESC="IPv4/IPv6 manipulation library"
