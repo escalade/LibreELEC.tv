@@ -31,6 +31,15 @@ PKG_LONGDESC="Kodi Media Center (which was formerly named Xbox Media Center or X
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
+post_unpack() {
+  if [ ! "$OEM_APPS" = "no" -a "$PROJECT" = "Generic" ]; then
+    patch -d $BUILD/$PKG_NAME-$PKG_VERSION/addons/skin.estuary -p1 < $PKG_DIR/files/app-shortcuts.patch
+  fi
+  if [ ! "$OEM_EMU" = "no" ]; then
+    patch -d $BUILD/$PKG_NAME-$PKG_VERSION/addons/skin.estuary -p1 < $PKG_DIR/files/emu-shortcuts.patch
+  fi
+}
+
 PKG_CMAKE_SCRIPT="$ROOT/$PKG_BUILD/project/cmake/CMakeLists.txt"
 
   get_graphicdrivers

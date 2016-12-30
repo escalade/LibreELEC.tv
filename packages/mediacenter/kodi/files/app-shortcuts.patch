@@ -1,0 +1,21 @@
+--- a/xml/Home.xml	2016-11-30 21:39:51.000000000 +0000
++++ b/xml/Home.xml	2016-12-02 11:32:27.735254121 +0000
+@@ -898,6 +898,18 @@
+ 							<property name="id">weather</property>
+ 							<visible>!Skin.HasSetting(HomeMenuNoWeatherButton)</visible>
+ 						</item>
++						<item>
++							<label>Chrome</label>
++							<onclick>XBMC.System.Exec(/usr/bin/google-chrome-stable)</onclick>
++							<thumb>DefaultAddonWebSkin.png</thumb>
++							<property name="id">chrome</property>
++						</item>
++						<item>
++							<label>Spotify</label>
++							<onclick>XBMC.System.Exec(/usr/bin/spotify)</onclick>
++							<thumb>DefaultAddonMusic.png</thumb>
++							<property name="id">spotify</property>
++						</item>
+ 					</content>
+ 				</control>
+ 				<control type="grouplist" id="700">

@@ -1,0 +1,15 @@
+--- a/xml/Home.xml	2016-12-02 11:32:58.361920593 +0000
++++ b/xml/Home.xml	2016-12-02 11:33:47.611920282 +0000
+@@ -912,6 +912,12 @@
+ 							<property name="id">spotify</property>
+ 							<visible>!Skin.HasSetting(HomeMenuNoFavButton)</visible>
+ 						</item>
++						<item>
++							<label>Emulators</label>
++							<onclick>XBMC.System.Exec(/usr/bin/emulator-frontend.sh)</onclick>
++							<thumb>DefaultAddonGame.png</thumb>
++							<property name="id">emulationstation</property>
++						</item>
+ 					</content>
+ 				</control>
+ 				<control type="grouplist" id="700">
