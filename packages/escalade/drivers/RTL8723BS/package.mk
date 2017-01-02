@@ -46,8 +46,8 @@ make_target() {
 }
 
 makeinstall_target() {
-  mkdir -p $INSTALL/lib/modules/$(get_module_dir)/$PKG_NAME
-    cp *.ko $INSTALL/lib/modules/$(get_module_dir)/$PKG_NAME
-  mkdir -p $INSTALL/lib/firmware/rtlwifi
-    cp rtl8723bs/*.bin $INSTALL/lib/firmware/rtlwifi/
+  mkdir -p $INSTALL/usr/lib/modules/$(get_module_dir)/$PKG_NAME
+    cp *.ko $INSTALL/usr/lib/modules/$(get_module_dir)/$PKG_NAME
+  mkdir -p $INSTALL/usr/lib/firmware/rtlwifi
+    cp rtl8723bs/*.bin $INSTALL/usr/lib/firmware/rtlwifi/
 }
