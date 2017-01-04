@@ -52,8 +52,8 @@ make_init() {
 }
 
 makeinstall_init() {
-  mkdir -p $INSTALL/sbin
-  cp ../.install_pkg/usr/bin/btrfs $INSTALL/sbin
-  cp ../.install_pkg/usr/bin/fsck.btrfs $INSTALL/sbin
-  cp ../.install_pkg/usr/bin/mkfs.btrfs $INSTALL/sbin
+  mkdir -p $INSTALL/usr/sbin
+  cp ../.install_pkg/usr/bin/btrfs $INSTALL/usr/sbin
+  cp ../.install_pkg/usr/bin/fsck.btrfs $INSTALL/usr/sbin
+  cp ../.install_pkg/usr/bin/mkfs.btrfs $INSTALL/usr/sbin
 }
