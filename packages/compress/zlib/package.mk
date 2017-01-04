@@ -62,6 +62,6 @@ make_init() {
 }
 
 makeinstall_init() {
-  mkdir -p $INSTALL/lib
-  cp -a ../.install_pkg/usr/lib/* $INSTALL/lib
+  mkdir -p $INSTALL/usr/lib
+  cp -a ../.install_pkg/usr/lib/* $INSTALL/usr/lib
 }
