@@ -48,10 +48,10 @@ make_init() {
 }
 
 makeinstall_init() {
-  mkdir -p $INSTALL/sbin
-  mkdir -p $INSTALL/lib
-    cp ../.$TARGET_NAME/parted/parted $INSTALL/sbin
-    cp ../.$TARGET_NAME/partprobe/partprobe $INSTALL/sbin
-    cp $(get_build_dir readline)/.install_pkg/usr/lib/libreadline.so.? $INSTALL/lib
-    cp $(get_build_dir netbsd-curses)/.install_pkg/usr/lib/libterminfo.so $INSTALL/lib
+  mkdir -p $INSTALL/usr/sbin
+  mkdir -p $INSTALL/usr/lib
+    cp ../.$TARGET_NAME/parted/parted $INSTALL/usr/sbin
+    cp ../.$TARGET_NAME/partprobe/partprobe $INSTALL/usr/sbin
+    cp $(get_build_dir readline)/.install_pkg/usr/lib/libreadline.so.? $INSTALL/usr/lib
+    cp $(get_build_dir netbsd-curses)/.install_pkg/usr/lib/libterminfo.so $INSTALL/usr/lib
 }
