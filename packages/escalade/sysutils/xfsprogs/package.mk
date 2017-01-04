@@ -51,8 +51,8 @@ make_init() {
 }
 
 makeinstall_init() {
-  mkdir -p $INSTALL/sbin
-  cp ../.install_pkg/usr/sbin/xfs_repair $INSTALL/sbin
-  cp ../.install_pkg/usr/sbin/fsck.xfs $INSTALL/sbin
-  cp ../.install_pkg/usr/sbin/mkfs.xfs $INSTALL/sbin
+  mkdir -p $INSTALL/usr/sbin
+  cp ../.install_pkg/usr/sbin/xfs_repair $INSTALL/usr/sbin
+  cp ../.install_pkg/usr/sbin/fsck.xfs $INSTALL/usr/sbin
+  cp ../.install_pkg/usr/sbin/mkfs.xfs $INSTALL/usr/sbin
 }
