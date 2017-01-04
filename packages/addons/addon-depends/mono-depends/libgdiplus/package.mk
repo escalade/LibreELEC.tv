@@ -37,3 +37,4 @@ PKG_CONFIGURE_OPTS_TARGET="--enable-shared \
 
 pre_configure_target() {
   strip_gold
+}
