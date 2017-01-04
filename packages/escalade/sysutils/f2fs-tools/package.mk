@@ -50,10 +50,10 @@ make_init() {
 }
 
 makeinstall_init() {
-  mkdir -p $INSTALL/sbin
-  mkdir -p $INSTALL/lib
-  cp ../.install_pkg/usr/sbin/fsck.f2fs $INSTALL/sbin
-  cp ../.install_pkg/usr/sbin/mkfs.f2fs $INSTALL/sbin
-  cp -a $(get_build_dir libselinux)/.install_pkg/usr/lib/libselinux* $INSTALL/lib
-  cp $(get_build_dir glibc)/.install_pkg/usr/lib/libdl.so.2 $INSTALL/lib
+  mkdir -p $INSTALL/usr/sbin
+  mkdir -p $INSTALL/usr/lib
+  cp ../.install_pkg/usr/sbin/fsck.f2fs $INSTALL/usr/sbin
+  cp ../.install_pkg/usr/sbin/mkfs.f2fs $INSTALL/usr/sbin
+  cp -a $(get_build_dir libselinux)/.install_pkg/usr/lib/libselinux* $INSTALL/usr/lib
+  cp $(get_build_dir glibc)/.install_pkg/usr/lib/libdl.so.2 $INSTALL/usr/lib
 }
