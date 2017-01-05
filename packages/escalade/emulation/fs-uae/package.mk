@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="fs-uae"
-PKG_VERSION="5b6d7c5"
+PKG_VERSION="09428de"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
