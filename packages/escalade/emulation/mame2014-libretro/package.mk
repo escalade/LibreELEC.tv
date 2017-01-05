@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="mame2014-libretro"
-PKG_VERSION="9e8ae1d"
+PKG_VERSION="2f669cb"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
