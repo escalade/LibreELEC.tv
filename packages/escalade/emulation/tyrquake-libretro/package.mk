@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="tyrquake-libretro"
-PKG_VERSION="ff67c16"
+PKG_VERSION="7f3c540"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
