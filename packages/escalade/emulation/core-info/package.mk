@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="core-info"
-PKG_VERSION="83b074e"
+PKG_VERSION="adb2940"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
