@@ -19,12 +19,13 @@
 ################################################################################
 
 PKG_NAME="emulationstation-theme-simple-dark"
-PKG_VERSION="baa0905"
+PKG_VERSION="4c33193"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/RetroPie/es-theme-simple-dark.git"
 PKG_URL="https://github.com/RetroPie/es-theme-simple-dark/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="es-theme-simple-dark-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="Simple dark theme for Emulationstation"
@@ -36,12 +37,12 @@ make_target() {
   :
 }
 
-unpack() {
-  tar -zxf $SOURCES/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz -C $BUILD
-  mv $BUILD/es-theme-simple-dark* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
 makeinstall_target() {
   mkdir -p $INSTALL/etc/emulationstation/themes/es-theme-simple-dark
+  mkdir -p $INSTALL/usr/share/kodi/addons/resource.uisounds.kodi/resources
   cp -r * $INSTALL/etc/emulationstation/themes/es-theme-simple-dark
+  cp $PKG_DIR/files/scroll.wav $INSTALL/etc/emulationstation/themes/es-theme-simple-dark/art/
+  cp $PKG_DIR/files/scroll.wav $INSTALL/usr/share/kodi/addons/resource.uisounds.kodi/resources/back.wav
+  cp $PKG_DIR/files/scroll.wav $INSTALL/usr/share/kodi/addons/resource.uisounds.kodi/resources/click.wav
+  cp $PKG_DIR/files/scroll.wav $INSTALL/usr/share/kodi/addons/resource.uisounds.kodi/resources/cursor.wav
 }

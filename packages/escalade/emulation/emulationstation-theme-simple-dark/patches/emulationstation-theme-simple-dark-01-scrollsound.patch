@@ -1,0 +1,10 @@
+--- a/simple-dark.xml	2017-01-07 16:40:08.304889449 +0000
++++ b/simple-dark.xml	2017-01-07 16:40:30.464889308 +0000
+@@ -82,6 +82,7 @@
+ 			<fontPath>./art/Roboto-Regular.ttf</fontPath>
+ 			<fontSize>0.03</fontSize>
+ 			<forceUppercase>1</forceUppercase>
++			<scrollSound>./art/scroll.wav</scrollSound>
+ 		</textlist>
+ 		
+ 	</view>
