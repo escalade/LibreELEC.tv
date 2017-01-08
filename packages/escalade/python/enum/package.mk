@@ -17,20 +17,20 @@
 ################################################################################
 
 PKG_NAME="enum"
-PKG_VERSION="0.4.6"
+PKG_VERSION="1.1.6"
 PKG_REV="1"
 PKG_ARCH="any"
-PKG_LICENSE="OSS"
-PKG_SITE="http://pypi.python.org/pypi/enum"
-PKG_URL="http://pypi.python.org/packages/source/e/enum/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_LICENSE="BSD"
+PKG_SITE="https://bitbucket.org/stoneleaf/enum34"
+PKG_URL="https://bitbucket.org/stoneleaf/enum34/get/$PKG_VERSION.tar.bz2"
+PKG_SOURCE_DIR="stoneleaf-enum34-*"
 PKG_DEPENDS_TARGET="toolchain Python distutilscross:host"
-PKG_SECTION="python/devel"
-PKG_SHORTDESC="This package provides a module for robust enumerations in Python"
+PKG_SECTION="python"
+PKG_SHORTDESC="Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4"
+PKG_LONGDESC="Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4"
+
 PKG_IS_ADDON="no"
-
 PKG_AUTORECONF="no"
-
-PKG_MAINTAINER="unofficial.addon.pro"
 
 pre_make_target() {
   export PYTHONXCPREFIX="$SYSROOT_PREFIX/usr"
