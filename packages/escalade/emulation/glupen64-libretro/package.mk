@@ -17,25 +17,19 @@
 ################################################################################
 
 PKG_NAME="glupen64-libretro"
-PKG_VERSION="510c673"
+PKG_VERSION="799d362"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
-PKG_SITE="https://github.com/loganmc10/GLupeN64"
-PKG_URL="custom"
+PKG_SITE="https://github.com/GLupeN64/GLupeN64"
+PKG_URL="https://github.com/GLupeN64/GLupeN64/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="GLupeN64-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="mupen64plus + RSP-HLE + GLideN64 + libretro"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
-
-unpack() {
-  git clone --recursive https://github.com/loganmc10/GLupeN64.git $PKG_BUILD
-  cd $PKG_BUILD
-  git reset --hard $PKG_VERSION
-  cd $ROOT
-}
 
 pre_build_target() {
   strip_lto
