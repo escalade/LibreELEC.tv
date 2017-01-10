@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="retroarch"
-PKG_VERSION="9d7fe2c"
+PKG_VERSION="4c611e4"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
@@ -94,7 +94,6 @@ pre_configure_target() {
 make_target() {
   make V=1
   make -C gfx/video_filters compiler=$CC extra_flags="$CFLAGS"
-  make -C audio/audio_filters compiler=$CC extra_flags="$CFLAGS"
 }
 
 makeinstall_target() {
@@ -105,9 +104,6 @@ makeinstall_target() {
   mkdir -p $INSTALL/usr/share/retroarch/video_filters
     cp $ROOT/$PKG_BUILD/gfx/video_filters/*.so $INSTALL/usr/share/retroarch/video_filters
     cp $ROOT/$PKG_BUILD/gfx/video_filters/*.filt $INSTALL/usr/share/retroarch/video_filters
-  mkdir -p $INSTALL/usr/share/retroarch/audio_filters
-    cp $ROOT/$PKG_BUILD/audio/audio_filters/*.so $INSTALL/usr/share/retroarch/audio_filters
-    cp $ROOT/$PKG_BUILD/audio/audio_filters/*.dsp $INSTALL/usr/share/retroarch/audio_filters
     cp $PKG_DIR/scripts/* $INSTALL/usr/bin
   
   # General configuration
