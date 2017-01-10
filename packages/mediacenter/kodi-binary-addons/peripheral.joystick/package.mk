@@ -39,3 +39,7 @@ addon() {
   ADDONSO=$(xmlstarlet sel -t -v "/addon/extension/@library_linux" $ADDON_BUILD/$PKG_ADDON_ID/addon.xml)
   cp -L $PKG_BUILD/.install_pkg/usr/lib/$MEDIACENTER/addons/$PKG_NAME/$ADDONSO $ADDON_BUILD/$PKG_ADDON_ID/
 }
+
+post_makeinstall_target() {
+  cp $PKG_DIR/buttonmaps/*.xml $INSTALL/usr/share/kodi/addons/peripheral.joystick/resources/buttonmaps/xml/linux/
+}
