@@ -23,20 +23,20 @@ PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="http://vice-emu.sourceforge.net/"
 PKG_URL="https://sourceforge.net/projects/vice-emu/files/releases/vice-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain alsa-lib SDL libpng giflib zlib libvorbis libogg lame"
+PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 libpng giflib zlib libvorbis libogg lame"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="VICE C64 emulator"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_TARGET="ac_cv_prog_sdl_config=$SYSROOT_PREFIX/usr/bin/sdl-config \
+PKG_CONFIGURE_OPTS_TARGET="ac_cv_prog_sdl2_config=$SYSROOT_PREFIX/usr/bin/sdl2-config \
 			   toolchain_check=no \
 			   --prefix=/usr \
 			   --disable-option-checking \
 			   --disable-catweasel \
 			   --enable-native-tools=$HOST_CC \
-                           --enable-sdlui \
+                           --enable-sdlui2 \
 			   --without-oss \
 			   --without-pulse"
 
