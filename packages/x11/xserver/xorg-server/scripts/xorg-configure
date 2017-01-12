@@ -62,6 +62,12 @@ logger -t Xorg "### creating start options ###"
     XORG_ARGS="$XORG_ARGS -config $XORG_CONF_DEFAULT"
   elif [ -f "$XORG_CONF_DEFAULT_DRV" ]; then
     XORG_ARGS="$XORG_ARGS -config $XORG_CONF_DEFAULT_DRV"
+  elif [ "$1" = "intel" ]; then
+    if grep -E -q 'Atom|Celeron' /proc/cpuinfo; then
+      XORG_ARGS="$XORG_ARGS -config /etc/X11/xorg-modesetting.conf"
+    else
+      XORG_ARGS="$XORG_ARGS -config /etc/X11/xorg-i915.conf"
+    fi
   fi
 
 ##############################################################################
