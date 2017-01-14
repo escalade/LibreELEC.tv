@@ -6,11 +6,16 @@ SPOTIFY_HOME=/storage/.cache/app.spotify
 
 install_spotify() {
   kodi-send --action="Notification(Spotify,This is the first time you are starting Spotify. It is being downloaded in the background...,13000)"
-  export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^pkgver='` || exit 1
-  export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^_anotherpkgver='` || exit 1
-  export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^source_x86_64='` || exit 1
-  export url=`echo $source_x86_64 | sed s:\$\{pkgver\}:$pkgver: | sed s:\$\{_anotherpkgver\}:$_anotherpkgver: | cut -d \" -f 2`
+  if [ -z "$1" ]; then
+    export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^pkgver='` || exit 1
+    export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^_anotherpkgver='` || exit 1
+    export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^source_x86_64='` || exit 1
+    export url=`echo $source_x86_64 | sed s:\$\{pkgver\}:$pkgver: | sed s:\$\{_anotherpkgver\}:$_anotherpkgver: | cut -d \" -f 2`
+  else
+    export url="$1"
+  fi 
   mkdir -p /tmp/spotify ; cd /tmp/spotify
+  echo downloading $url
   wget -q $url || exit 1
   ar -x *.deb && tar -zxf data.tar.gz
   mv usr/share/spotify $SPOTIFY_HOME
@@ -22,7 +27,7 @@ run_spotify() {
 }
 
 if [ ! -x $SPOTIFY_HOME ]; then
-  install_spotify > /tmp/spotify.log 2>&1
+  install_spotify "$1" > /tmp/spotify.log 2>&1
 fi
 
 if [ -S /var/run/pulse/native -a ! -f /storage/.config/usepulse ]; then
