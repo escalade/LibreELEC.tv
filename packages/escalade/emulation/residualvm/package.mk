@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="residualvm"
-PKG_VERSION="36145d3"
+PKG_VERSION="bc84594"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
