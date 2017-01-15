@@ -33,8 +33,7 @@ PKG_AUTORECONF="yes"
 pre_configure_target() {
   export ac_cv_func_realloc_0_nonnull=yes
   export SYSROOT_PREFIX
-  # auto detection for DS4 bluetooth
-  cp ../share/fs-uae/input/sony_computer_entertainment_wireless_controller_14_10_1_0_linux.conf ../share/fs-uae/input/wireless_controller_14_6_1_0_linux.conf
+  cp $PKG_DIR/input/* ../share/fs-uae/input/
 }
 
 post_makeinstall_target() {
