@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="SABnzbd"
-PKG_VERSION="1.1.1"
+PKG_VERSION="1.2.0"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://sabnzbd.org/"
 PKG_URL="https://github.com/sabnzbd/sabnzbd/releases/download/$PKG_VERSION/$PKG_NAME-$PKG_VERSION-src.tar.gz"
-PKG_DEPENDS_TARGET="toolchain Python Cheetah yenc six par2cmdline unrar pyOpenSSL"
+PKG_DEPENDS_TARGET="toolchain Python Cheetah yenc six par2cmdline unrar cryptography p7zip"
 PKG_SECTION="service/downloadmanager"
 PKG_SHORTDESC="SABnzbd makes Usenet as simple and streamlined as possible by automating everything we can."
 PKG_LONGDESC="SABnzbd makes Usenet as simple and streamlined as possible by automating everything we can. All you have to do is add a .nzb file. SABnzbd+ takes over from there, where it will be automatically downloaded, verified, repaired, extracted and filed away with zero human interaction."
@@ -38,6 +38,8 @@ make_target() {
 makeinstall_target() {
   mkdir -p $INSTALL/opt/sabnzbd
   cp -PR * $INSTALL/opt/sabnzbd/
+  mkdir -p $INSTALL/usr/bin
+  cp $(get_build_dir p7zip)/bin/7za $INSTALL/usr/bin/
 }
 
 post_makeinstall_target() {
