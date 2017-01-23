@@ -17,12 +17,13 @@
 ################################################################################
 
 PKG_NAME="reicast"
-PKG_VERSION="ed47c72"
+PKG_VERSION="ca837e1"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/reicast/reicast-emulator"
 PKG_URL="https://github.com/reicast/reicast-emulator/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="reicast-emulator-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain alsa-utils"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="Reicast is a multi-platform Sega Dreamcast emulator"
@@ -30,19 +31,14 @@ PKG_SHORTDESC="Reicast is a multi-platform Sega Dreamcast emulator"
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
-  mv $BUILD/reicast-emulator-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
 make_target() {
-  strip_lto
   cd shell/linux
   case $PROJECT in
     RPi2)
-      make CC=$CC CXX=$CXX AS=$AS STRIP=$STRIP SYSROOT_PREFIX=$SYSROOT_PREFIX platform=rpi2
+      make CC=$CC CXX=$CXX AS=$CC STRIP=$STRIP platform=rpi2 reicast.elf
       ;;
     Generic)
-      make CC=$CC CXX=$CXX AS=$AS STRIP=$STRIP SYSROOT_PREFIX=$SYSROOT_PREFIX platform=x64
+      make CC=$CC CXX=$CXX AS=$CC STRIP=$STRIP platform=x64 reicast.elf
       ;;
   esac
 }
@@ -50,5 +46,6 @@ make_target() {
 makeinstall_target() {
   mkdir -p $INSTALL/usr/bin
   cp reicast.elf $INSTALL/usr/bin/reicast
+  cp tools/reicast-joyconfig.py $INSTALL/usr/bin/
   cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
 }
