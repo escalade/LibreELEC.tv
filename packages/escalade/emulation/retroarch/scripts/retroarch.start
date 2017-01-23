@@ -5,16 +5,17 @@
 kodifreeze.sh freeze
 
 # Switch to VT2 for kms
-if [ -f /storage/.config/retroarch/kms ]; then
+if grep -q i915 /run/libreelec/xorg-settings.conf && [ ! -f /storage/.config/retroarch/nokms ]; then
   sed -i -e "s/video_driver.*/video_driver = \"gl\"/" /storage/.config/retroarch/retroarch.cfg
   chvt 2
   unset DISPLAY
+  KMS=1
 fi
 
 # Launch RetroArch
 /usr/bin/retroarch -v "$@" > /tmp/retroarch.log 2>&1
 
 # Switch back to VT1
-[ -f /storage/.config/retroarch/kms ] && chvt 1
+[ "$KMS" = "1" ] && chvt 1
 
 pidof emulationstation > /dev/null 2>&1 || kodifreeze.sh unfreeze
