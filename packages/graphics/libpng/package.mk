@@ -34,6 +34,10 @@ PKG_AUTORECONF="no"
 
 PKG_CONFIGURE_OPTS_TARGET="--enable-static ac_cv_lib_z_zlibVersion=yes"
 
+if [[ "$PROJECT" =~ "RPi" ]]; then
+  PKG_CONFIGURE_OPTS_TARGET="$PKG_CONFIGURE_OPTS_TARGET --enable-arm-neon=yes"
+fi
+
 PKG_CONFIGURE_OPTS_HOST="--enable-static --disable-shared"
 
 pre_configure_host() {
