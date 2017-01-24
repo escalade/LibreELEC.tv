@@ -18,7 +18,6 @@
 
 PKG_NAME="reicast"
 PKG_VERSION="ca837e1"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/reicast/reicast-emulator"

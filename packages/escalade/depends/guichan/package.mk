@@ -18,7 +18,6 @@
 
 PKG_NAME="guichan"
 PKG_VERSION="1a72794"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="https://github.com/sphaero/guichan.git"

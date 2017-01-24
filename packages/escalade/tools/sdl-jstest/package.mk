@@ -18,7 +18,6 @@
 
 PKG_NAME="sdl-jstest"
 PKG_VERSION="c749562"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="http://fs-uae.net"

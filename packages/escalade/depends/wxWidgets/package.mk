@@ -18,7 +18,6 @@
 
 PKG_NAME="wxWidgets"
 PKG_VERSION="3.0.2"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="wxWindows Licence"
 PKG_SITE="http://www.wxwidgets.org/"

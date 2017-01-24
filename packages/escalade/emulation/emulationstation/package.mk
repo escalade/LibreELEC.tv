@@ -18,7 +18,6 @@
 
 PKG_NAME="emulationstation"
 PKG_VERSION="76c1538"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/Herdinger/EmulationStation.git"

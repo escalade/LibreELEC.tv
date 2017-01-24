@@ -18,7 +18,6 @@
 
 PKG_NAME="emby-system"
 PKG_VERSION="3.0.5986"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="http://emby.media"

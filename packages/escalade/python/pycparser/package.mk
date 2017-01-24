@@ -18,7 +18,6 @@
 
 PKG_NAME="pycparser"
 PKG_VERSION="2.17"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="https://github.com/eliben/pycparser"

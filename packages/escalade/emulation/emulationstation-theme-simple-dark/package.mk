@@ -20,7 +20,6 @@
 
 PKG_NAME="emulationstation-theme-simple-dark"
 PKG_VERSION="4c33193"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/RetroPie/es-theme-simple-dark.git"

@@ -18,7 +18,6 @@
 
 PKG_NAME="google-chrome"
 PKG_VERSION="latest"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Freeware"
 PKG_SITE="http://www.google.com/chrome"

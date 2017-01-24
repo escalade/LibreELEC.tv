@@ -20,7 +20,6 @@
 
 PKG_NAME="mame2003-libretro"
 PKG_VERSION="dbf1503"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MAME"
 PKG_SITE="https://github.com/libretro/mame2003-libretro.git"

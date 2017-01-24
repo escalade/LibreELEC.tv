@@ -18,7 +18,6 @@
 
 PKG_NAME="f2fs-tools"
 PKG_VERSION="1.7.0"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://sourceforge.net/projects/f2fs-tools/"

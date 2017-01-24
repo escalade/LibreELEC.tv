@@ -18,7 +18,6 @@
 
 PKG_NAME="docker-containers"
 PKG_VERSION="1.0"
-PKG_REV="1"
 PKG_ARCH="x86_64"
 PKG_LICENSE="GPL"
 PKG_SITE="https://plex.tv"

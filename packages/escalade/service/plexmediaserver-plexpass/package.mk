@@ -18,7 +18,6 @@
 
 PKG_NAME="plexmediaserver-plexpass"
 PKG_VERSION="1.0.1.2396"
-PKG_REV="c094d0d"
 PKG_ARCH="any"
 PKG_LICENSE="Freemium"
 PKG_SITE="http://plex.tv"

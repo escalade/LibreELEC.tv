@@ -18,7 +18,6 @@
 
 PKG_NAME="SDL_ttf"
 PKG_VERSION="2.0.11"
-PKG_REV="0"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.libsdl.org/"

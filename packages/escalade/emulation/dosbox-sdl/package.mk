@@ -18,7 +18,6 @@
 
 PKG_NAME="dosbox-sdl"
 PKG_VERSION="4000"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.dosbox.com"

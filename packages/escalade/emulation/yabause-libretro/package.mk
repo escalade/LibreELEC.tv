@@ -18,7 +18,6 @@
 
 PKG_NAME="yabause-libretro"
 PKG_VERSION="dac3c5a"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/yabause"

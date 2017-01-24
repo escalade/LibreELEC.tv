@@ -20,7 +20,6 @@
 
 PKG_NAME="nxengine-libretro"
 PKG_VERSION="f51fa45"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/nxengine-libretro"

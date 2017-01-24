@@ -18,7 +18,6 @@
 
 PKG_NAME="ipaddress"
 PKG_VERSION="1.0.16"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="OSS"
 PKG_SITE="https://github.com/phihag/ipaddress"

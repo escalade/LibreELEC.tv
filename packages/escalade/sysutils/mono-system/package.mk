@@ -18,7 +18,6 @@
 
 PKG_NAME="mono-system"
 PKG_VERSION="4.6.2.7"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MIT"
 PKG_SITE="http://www.mono-project.com"

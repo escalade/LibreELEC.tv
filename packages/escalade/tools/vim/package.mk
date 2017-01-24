@@ -18,7 +18,6 @@
 
 PKG_NAME="vim"
 PKG_VERSION="8.0.0022"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="VIM"
 PKG_SITE="http://www.vim.org/"

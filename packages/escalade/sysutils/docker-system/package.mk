@@ -18,7 +18,6 @@
 
 PKG_NAME="docker-system"
 PKG_VERSION="1.12.3"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_PROJECTS="Generic RPi RPi2"
 PKG_LICENSE="ASL"

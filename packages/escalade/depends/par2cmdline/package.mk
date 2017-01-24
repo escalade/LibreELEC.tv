@@ -20,7 +20,6 @@
 
 PKG_NAME="par2cmdline"
 PKG_VERSION="b0fab49"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/Parchive/par2cmdline"

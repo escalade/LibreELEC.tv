@@ -18,7 +18,6 @@
 
 PKG_NAME="RTL8723BS"
 PKG_VERSION="7708383"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/hadess/rtl8723bs"

@@ -18,7 +18,6 @@
 
 PKG_NAME="buildbot-cores"
 PKG_VERSION="latest"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MIT"
 PKG_SITE="http://buildbot.libretro.com"

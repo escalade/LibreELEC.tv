@@ -18,7 +18,6 @@
 
 PKG_NAME="mame2010-libretro"
 PKG_VERSION="abdabbe"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/mame2010-libretro"

@@ -18,7 +18,6 @@
 
 PKG_NAME="spotify"
 PKG_VERSION="latest"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Freeware"
 PKG_SITE="http://www.spotify.com"

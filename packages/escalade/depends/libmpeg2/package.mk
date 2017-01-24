@@ -18,7 +18,6 @@
 
 PKG_NAME="libmpeg2"
 PKG_VERSION="0.5.1"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://libmpeg2.sourceforge.net/"

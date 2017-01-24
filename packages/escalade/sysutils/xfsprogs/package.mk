@@ -18,7 +18,6 @@
 
 PKG_NAME="xfsprogs"
 PKG_VERSION="4.8.0"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.xfs.org"

@@ -18,7 +18,6 @@
 
 PKG_NAME="SDL"
 PKG_VERSION="5e5cf17"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/vanfanel/SDL-1.2.15-raspberrypi.git"

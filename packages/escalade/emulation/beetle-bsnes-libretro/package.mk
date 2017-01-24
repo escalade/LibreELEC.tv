@@ -20,7 +20,6 @@
 
 PKG_NAME="beetle-bsnes-libretro"
 PKG_VERSION="75210dd"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="Non-commercial"
 PKG_SITE="https://github.com/libretro/beetle-bsnes-libretro"

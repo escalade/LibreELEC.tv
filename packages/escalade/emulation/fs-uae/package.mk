@@ -18,7 +18,6 @@
 
 PKG_NAME="fs-uae"
 PKG_VERSION="09428de"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/FrodeSolheim/fs-uae"

@@ -20,7 +20,6 @@
 
 PKG_NAME="unfs3"
 PKG_VERSION="497"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/markusn/unfs3"

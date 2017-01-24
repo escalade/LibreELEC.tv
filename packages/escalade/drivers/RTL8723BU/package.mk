@@ -18,7 +18,6 @@
 
 PKG_NAME="RTL8723BU"
 PKG_VERSION="4051c16"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/lwfinger/rtl8723bu"

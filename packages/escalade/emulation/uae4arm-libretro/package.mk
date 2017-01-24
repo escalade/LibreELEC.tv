@@ -18,7 +18,6 @@
 
 PKG_NAME="uae4arm-libretro"
 PKG_VERSION="d7f97a7"
-PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="MAME"
 PKG_SITE="https://github.com/repojohnray/libretro-uae4arm"
