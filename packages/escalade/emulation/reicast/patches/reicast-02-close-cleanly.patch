@@ -1,0 +1,584 @@
+From 99b45946dd0ce6ec0b0c886f08d8f8a363f4545d Mon Sep 17 00:00:00 2001
+From: 7oxicshadow <7oxicshadow@googlemail.com>
+Date: Fri, 22 Apr 2016 23:11:39 +0100
+Subject: [PATCH 1/3] Allow Linux build to close cleanly *Add the ability to
+ stop the render thread *Add the ability to stop the ngen thread *Add the
+ ability to detect the window close event *Add gl_context_destroy function
+ *Close any open controllers *Allows the nvmem to save
+
+---
+ core/hw/pvr/Renderer_if.cpp | 12 +++++++++++-
+ core/linux-dist/main.cpp    | 28 +++++++++++++++++++++++++++-
+ core/linux-dist/x11.cpp     | 41 ++++++++++++++++++++++++++++++++++++++++-
+ core/linux-dist/x11.h       |  1 +
+ core/rec-x64/rec_x64.cpp    | 14 ++++++++++++--
+ 5 files changed, 91 insertions(+), 5 deletions(-)
+
+diff --git a/core/hw/pvr/Renderer_if.cpp b/core/hw/pvr/Renderer_if.cpp
+index cc34362..c484cb8 100644
+--- a/core/hw/pvr/Renderer_if.cpp
++++ b/core/hw/pvr/Renderer_if.cpp
+@@ -229,6 +229,8 @@ bool rend_single_frame()
+ 	return do_swp;
+ }
+ 
++int rend_en = true;
++
+ void* rend_thread(void* p)
+ {
+ #if FEAT_HAS_NIXPROF
+@@ -269,13 +271,21 @@ void* rend_thread(void* p)
+ 	//we don't know if this is true, so let's not speculate here
+ 	//renderer->Resize(640, 480);
+ 
+-	for(;;)
++	while(rend_en)
+ 	{
+ 		if (rend_single_frame())
+ 			renderer->Present();
+ 	}
+ }
+ 
++#if HOST_OS==OS_LINUX
++	void rend_terminate()
++	{
++		rend_en = false;
++		printf("rend thread stopped\n");
++	}
++#endif
++
+ #if !defined(TARGET_NO_THREADS)
+ cThread rthd(rend_thread,0);
+ #endif
+diff --git a/core/linux-dist/main.cpp b/core/linux-dist/main.cpp
+index 5862aee..c5b1e64 100755
+--- a/core/linux-dist/main.cpp
++++ b/core/linux-dist/main.cpp
+@@ -195,6 +195,7 @@ void os_DoEvents()
+ {
+ 	#if defined(SUPPORT_X11)
+ 		input_x11_handle();
++	    event_x11_handle();
+ 	#endif
+ }
+ 
+@@ -396,6 +397,10 @@ std::vector<string> find_system_data_dirs()
+ 	return dirs;
+ }
+ 
++/* Required Prototypes */
++void x11_gl_context_destroy();
++void x11_window_destroy();
++void dc_term();
+ 
+ int main(int argc, wchar* argv[])
+ {
+@@ -445,7 +450,28 @@ int main(int argc, wchar* argv[])
+ 		emscripten_set_main_loop(&dc_run, 100, false);
+ 	#endif
+ 
+-
++	/* Attempt a relatively clean exit on linux. This will only 
++	   happen if the ngen thread is terminated */
++    #if HOST_OS==OS_LINUX
++	    /* Close processes and save the bios settings */
++		dc_term();
++	
++		/* close the controllers */
++		for (int port = 0; port < 4 ; port++)
++		{
++			if (evdev_controllers[port].fd >= 0)
++			{
++				close(evdev_controllers[port].fd);
++			}
++		}
++	
++		/*Close the GL context */
++		x11_gl_context_destroy();
++	
++		/* Destroy the window */
++		x11_window_destroy();
++	#endif
++	
+ 	#ifdef TARGET_PANDORA
+ 		clean_exit(0);
+ 	#endif
+diff --git a/core/linux-dist/x11.cpp b/core/linux-dist/x11.cpp
+index 4a88ccf..7e7a644 100644
+--- a/core/linux-dist/x11.cpp
++++ b/core/linux-dist/x11.cpp
+@@ -3,6 +3,7 @@
+ #include <X11/Xlib.h>
+ #include <X11/Xatom.h>
+ #include <X11/Xutil.h>
++#include <iostream>
+ 
+ #if !defined(GLES)
+ 	#include <GL/gl.h>
+@@ -37,6 +38,7 @@ int x11_height;
+ int ndcid = 0;
+ void* x11_glc;
+ bool x11_fullscreen = false;
++Atom wmDeleteMessage;
+ 
+ void* x11_vis;
+ 
+@@ -64,6 +66,25 @@ void x11_window_set_fullscreen(bool fullscreen)
+ 		XSendEvent((Display*)x11_disp, DefaultRootWindow((Display*)x11_disp), False, SubstructureNotifyMask, &xev);
+ }
+ 
++void ngen_terminate();
++void rend_terminate();
++
++void event_x11_handle()
++{
++	XEvent event;
++	
++	while(XPending(x11_disp)) {
++		XNextEvent(x11_disp, &event);
++
++		if (event.type == ClientMessage &&
++		event.xclient.data.l[0] == wmDeleteMessage) {
++			printf("Caught window close event\n");
++			rend_terminate();
++			ngen_terminate();
++		}
++	}
++}
++
+ void input_x11_handle()
+ {
+ 	if (x11_win && x11_keyboard_input)
+@@ -79,7 +100,11 @@ void input_x11_handle()
+ 				case KeyRelease:
+ 					if (e.type == KeyRelease && e.xkey.keycode == 9) // ESC button
+ 					{
+-						die("death by escape key");
++						/* Terminate the main program loop */
++						rend_terminate();
++						ngen_terminate();
++						
++						//die("death by escape key");
+ 					}
+ #if FEAT_HAS_NIXPROF
+ 					else if (e.type == KeyRelease && e.xkey.keycode == 76) // F10 button
+@@ -254,6 +279,10 @@ void x11_window_create()
+ 		// Creates the X11 window
+ 		x11Window = XCreateWindow(x11Display, RootWindow(x11Display, x11Screen), (ndcid%3)*640, (ndcid/3)*480, x11_width, x11_height,
+ 			0, depth, InputOutput, x11Visual->visual, ui32Mask, &sWA);
++		
++        // Capture the close window event
++        wmDeleteMessage = XInternAtom(x11Display, "WM_DELETE_WINDOW", False);
++        XSetWMProtocols(x11Display, x11Window, &wmDeleteMessage, 1);
+ 
+ 		if(x11_fullscreen)
+ 		{
+@@ -320,8 +349,17 @@ void x11_window_set_text(const char* text)
+ 	}
+ }
+ 
++void x11_gl_context_destroy()
++{
++	printf("Destroy GL Context\n");
++	glXMakeCurrent((Display*)x11_disp, None, NULL);
++ 	glXDestroyContext((Display*)x11_disp, x11_glc);
++}
++
++
+ void x11_window_destroy()
+ {
++	printf("Destroy X11 Window\n");
+ 	// close XWindow
+ 	if (x11_win)
+ 	{
+@@ -334,4 +372,5 @@ void x11_window_destroy()
+ 		x11_disp = 0;
+ 	}
+ }
++
+ #endif
+diff --git a/core/linux-dist/x11.h b/core/linux-dist/x11.h
+index dcb0568..8d891a6 100644
+--- a/core/linux-dist/x11.h
++++ b/core/linux-dist/x11.h
+@@ -3,5 +3,6 @@
+ extern void* x11_glc;
+ extern void input_x11_init();
+ extern void input_x11_handle();
++extern void event_x11_handle();
+ extern void x11_window_create();
+ extern void x11_window_set_text(const char* text);
+diff --git a/core/rec-x64/rec_x64.cpp b/core/rec-x64/rec_x64.cpp
+index 1d46ef1..91bf288 100644
+--- a/core/rec-x64/rec_x64.cpp
++++ b/core/rec-x64/rec_x64.cpp
+@@ -38,13 +38,15 @@ void ngen_FailedToFindBlock_internal() {
+ 
+ void(*ngen_FailedToFindBlock)() = &ngen_FailedToFindBlock_internal;
+ 
++int ngen_required = true;
++
+ void ngen_mainloop(void* v_cntx)
+ {
+ 	Sh4RCB* ctx = (Sh4RCB*)((u8*)v_cntx - sizeof(Sh4RCB));
+ 
+ 	cycle_counter = 0;
+ 
+-	for (;;) {
++	do{
+ 		cycle_counter = SH4_TIMESLICE;
+ 		do {
+ 			DynarecCodeEntryPtr rcb = bm_GetCode(ctx->cntx.pc);
+@@ -54,9 +56,17 @@ void ngen_mainloop(void* v_cntx)
+ 		if (UpdateSystem()) {
+ 			rdv_DoInterrupts_pc(ctx->cntx.pc);
+ 		}
+-	}
++	}while(ngen_required);
+ }
+ 
++#if HOST_OS==OS_LINUX
++	void ngen_terminate()
++	{
++		ngen_required = false;
++		printf("ngen thread stopped\n");
++	}
++#endif
++
+ void ngen_init()
+ {
+ }
+
+From 19335405a0cfabc40e58a99f27f87685feac7e79 Mon Sep 17 00:00:00 2001
+From: colin johnson <7oxicshadow@googlemail.com>
+Date: Sun, 3 Jul 2016 15:03:08 +0100
+Subject: [PATCH 2/3] Fixes for raspberry pi
+
+pi2 should now exit cleanly
+pi2 should now save settings
+general formatting clean-up
+
+Note: Raspberry pi requires keyboard.cfg in /mappings
+      to bind esc key
+---
+ core/hw/pvr/Renderer_if.cpp | 10 +++----
+ core/linux-dist/evdev.cpp   |  4 ++-
+ core/linux-dist/main.cpp    | 71 +++++++++++++++++++++++++++++----------------
+ core/linux-dist/x11.cpp     | 18 ++++--------
+ core/rec-ARM/ngen_arm.S     | 14 ++++++++-
+ core/rec-ARM/rec_arm.cpp    | 15 ++++++++++
+ core/rec-x64/rec_x64.cpp    | 14 ++++-----
+ 7 files changed, 95 insertions(+), 51 deletions(-)
+
+diff --git a/core/hw/pvr/Renderer_if.cpp b/core/hw/pvr/Renderer_if.cpp
+index c484cb8..24ea157 100644
+--- a/core/hw/pvr/Renderer_if.cpp
++++ b/core/hw/pvr/Renderer_if.cpp
+@@ -279,11 +279,11 @@ void* rend_thread(void* p)
+ }
+ 
+ #if HOST_OS==OS_LINUX
+-	void rend_terminate()
+-	{
+-		rend_en = false;
+-		printf("rend thread stopped\n");
+-	}
++void rend_terminate()
++{
++	rend_en = false;
++	printf("rend_terminate called\n");
++}
+ #endif
+ 
+ #if !defined(TARGET_NO_THREADS)
+diff --git a/core/linux-dist/evdev.cpp b/core/linux-dist/evdev.cpp
+index 955e507..b2ee27d 100644
+--- a/core/linux-dist/evdev.cpp
++++ b/core/linux-dist/evdev.cpp
+@@ -298,6 +298,8 @@
+ 		}
+ 	}
+ 
++        void start_shutdown(void);
++
+ 	bool input_evdev_handle(EvdevController* controller, u32 port)
+ 	{
+ 		#define SET_FLAG(field, mask, expr) field =((expr) ? (field & ~mask) : (field | mask))
+@@ -330,7 +332,7 @@
+ 					} else if (ie.code == controller->mapping->Btn_Start) {
+ 						SET_FLAG(kcode[port], DC_BTN_START, ie.value);
+ 					} else if (ie.code == controller->mapping->Btn_Escape) {
+-						die("death by escape key");
++                                                start_shutdown();
+ 					} else if (ie.code == controller->mapping->Btn_DPad_Left) {
+ 						SET_FLAG(kcode[port], DC_DPAD_LEFT, ie.value);
+ 					} else if (ie.code == controller->mapping->Btn_DPad_Right) {
+diff --git a/core/linux-dist/main.cpp b/core/linux-dist/main.cpp
+index c5b1e64..81960e1 100755
+--- a/core/linux-dist/main.cpp
++++ b/core/linux-dist/main.cpp
+@@ -195,7 +195,7 @@ void os_DoEvents()
+ {
+ 	#if defined(SUPPORT_X11)
+ 		input_x11_handle();
+-	    event_x11_handle();
++		event_x11_handle();
+ 	#endif
+ }
+ 
+@@ -397,10 +397,26 @@ std::vector<string> find_system_data_dirs()
+ 	return dirs;
+ }
+ 
+-/* Required Prototypes */
+-void x11_gl_context_destroy();
+-void x11_window_destroy();
++#if HOST_OS==OS_LINUX
++
++#if defined(SUPPORT_X11)
++    /* Required Prototypes */
++    void x11_gl_context_destroy();
++    void x11_window_destroy();
++#endif
++
+ void dc_term();
++void rend_terminate();
++void ngen_terminate();
++
++void start_shutdown(void)
++{
++    printf("start_shutdown called\n");
++    rend_terminate();
++    ngen_terminate();
++}
++
++#endif
+ 
+ int main(int argc, wchar* argv[])
+ {
+@@ -450,32 +466,37 @@ int main(int argc, wchar* argv[])
+ 		emscripten_set_main_loop(&dc_run, 100, false);
+ 	#endif
+ 
+-	/* Attempt a relatively clean exit on linux. This will only 
+-	   happen if the ngen thread is terminated */
+-    #if HOST_OS==OS_LINUX
+-	    /* Close processes and save the bios settings */
+-		dc_term();
+-	
+-		/* close the controllers */
+-		for (int port = 0; port < 4 ; port++)
+-		{
+-			if (evdev_controllers[port].fd >= 0)
+-			{
+-				close(evdev_controllers[port].fd);
+-			}
+-		}
+-	
+-		/*Close the GL context */
+-		x11_gl_context_destroy();
+-	
+-		/* Destroy the window */
+-		x11_window_destroy();
+-	#endif
+ 	
+ 	#ifdef TARGET_PANDORA
+ 		clean_exit(0);
+ 	#endif
+ 
++        #if HOST_OS==OS_LINUX
++
++            printf("main loop ended\n");
++
++            dc_term();
++
++            printf("closing any open controllers\n");
++
++            for (int port = 0; port < 4 ; port++)
++            {
++                if(evdev_controllers[port].fd >= 0)
++                {
++                    close(evdev_controllers[port].fd);
++                }
++            }
++
++            #if defined(SUPPORT_X11)
++                /*Close the GL context */
++                x11_gl_context_destroy();
++	
++	        /* Destroy the window */
++	        x11_window_destroy();
++            #endif
++
++        #endif
++
+ 	return 0;
+ }
+ #endif
+diff --git a/core/linux-dist/x11.cpp b/core/linux-dist/x11.cpp
+index 7e7a644..6fafef3 100644
+--- a/core/linux-dist/x11.cpp
++++ b/core/linux-dist/x11.cpp
+@@ -66,8 +66,7 @@ void x11_window_set_fullscreen(bool fullscreen)
+ 		XSendEvent((Display*)x11_disp, DefaultRootWindow((Display*)x11_disp), False, SubstructureNotifyMask, &xev);
+ }
+ 
+-void ngen_terminate();
+-void rend_terminate();
++void start_shutdown(void);
+ 
+ void event_x11_handle()
+ {
+@@ -79,8 +78,7 @@ void event_x11_handle()
+ 		if (event.type == ClientMessage &&
+ 		event.xclient.data.l[0] == wmDeleteMessage) {
+ 			printf("Caught window close event\n");
+-			rend_terminate();
+-			ngen_terminate();
++			start_shutdown();
+ 		}
+ 	}
+ }
+@@ -100,11 +98,7 @@ void input_x11_handle()
+ 				case KeyRelease:
+ 					if (e.type == KeyRelease && e.xkey.keycode == 9) // ESC button
+ 					{
+-						/* Terminate the main program loop */
+-						rend_terminate();
+-						ngen_terminate();
+-						
+-						//die("death by escape key");
++						start_shutdown();
+ 					}
+ #if FEAT_HAS_NIXPROF
+ 					else if (e.type == KeyRelease && e.xkey.keycode == 76) // F10 button
+@@ -280,9 +274,9 @@ void x11_window_create()
+ 		x11Window = XCreateWindow(x11Display, RootWindow(x11Display, x11Screen), (ndcid%3)*640, (ndcid/3)*480, x11_width, x11_height,
+ 			0, depth, InputOutput, x11Visual->visual, ui32Mask, &sWA);
+ 		
+-        // Capture the close window event
+-        wmDeleteMessage = XInternAtom(x11Display, "WM_DELETE_WINDOW", False);
+-        XSetWMProtocols(x11Display, x11Window, &wmDeleteMessage, 1);
++ 		// Capture the close window event
++		wmDeleteMessage = XInternAtom(x11Display, "WM_DELETE_WINDOW", False);
++		XSetWMProtocols(x11Display, x11Window, &wmDeleteMessage, 1);
+ 
+ 		if(x11_fullscreen)
+ 		{
+diff --git a/core/rec-ARM/ngen_arm.S b/core/rec-ARM/ngen_arm.S
+index fddaded..7898e88 100644
+--- a/core/rec-ARM/ngen_arm.S
++++ b/core/rec-ARM/ngen_arm.S
+@@ -170,8 +170,18 @@ do_iter:
+ 	mov r4,r0
+ 
+ .global CSYM(no_update)
++.extern ngen_required
+ HIDDEN(no_update)
+-CSYM(no_update):              @ next_pc _MUST_ be on r4 *R4 NOT R0 anymore*
++CSYM(no_update):               @ next_pc _MUST_ be on r4 *R4 NOT R0 anymore*
++
++                               @ Note: I suspect that the exit thread routine
++                               @       below is inefficient. If anyone is familiar
++                               @       with asm please consider optimising!
++
++        ldr r3, =ngen_required @ load r3 with the address of c variable ngen_required
++        ldr r0,[r3]            @ dereference and store in r0
++        cmp r0,#0              @ compare r0 with numerical value 0
++        beq CSYM(cleanup)      @ if compare is true jump to cleanup label and exit thread
+ 
+ #if DC_PLATFORM == DC_PLATFORM_NAOMI
+ 	sub r2,r8,#0x4100000
+@@ -185,6 +195,8 @@ CSYM(no_update):              @ next_pc _MUST_ be on r4 *R4 NOT R0 anymore*
+ 	@bic r1,r4,#0xFF000000
+ 	@ldr pc,[r2,r1,lsl #1]
+ 
++HIDDEN(cleanup)
++CSYM(cleanup):
+ 
+ pop {r4-r12,lr}
+ bx lr
+diff --git a/core/rec-ARM/rec_arm.cpp b/core/rec-ARM/rec_arm.cpp
+index 1271793..2339665 100644
+--- a/core/rec-ARM/rec_arm.cpp
++++ b/core/rec-ARM/rec_arm.cpp
+@@ -2339,4 +2339,19 @@ RuntimeBlockInfo* ngen_AllocateBlock()
+ 	return new DynaRBI();
+ };
+ 
++/* This is declared outside the #if so that any
++   the .s file will still build and run in an infinity
++   loop if ngen_terminate is not available */
++unsigned int ngen_required = true;
++
++#if HOST_OS==OS_LINUX
++
++void ngen_terminate(void)
++{
++	printf("ngen_terminate called\n");
++	ngen_required = false;
++}
++
++#endif
++
+ #endif
+diff --git a/core/rec-x64/rec_x64.cpp b/core/rec-x64/rec_x64.cpp
+index 91bf288..7b3e270 100644
+--- a/core/rec-x64/rec_x64.cpp
++++ b/core/rec-x64/rec_x64.cpp
+@@ -38,7 +38,7 @@ void ngen_FailedToFindBlock_internal() {
+ 
+ void(*ngen_FailedToFindBlock)() = &ngen_FailedToFindBlock_internal;
+ 
+-int ngen_required = true;
++unsigned int ngen_required = true;
+ 
+ void ngen_mainloop(void* v_cntx)
+ {
+@@ -60,11 +60,11 @@ void ngen_mainloop(void* v_cntx)
+ }
+ 
+ #if HOST_OS==OS_LINUX
+-	void ngen_terminate()
+-	{
+-		ngen_required = false;
+-		printf("ngen thread stopped\n");
+-	}
++void ngen_terminate()
++{
++	ngen_required = false;
++	printf("ngen thread stopped\n");
++}
+ #endif
+ 
+ void ngen_init()
+@@ -484,4 +484,4 @@ void ngen_CC_Finish(shil_opcode* op)
+ {
+ 
+ }
+-#endif
+\ No newline at end of file
++#endif
+
+From aad2955c0fcf159784bbfe330cc9e0a7ba29064c Mon Sep 17 00:00:00 2001
+From: colin johnson <7oxicshadow@googlemail.com>
+Date: Sun, 3 Jul 2016 15:30:15 +0100
+Subject: [PATCH 3/3] add missing return value for appveyor
+
+---
+ core/hw/pvr/Renderer_if.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/core/hw/pvr/Renderer_if.cpp b/core/hw/pvr/Renderer_if.cpp
+index 24ea157..907877d 100644
+--- a/core/hw/pvr/Renderer_if.cpp
++++ b/core/hw/pvr/Renderer_if.cpp
+@@ -276,6 +276,8 @@ void* rend_thread(void* p)
+ 		if (rend_single_frame())
+ 			renderer->Present();
+ 	}
++	
++	return (0);
+ }
+ 
+ #if HOST_OS==OS_LINUX
