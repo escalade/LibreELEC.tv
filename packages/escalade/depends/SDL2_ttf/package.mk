@@ -29,4 +29,8 @@ PKG_SHORTDESC="This is a sample library which allows you to use TrueType fonts i
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-PKG_CONFIGURE_OPTS_TARGET="--with-freetype-prefix=$SYSROOT_PREFIX/usr"
+if [ ! "$DISPLAYSERVER" = "x11" ]; then
+  X11="--without-x"
+fi
+
+PKG_CONFIGURE_OPTS_TARGET="--with-freetype-prefix=$SYSROOT_PREFIX/usr $X11"
