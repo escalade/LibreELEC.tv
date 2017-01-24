@@ -92,6 +92,7 @@ OEM_EMU_RPI=" \
   mame2003-libretro \
   uae4arm \
   pcsx_rearmed-libretro \
+  reicast \
   yabause-libretro"
 
 if [ ! "$OEM_APPS" = "no" ]; then
