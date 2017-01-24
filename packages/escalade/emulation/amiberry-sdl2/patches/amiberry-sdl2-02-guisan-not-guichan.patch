@@ -1,0 +1,13 @@
+--- a/src/osdep/pandora_gui.cpp	2017-01-24 16:21:06.784937954 +0100
++++ b/src/osdep/pandora_gui.cpp	2017-01-24 16:18:18.009972262 +0100
+@@ -2,8 +2,8 @@
+ #include <iostream>
+ #include <vector>
+ #include <sstream>
+-#include <guichan.hpp>
+-#include <guichan/sdl.hpp>
++#include <guisan.hpp>
++#include <guisan/sdl.hpp>
+ #include "sysconfig.h"
+ #include "sysdeps.h"
+ #include "config.h"

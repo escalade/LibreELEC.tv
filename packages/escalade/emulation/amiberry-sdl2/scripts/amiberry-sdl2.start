@@ -4,7 +4,7 @@ MAX_DRIVES=4
 i=0
 
 . /etc/profile
-cd /storage/.config/uae4arm
+cd /storage/.config/amiberry
 
 kodifreeze.sh freeze
 
@@ -12,7 +12,7 @@ kodifreeze.sh freeze
 tvservice -e "CEA 31"
 
 # Copy over the default configuration
-TMP_DIR=/tmp/uae4arm
+TMP_DIR=/tmp/amiberry
 mkdir -p "$TMP_DIR"
 cp conf/uaeconfig.uae "$TMP_DIR"/
 
@@ -26,7 +26,7 @@ if [ `echo $1 | grep -i .zip | wc -l` -eq 1 ]; then
           finegrain_cpu_speed=1024 \n
           cpu_type=68ec020 \n
           cpu_model=68020 \n
-          kickstart_rom_file=/storage/.config/uae4arm/kickstarts/kick31.rom"
+          kickstart_rom_file=/storage/.config/amiberry/kickstarts/kick31.rom"
   fi
   for FILE in "$TMP_DIR"/*
   do
@@ -38,15 +38,15 @@ if [ `echo $1 | grep -i .zip | wc -l` -eq 1 ]; then
     fi
   done
   echo -e $ARGS >> "$TMP_DIR"/uaeconfig.uae
-  uae4arm -f "$TMP_DIR"/uaeconfig.uae > /tmp/uae4arm.log 2>&1
+  amiberry-sdl2 -f "$TMP_DIR"/uaeconfig.uae > /tmp/amiberry-sdl2.log 2>&1
   rm -rf "$TMP_DIR"
 else
   # Check for AGA game
   if [ `echo $1 | egrep 'AGA|CD32' | wc -l` -eq 1 -o `echo "$TMP_DIR"/* | egrep 'AGA|CD32' | wc -l` -eq 1 ]; then
-    ARGS="chipset=aga\ncachesize=0\nchipmem_size=4\nfinegrain_cpu_speed=1024\ncpu_type=68ec020\ncpu_model=68020\nkickstart_rom_file=/storage/emulators/uae4arm/kickstarts/kick31.rom"
+    ARGS="chipset=aga\ncachesize=0\nchipmem_size=4\nfinegrain_cpu_speed=1024\ncpu_type=68ec020\ncpu_model=68020\nkickstart_rom_file=/storage/.config/amiberry/kickstarts/kick31.rom"
   fi
   echo -e "$ARGS\nfloppy0=$1" >> "$TMP_DIR"/uaeconfig.uae
-  uae4arm -f "$TMP_DIR"/uaeconfig.uae > /tmp/uae4arm.log 2>&1
+  amiberry-sdl2 -f "$TMP_DIR"/uaeconfig.uae > /tmp/amiberry-sdl2.log 2>&1
 fi
 
 # Change back refresh rate

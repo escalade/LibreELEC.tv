@@ -1,0 +1,40 @@
+--- a/Makefile	2017-01-24 15:59:35.394162454 +0100
++++ b/Makefile	2017-01-24 16:02:20.553010145 +0100
+@@ -3,13 +3,13 @@
+ endif
+ 
+ ifeq ($(PLATFORM),rpi3)
+-	CPU_FLAGS += -std=gnu++14 -march=armv8-a -mfpu=neon-fp-armv8 -mfloat-abi=hard
++	CPU_FLAGS += -std=gnu++14
+ 	MORE_CFLAGS += -DARMV6T2 -DUSE_ARMNEON
+ else ifeq ($(PLATFORM),rpi2)
+-	CPU_FLAGS += -std=gnu++14 -march=armv7-a -mfpu=neon-vfpv4 -mfloat-abi=hard
++	CPU_FLAGS += -std=gnu++14
+ 	MORE_CFLAGS += -DARMV6T2 -DUSE_ARMNEON
+ else ifeq ($(PLATFORM),rpi1)
+-	CPU_FLAGS += -std=gnu++14 -march=armv6zk -mfpu=vfp -mfloat-abi=hard
++	CPU_FLAGS += -std=gnu++14
+ endif
+ 
+ NAME   = amiberry-sdl2
+@@ -29,9 +29,9 @@
+ #GEN_PROFILE=1
+ #USE_PROFILE=1
+ 
+-SDL_CFLAGS = `sdl2-config --cflags --libs`
++SDL_CFLAGS = `$(SYSROOT_PREFIX)/usr/bin/sdl2-config --cflags --libs`
+ 
+-DEFS +=  `xml2-config --cflags`
++DEFS +=  `$(SYSROOT_PREFIX)/usr/bin/xml2-config --cflags`
+ DEFS += -DCPU_arm -DARMV6_ASSEMBLY -DPANDORA -DPICASSO96
+ DEFS += -DWITH_INGAME_WARNING -DRASPBERRY -DCAPSLOCK_DEBIAN_WORKAROUND
+ DEFS += -DROM_PATH_PREFIX=\"./\" -DDATA_PREFIX=\"./data/\" -DSAVE_PREFIX=\"./saves/\"
+@@ -42,7 +42,7 @@
+ MORE_CFLAGS += -fexceptions -fpermissive
+ 
+ LDFLAGS += -lpthread -lm -lz -lpng -lrt -lxml2 -lFLAC -lmpg123 -ldl
+-LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf -lguisan -L/opt/vc/lib -Lsrc/guisan
++LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf -lguisan -L$(SYSROOT_PREFIX)/usr/lib -Lsrc/guisan
+ 
+ ifndef DEBUG
+ MORE_CFLAGS += -Ofast -pipe -fweb
