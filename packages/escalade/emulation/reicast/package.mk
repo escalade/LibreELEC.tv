@@ -48,3 +48,7 @@ makeinstall_target() {
   cp tools/reicast-joyconfig.py $INSTALL/usr/bin/
   cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
 }
+
+postinstall_target() {
+  enable_service reicast-biosdir.service
+}

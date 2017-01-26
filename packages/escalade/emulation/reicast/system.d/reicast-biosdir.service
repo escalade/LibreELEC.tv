@@ -1,0 +1,11 @@
+[Unit]
+Description=Reicast BIOS directory symlink
+ConditionPathIsSymbolicLink=!/storage/.local/share/reicast/data
+
+[Service]
+Type=oneshot
+ExecStart=-/bin/sh -c "mkdir -p /storage/.local/share/reicast ; rm -rf /storage/.local/share/reicast/data ; ln -s /storage/roms/bios /storage/.local/share/reicast/data"
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
