@@ -2,9 +2,9 @@ config_description=UAE default configuration
 config_hardware=true
 config_host=true
 config_version=1.5.3
-pandora.rom_path=/storage/.config/uae4arm/kickstarts/
-pandora.floppy_path=/storage/.config/uae4arm/disks/
-pandora.hardfile_path=/storage/.config/uae4arm/
+pandora.rom_path=/storage/.config/amiberry/kickstarts/
+pandora.floppy_path=/storage/roms/amiga
+pandora.hardfile_path=/storage/.config/amiberry/
 ; host-specific
 pandora.cpu_speed=600
 pandora.joy_conf=0
