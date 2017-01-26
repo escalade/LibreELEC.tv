@@ -5,7 +5,7 @@
 ################################################################################
 
 PKG_NAME="amiberry-sdl2"
-PKG_VERSION="b66e10b"
+PKG_VERSION="1547d56"
 PKG_ARCH="arm"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/midwan/amiberry"
