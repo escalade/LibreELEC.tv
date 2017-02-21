@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="fs-uae"
-PKG_VERSION="09428de"
+PKG_VERSION="4bec4fa"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/FrodeSolheim/fs-uae"
@@ -45,8 +45,8 @@ post_makeinstall_target() {
   ln -s /storage/roms/bios $INSTALL/usr/config/fs-uae/Kickstarts
 
   # install capsimg plugin for ipf support
-  wget https://fs-uae.net/devel/plugins/CAPSImg/CAPSImg_5.1fs2.zip
-  unzip -o -d $INSTALL/usr/config/fs-uae CAPSImg_5.1fs2.zip
+  wget https://fs-uae.net/devel/plugins/CAPSImg/CAPSImg_5.1fs3.zip
+  unzip -o -d $INSTALL/usr/config/fs-uae CAPSImg_5.1fs3.zip
   rm -rf $INSTALL/usr/config/fs-uae/Plugins/CAPSImg/OSX
   rm -rf $INSTALL/usr/config/fs-uae/Plugins/CAPSImg/SteamOS
   rm -rf $INSTALL/usr/config/fs-uae/Plugins/CAPSImg/Windows
