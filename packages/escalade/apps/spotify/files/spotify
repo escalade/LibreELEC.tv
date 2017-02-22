@@ -10,7 +10,8 @@ install_spotify() {
     export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^pkgver='` || exit 1
     export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^_anotherpkgver='` || exit 1
     export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^source_x86_64='` || exit 1
-    export url=`echo $source_x86_64 | sed s:\$\{pkgver\}:$pkgver: | sed s:\$\{_anotherpkgver\}:$_anotherpkgver: | cut -d \" -f 2`
+    export `curl -s "https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=spotify" | grep -E '^_amd64_pkgrel='`
+    export url=`echo $source_x86_64 | sed s:\$\{pkgver\}:$pkgver: | sed s:\$\{_anotherpkgver\}:$_anotherpkgver: | sed s:\$\{_amd64_pkgrel\}:$_amd64_pkgrel: | cut -d \" -f 2`
   else
     export url="$1"
   fi 
@@ -23,7 +24,7 @@ install_spotify() {
 }
 
 run_spotify() {
-  LD_PRELOAD=libcurl-compat.so $SPOTIFY_HOME/spotify "$@"
+  LD_PRELOAD="libcurl-compat.so libcrypto-compat.so libssl-compat.so" $SPOTIFY_HOME/spotify "$@"
 }
 
 if [ ! -x $SPOTIFY_HOME ]; then
