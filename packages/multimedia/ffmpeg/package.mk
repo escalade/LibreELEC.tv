@@ -123,7 +123,7 @@ configure_target() {
               --enable-shared \
               --enable-gpl \
               --disable-version3 \
-              --disable-nonfree \
+              --enable-nonfree \
               --enable-logging \
               --disable-doc \
               $FFMPEG_DEBUG \
