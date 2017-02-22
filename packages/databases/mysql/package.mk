@@ -32,7 +32,6 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 post_unpack() {
-  sed -i 's|OPENSSL_MAJOR_VERSION STREQUAL "1"|OPENSSL_MAJOR_VERSION STREQUAL "2"|' $ROOT/$PKG_BUILD/cmake/ssl.cmake
   sed -i 's|GET_TARGET_PROPERTY(LIBMYSQL_OS_OUTPUT_NAME libmysql OUTPUT_NAME)|SET(LIBMYSQL_OS_OUTPUT_NAME "mysqlclient")|' $ROOT/$PKG_BUILD/scripts/CMakeLists.txt
   sed -i "s|COMMAND comp_err|COMMAND $ROOT/$TOOLCHAIN/bin/comp_err|" $ROOT/$PKG_BUILD/extra/CMakeLists.txt
   sed -i "s|COMMAND comp_sql|COMMAND $ROOT/$TOOLCHAIN/bin/comp_sql|" $ROOT/$PKG_BUILD/scripts/CMakeLists.txt
