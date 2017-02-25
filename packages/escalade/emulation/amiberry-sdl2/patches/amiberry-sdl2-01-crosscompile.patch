@@ -16,8 +16,8 @@
 +	CPU_FLAGS += -std=gnu++14
  endif
  
- NAME   = amiberry-sdl2
-@@ -29,9 +29,9 @@
+ NAME  = amiberry-sdl2
+@@ -32,9 +32,9 @@
  #GEN_PROFILE=1
  #USE_PROFILE=1
  
@@ -29,12 +29,23 @@
  DEFS += -DCPU_arm -DARMV6_ASSEMBLY -DPANDORA -DPICASSO96
  DEFS += -DWITH_INGAME_WARNING -DRASPBERRY -DCAPSLOCK_DEBIAN_WORKAROUND
  DEFS += -DROM_PATH_PREFIX=\"./\" -DDATA_PREFIX=\"./data/\" -DSAVE_PREFIX=\"./saves/\"
-@@ -42,7 +42,7 @@
+@@ -45,7 +45,7 @@
  MORE_CFLAGS += -fexceptions -fpermissive
  
  LDFLAGS += -lpthread -lm -lz -lpng -lrt -lxml2 -lFLAC -lmpg123 -ldl
--LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf -lguisan -L/opt/vc/lib -Lsrc/guisan
-+LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf -lguisan -L$(SYSROOT_PREFIX)/usr/lib -Lsrc/guisan
+-LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf -lguisan -L/opt/vc/lib -Lsrc/guisan/lib
++LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf -lguisan -L$(SYSROOT_PREFIX)/usr/lib -Lsrc/guisan/lib
  
  ifndef DEBUG
- MORE_CFLAGS += -Ofast -pipe -fweb
+ MORE_CFLAGS += -Ofast -pipe
+--- a/src/guisan/Makefile	2017-02-26 00:39:25.589472265 +0100
++++ b/src/guisan/Makefile	2017-02-26 00:39:39.182924185 +0100
+@@ -2,7 +2,7 @@
+   
+ AR      = ar
+ 
+-DIRS	=$(shell find ./src -maxdepth 3 -type d)
++DIRS	= src src/sdl src/widgets
+ SOURCE	= $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
+ OBJS    = $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
+ 

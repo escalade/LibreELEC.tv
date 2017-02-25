@@ -5,13 +5,13 @@
 ################################################################################
 
 PKG_NAME="amiberry-sdl2"
-PKG_VERSION="1547d56"
+PKG_VERSION="783ab8c"
 PKG_ARCH="arm"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/midwan/amiberry"
 PKG_URL="https://github.com/midwan/amiberry/archive/sdl2/$PKG_VERSION.tar.gz"
 PKG_SOURCE_DIR="amiberry-sdl2"
-PKG_DEPENDS_TARGET="toolchain alsa-lib freetype zlib SDL2 SDL2_image libpng flac mpg123"
+PKG_DEPENDS_TARGET="toolchain alsa-lib freetype zlib SDL2 SDL2_ttf SDL2_image libpng flac mpg123"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="Amiga emulator optimized for Raspberry Pi"
 
