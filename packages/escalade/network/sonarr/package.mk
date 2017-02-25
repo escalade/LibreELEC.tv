@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="sonarr"
-PKG_VERSION="2.0.0.4409"
+PKG_VERSION="2.0.0.4613"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://sonarr.tv"
