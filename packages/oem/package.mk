@@ -82,6 +82,7 @@ OEM_EMU_GENERIC=" \
   dolphin \
   mame2014-libretro \
   fs-uae \
+  parallel-n64-libretro \
   ppsspp-libretro \
   reicast-libretro \
   unclutter"
