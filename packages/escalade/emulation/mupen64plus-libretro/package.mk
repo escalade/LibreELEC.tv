@@ -17,14 +17,14 @@
 ################################################################################
 
 PKG_NAME="mupen64plus-libretro"
-PKG_VERSION="fcad51c"
+PKG_VERSION="938277a"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/mupen64plus-libretro"
 PKG_URL="https://github.com/libretro/mupen64plus-libretro/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="emulation"
-PKG_SHORTDESC="Libretro port of Mupen64 Plus"
+PKG_SHORTDESC="mupen64plus + RSP-HLE + GLideN64 + libretro"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
@@ -48,12 +48,7 @@ make_target() {
       make platform=armv7-neon-gles-cortex-a9
       ;;
     Generic)
-      mkdir out
       make WITH_DYNAREC=$TARGET_ARCH
-      mv *.so out/
-      make clean
-      make WITH_DYNAREC=$TARGET_ARCH HAVE_OPENGL=0 HAVE_PARALLEL_ONLY=1
-      mv out/*.so .
       ;;
   esac
 }
