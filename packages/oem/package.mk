@@ -63,7 +63,6 @@ OEM_EMU_COMMON=" \
   emulationstation \
   mgba-libretro \
   mupen64plus-libretro \
-  glupen64-libretro \
   nxengine-libretro \
   quicknes-libretro \
   prboom-libretro \
