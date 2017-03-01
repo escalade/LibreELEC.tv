@@ -32,7 +32,7 @@ PKG_LONGDESC="As of Linux 2.2.0, the power of the superuser has been partitioned
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
+post_patch() {
   mkdir -p $ROOT/$PKG_BUILD/.$HOST_NAME
   cp -r $ROOT/$PKG_BUILD/* $ROOT/$PKG_BUILD/.$HOST_NAME
   mkdir -p $ROOT/$PKG_BUILD/.$TARGET_NAME 
