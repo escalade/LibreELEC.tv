@@ -1,0 +1,13 @@
+--- a/src/defaults.py	2017-03-02 13:22:35.409429145 +0000
++++ b/src/defaults.py	2017-03-02 13:23:02.122762308 +0000
+@@ -63,8 +63,8 @@
+ services = {
+     'ENABLED': True,
+     'KERNEL_CMD': '/proc/cmdline',
+-    'SAMBA_NMDB': '/usr/bin/nmbd',
+-    'SAMBA_SMDB': '/usr/bin/smbd',
++    'SAMBA_NMDB': '/usr/sbin/nmbd',
++    'SAMBA_SMDB': '/usr/sbin/smbd',
+     'D_SAMBA_SECURE': '0',
+     'D_SAMBA_USERNAME': 'libreelec',
+     'D_SAMBA_PASSWORD': 'libreelec',
