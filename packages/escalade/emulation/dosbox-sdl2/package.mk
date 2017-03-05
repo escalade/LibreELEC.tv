@@ -17,13 +17,13 @@
 ################################################################################
 
 PKG_NAME="dosbox-sdl2"
-PKG_VERSION="71d6832"
+PKG_VERSION="1427002"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/duganchen/dosbox"
 PKG_URL="https://github.com/duganchen/dosbox/archive/$PKG_VERSION.tar.gz"
 PKG_SOURCE_DIR="dosbox-$PKG_VERSION*"
-PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 SDL2_net fluidsynth munt libpng"
+PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2 SDL2_net SDL_sound fluidsynth libpng"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="DOSBox emulator SDL2 fork by duganchen"
 
@@ -38,8 +38,12 @@ PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
 			   --enable-core-inline \
                            --enable-dynrec \
 			   --enable-unaligned_memory \
-                           --with-sdl=sdl2 \
                            --with-sdl-prefix=$SYSROOT_PREFIX/usr"
+
+pre_configure_target () {
+  cd ..
+  rm -rf .$TARGET
+}
 
 pre_make_target() {
   if [[ "$PROJECT" =~ "RPi" ]]; then
