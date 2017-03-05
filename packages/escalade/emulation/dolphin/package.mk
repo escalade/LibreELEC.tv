@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="dolphin"
-PKG_VERSION="eed64bb"
+PKG_VERSION="c259469"
 PKG_ARCH="x86_64"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/dolphin-emu/dolphin"
@@ -30,6 +30,11 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 PKG_CMAKE_OPTS_TARGET="-DSYSTEM_PORTAUDIO_EXITCODE=0 -DENABLE_LTO=on -DUSE_SHARED_ENET=on"
+
+pre_make_target() {
+  find . -name flags.make -exec sed -i "s:isystem :I:g" \{} \;
+  export VERBOSE=1
+}
 
 post_makeinstall_target() {
   cp $PKG_DIR/scripts/* $INSTALL/usr/bin/
