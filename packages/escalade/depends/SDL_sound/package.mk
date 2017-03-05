@@ -19,18 +19,27 @@
 ################################################################################
 
 PKG_NAME="SDL_sound"
-PKG_VERSION="1.0.3"
+PKG_VERSION="719dade41745"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://www.icculus.org/SDL_sound/"
-PKG_URL="https://www.icculus.org/SDL_sound/downloads/SDL_sound-$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain alsa-lib SDL"
+PKG_URL="http://hg.icculus.org/icculus/SDL_sound/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="SDL_sound-$PKG_VERSION"
+PKG_DEPENDS_TARGET="toolchain alsa-lib SDL2"
 PKG_SECTION="emulators/depends"
 PKG_SHORTDESC="SDL_sound library"
 
 PKG_IS_ADDON="no"
-PKG_AUTORECONF="no"
+PKG_AUTORECONF="yes"
 
 PKG_CONFIGURE_OPTS_TARGET="--prefix=/usr \
 			   --disable-speex \
-			   --with-sdl-prefix=$SYSROOT_PREFIX/usr"
+			   ac_cv_path_SDL2_CONFIG=$SYSROOT_PREFIX/usr/bin/sdl2-config"
+
+post_unpack() {
+  touch $PKG_BUILD/README
+}
+
+post_makeinstall_target() {
+  ln -sf $SYSROOT_PREFIX/usr/include/SDL/SDL_sound.h $SYSROOT_PREFIX/usr/include/SDL2/SDL_sound.h
+}
