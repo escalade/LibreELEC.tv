@@ -53,6 +53,7 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-dependency-tracking \
                            --enable-tools \
                            --enable-datafiles \
                            --disable-experimental \
+                           --enable-deprecated \
                            --enable-sixaxis \
                            --with-gnu-ld \
                            $BLUEZ_CONFIG \
@@ -72,6 +73,10 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/bin/bluemoon
   rm -rf $INSTALL/usr/bin/ciptool
   rm -rf $INSTALL/usr/share/dbus-1
+
+  mkdir -p $INSTALL/usr/bin
+    cp tools/btinfo $INSTALL/usr/bin
+    cp tools/btmgmt $INSTALL/usr/bin
 
   mkdir -p $INSTALL/etc/bluetooth
     cp src/main.conf $INSTALL/etc/bluetooth
