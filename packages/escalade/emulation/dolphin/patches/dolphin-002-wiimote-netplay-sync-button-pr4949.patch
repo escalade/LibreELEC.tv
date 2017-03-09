@@ -1,0 +1,399 @@
+From 6777f8b3513949614e6be662173b61cb6e965cb1 Mon Sep 17 00:00:00 2001
+From: mimimi085181 <mimimi085181@gmail.com>
+Date: Sun, 19 Feb 2017 12:33:18 +0100
+Subject: [PATCH 1/2] Change wiimote reconnect on button press code
+
+This moves the reconnect logic into a single function, so the netplay code doesn't need to be written 2 times
+---
+ Source/Core/Core/HW/Wiimote.cpp                 | 23 +++++++++++++++++++++--
+ Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.cpp   | 20 +++-----------------
+ Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.h     |  5 +----
+ Source/Core/Core/HW/WiimoteReal/WiimoteReal.cpp | 24 ++++++++----------------
+ Source/Core/Core/HW/WiimoteReal/WiimoteReal.h   |  5 ++---
+ 5 files changed, 35 insertions(+), 42 deletions(-)
+
+diff --git a/Source/Core/Core/HW/Wiimote.cpp b/Source/Core/Core/HW/Wiimote.cpp
+index c1f067f..244abb5 100644
+--- a/Source/Core/Core/HW/Wiimote.cpp
++++ b/Source/Core/Core/HW/Wiimote.cpp
+@@ -9,6 +9,7 @@
+ 
+ #include "Core/HW/WiimoteEmu/WiimoteEmu.h"
+ #include "Core/HW/WiimoteReal/WiimoteReal.h"
++#include "Core/Host.h"
+ #include "Core/Movie.h"
+ 
+ #include "InputCommon/ControllerEmu/ControlGroup/ControlGroup.h"
+@@ -130,11 +131,29 @@ void Update(int number, bool connected)
+   }
+   else
+   {
++    static u8 m_last_connect_request_counter[4] = {0, 0, 0, 0};
++    if (m_last_connect_request_counter[number] > 0)
++    {
++      --m_last_connect_request_counter[number];
++      return;
++    }
++
++    bool button_pressed = false;
++
+     if (WIIMOTE_SRC_EMU & g_wiimote_sources[number])
+-      static_cast<WiimoteEmu::Wiimote*>(s_config.GetController(number))->ConnectOnInput();
++      button_pressed =
++          static_cast<WiimoteEmu::Wiimote*>(s_config.GetController(number))->CheckForButtonPress();
+ 
+     if (WIIMOTE_SRC_REAL & g_wiimote_sources[number])
+-      WiimoteReal::ConnectOnInput(number);
++      button_pressed = WiimoteReal::CheckForButtonPress(number);
++
++    if (button_pressed)
++    {
++      Host_ConnectWiimote(number, true);
++      // arbitrary value so it doesn't try to send multiple requests before Dolphin can react
++      // if Wii Remotes are polled at 200Hz then this results in one request being sent per 500ms
++      m_last_connect_request_counter[number] = 100;
++    }
+   }
+ }
+ 
+diff --git a/Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.cpp b/Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.cpp
+index fed5ac3..fa26174 100644
+--- a/Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.cpp
++++ b/Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.cpp
+@@ -23,7 +23,6 @@
+ #include "Core/HW/WiimoteEmu/MatrixMath.h"
+ #include "Core/HW/WiimoteEmu/WiimoteHid.h"
+ #include "Core/HW/WiimoteReal/WiimoteReal.h"
+-#include "Core/Host.h"
+ #include "Core/Movie.h"
+ #include "Core/NetPlayClient.h"
+ 
+@@ -245,8 +244,7 @@ void Wiimote::Reset()
+   m_adpcm_state.step = 127;
+ }
+ 
+-Wiimote::Wiimote(const unsigned int index)
+-    : m_index(index), ir_sin(0), ir_cos(1), m_last_connect_request_counter(0)
++Wiimote::Wiimote(const unsigned int index) : m_index(index), ir_sin(0), ir_cos(1)
+ {
+   // ---- set up all the controls ----
+ 
+@@ -968,26 +966,14 @@ void Wiimote::InterruptChannel(const u16 _channelID, const void* _pData, u32 _Si
+   }
+ }
+ 
+-void Wiimote::ConnectOnInput()
++bool Wiimote::CheckForButtonPress()
+ {
+-  if (m_last_connect_request_counter > 0)
+-  {
+-    --m_last_connect_request_counter;
+-    return;
+-  }
+-
+   u16 buttons = 0;
+   const auto lock = GetStateLock();
+   m_buttons->GetState(&buttons, button_bitmasks);
+   m_dpad->GetState(&buttons, dpad_bitmasks);
+ 
+-  if (buttons != 0 || m_extension->IsButtonPressed())
+-  {
+-    Host_ConnectWiimote(m_index, true);
+-    // arbitrary value so it doesn't try to send multiple requests before Dolphin can react
+-    // if Wii Remotes are polled at 200Hz then this results in one request being sent per 500ms
+-    m_last_connect_request_counter = 100;
+-  }
++  return (buttons != 0 || m_extension->IsButtonPressed());
+ }
+ 
+ void Wiimote::LoadDefaults(const ControllerInterface& ciface)
+diff --git a/Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.h b/Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.h
+index 3120476..8887f9ae 100644
+--- a/Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.h
++++ b/Source/Core/Core/HW/WiimoteEmu/WiimoteEmu.h
+@@ -196,7 +196,7 @@ class Wiimote : public ControllerEmu::EmulatedController
+   void Update();
+   void InterruptChannel(const u16 _channelID, const void* _pData, u32 _Size);
+   void ControlChannel(const u16 _channelID, const void* _pData, u32 _Size);
+-  void ConnectOnInput();
++  bool CheckForButtonPress();
+   void Reset();
+ 
+   void DoState(PointerWrap& p);
+@@ -318,9 +318,6 @@ class Wiimote : public ControllerEmu::EmulatedController
+     u8 unk_9;
+   } m_reg_speaker;
+ 
+-  // limits the amount of connect requests we send when a button is pressed in disconnected state
+-  u8 m_last_connect_request_counter;
+-
+ #pragma pack(pop)
+ };
+ }
+diff --git a/Source/Core/Core/HW/WiimoteReal/WiimoteReal.cpp b/Source/Core/Core/HW/WiimoteReal/WiimoteReal.cpp
+index 5d8e81a..40f447e 100644
+--- a/Source/Core/Core/HW/WiimoteReal/WiimoteReal.cpp
++++ b/Source/Core/Core/HW/WiimoteReal/WiimoteReal.cpp
+@@ -48,9 +48,7 @@ std::mutex g_wiimotes_mutex;
+ Wiimote* g_wiimotes[MAX_BBMOTES];
+ WiimoteScanner g_wiimote_scanner;
+ 
+-Wiimote::Wiimote()
+-    : m_index(), m_last_input_report(), m_channel(0), m_last_connect_request_counter(0),
+-      m_rumble_state()
++Wiimote::Wiimote() : m_index(), m_last_input_report(), m_channel(0), m_rumble_state()
+ {
+ }
+ 
+@@ -362,14 +360,8 @@ void Wiimote::Update()
+   }
+ }
+ 
+-void Wiimote::ConnectOnInput()
++bool Wiimote::CheckForButtonPress()
+ {
+-  if (m_last_connect_request_counter > 0)
+-  {
+-    --m_last_connect_request_counter;
+-    return;
+-  }
+-
+   const Report& rpt = ProcessReadQueue();
+   if (rpt.size() >= 4)
+   {
+@@ -388,15 +380,14 @@ void Wiimote::ConnectOnInput()
+       // check any button without checking accelerometer data
+       if ((rpt[2] & 0x1F) != 0 || (rpt[3] & 0x9F) != 0)
+       {
+-        Host_ConnectWiimote(m_index, true);
+-        // see WiimoteEmu::Wiimote::ConnectOnInput(), same idea here
+-        m_last_connect_request_counter = 100;
++        return true;
+       }
+       break;
+     default:
+       break;
+     }
+   }
++  return false;
+ }
+ 
+ void Wiimote::Prepare()
+@@ -882,15 +873,16 @@ void Update(int wiimote_number)
+   g_wiimotes_mutex.unlock();
+ }
+ 
+-void ConnectOnInput(int wiimote_number)
++bool CheckForButtonPress(int wiimote_number)
+ {
+   if (!g_wiimotes_mutex.try_lock())
+-    return;
++    return false;
+ 
+   if (g_wiimotes[wiimote_number])
+-    g_wiimotes[wiimote_number]->ConnectOnInput();
++    return g_wiimotes[wiimote_number]->CheckForButtonPress();
+ 
+   g_wiimotes_mutex.unlock();
++  return false;
+ }
+ 
+ void StateChange(EMUSTATE_CHANGE newState)
+diff --git a/Source/Core/Core/HW/WiimoteReal/WiimoteReal.h b/Source/Core/Core/HW/WiimoteReal/WiimoteReal.h
+index bf5d978..b1399b4 100644
+--- a/Source/Core/Core/HW/WiimoteReal/WiimoteReal.h
++++ b/Source/Core/Core/HW/WiimoteReal/WiimoteReal.h
+@@ -36,7 +36,7 @@ class Wiimote : NonCopyable
+   void ControlChannel(const u16 channel, const void* const data, const u32 size);
+   void InterruptChannel(const u16 channel, const void* const data, const u32 size);
+   void Update();
+-  void ConnectOnInput();
++  bool CheckForButtonPress();
+ 
+   const Report& ProcessReadQueue();
+ 
+@@ -83,7 +83,6 @@ class Wiimote : NonCopyable
+   int m_index;
+   Report m_last_input_report;
+   u16 m_channel;
+-  u8 m_last_connect_request_counter;
+   // If true, the Wiimote will be really disconnected when it is disconnected by Dolphin.
+   // In any other case, data reporting is not paused to allow reconnecting on any button press.
+   // This is not enabled on all platforms as connecting a Wiimote can be a pain on some platforms.
+@@ -159,7 +158,7 @@ extern Wiimote* g_wiimotes[MAX_BBMOTES];
+ void InterruptChannel(int _WiimoteNumber, u16 _channelID, const void* _pData, u32 _Size);
+ void ControlChannel(int _WiimoteNumber, u16 _channelID, const void* _pData, u32 _Size);
+ void Update(int _WiimoteNumber);
+-void ConnectOnInput(int _WiimoteNumber);
++bool CheckForButtonPress(int _WiimoteNumber);
+ 
+ void StateChange(EMUSTATE_CHANGE newState);
+ void ChangeWiimoteSource(unsigned int index, int source);
+
+From e9127a82c8c6f1a6a90e4a464d98b79ba9d7b680 Mon Sep 17 00:00:00 2001
+From: mimimi085181 <mimimi085181@gmail.com>
+Date: Wed, 22 Feb 2017 22:04:45 +0100
+Subject: [PATCH 2/2] Sync info about pressed wiimote button
+
+---
+ Source/Core/Core/HW/Wiimote.cpp    |  6 +++
+ Source/Core/Core/HW/Wiimote.h      |  1 +
+ Source/Core/Core/NetPlayClient.cpp | 89 ++++++++++++++++++++++++++++++++++++++
+ Source/Core/Core/NetPlayClient.h   |  1 +
+ 4 files changed, 97 insertions(+)
+
+diff --git a/Source/Core/Core/HW/Wiimote.cpp b/Source/Core/Core/HW/Wiimote.cpp
+index 244abb5..bc7cc1f 100644
+--- a/Source/Core/Core/HW/Wiimote.cpp
++++ b/Source/Core/Core/HW/Wiimote.cpp
+@@ -11,6 +11,7 @@
+ #include "Core/HW/WiimoteReal/WiimoteReal.h"
+ #include "Core/Host.h"
+ #include "Core/Movie.h"
++#include "Core/NetPlayClient.h"
+ 
+ #include "InputCommon/ControllerEmu/ControlGroup/ControlGroup.h"
+ #include "InputCommon/ControllerInterface/ControllerInterface.h"
+@@ -147,6 +148,11 @@ void Update(int number, bool connected)
+     if (WIIMOTE_SRC_REAL & g_wiimote_sources[number])
+       button_pressed = WiimoteReal::CheckForButtonPress(number);
+ 
++    if (g_wiimote_sources[number] && NetPlay::IsNetPlayRunning())
++    {
++      button_pressed = Wiimote::NetPlay_GetButtonPress(number, button_pressed);
++    }
++
+     if (button_pressed)
+     {
+       Host_ConnectWiimote(number, true);
+diff --git a/Source/Core/Core/HW/Wiimote.h b/Source/Core/Core/HW/Wiimote.h
+index 5e4cc2b..1bfe52d 100644
+--- a/Source/Core/Core/HW/Wiimote.h
++++ b/Source/Core/Core/HW/Wiimote.h
+@@ -77,6 +77,7 @@ ControllerEmu::ControlGroup* GetTurntableGroup(int number, WiimoteEmu::Turntable
+ void ControlChannel(int _number, u16 _channelID, const void* _pData, u32 _Size);
+ void InterruptChannel(int _number, u16 _channelID, const void* _pData, u32 _Size);
+ void Update(int _number, bool _connected);
++bool NetPlay_GetButtonPress(int wiimote, bool pressed);
+ }
+ 
+ namespace WiimoteReal
+diff --git a/Source/Core/Core/NetPlayClient.cpp b/Source/Core/Core/NetPlayClient.cpp
+index 0c6cb24..1d9f640 100644
+--- a/Source/Core/Core/NetPlayClient.cpp
++++ b/Source/Core/Core/NetPlayClient.cpp
+@@ -1091,6 +1091,84 @@ bool NetPlayClient::WiimoteUpdate(int _number, u8* data, const u8 size, u8 repor
+   return true;
+ }
+ 
++// called from ---CPU--- thread
++bool NetPlayClient::WiimoteGetButtonPress(int _number, bool pressed)
++{
++  NetWiimote nw;
++  {
++    std::lock_guard<std::recursive_mutex> lkp(m_crit.players);
++
++    // Only send data, if this Wiimote is mapped to this player
++    if (m_wiimote_map[_number] == m_local_player->pid)
++    {
++      u8 data[2];
++      data[0] = (u8)pressed;
++      data[1] = 1;
++      // Use the 2nd byte to determine that this packet only contains the button press info
++      // For input packets it contains the reporting mode, which is >= WM_REPORT_CORE(0x30)
++
++      nw.assign(data, data + 2);
++      do
++      {
++        // add to buffer
++        m_wiimote_buffer[_number].Push(nw);
++
++        SendWiimoteState(_number, nw);
++      } while (m_wiimote_buffer[_number].Size() <=
++               m_target_buffer_size * 200 /
++                   120);  // TODO: add a seperate setting for wiimote buffer?
++    }
++
++  }  // unlock players
++
++  while (m_wiimote_buffer[_number].Size() == 0)
++  {
++    if (!m_is_running.IsSet())
++    {
++      return false;
++    }
++
++    // wait for receiving thread to push some data
++    m_wii_pad_event.Wait();
++  }
++
++  m_wiimote_buffer[_number].Pop(nw);
++
++  // Pop through the buffer, until we reach a packet with the button press info
++  if (nw[1] != 1)
++  {
++    u32 tries = 0;
++    while (nw[1] != 1)
++    {
++      while (m_wiimote_buffer[_number].Size() == 0)
++      {
++        if (!m_is_running.IsSet())
++        {
++          return false;
++        }
++
++        // wait for receiving thread to push some data
++        m_wii_pad_event.Wait();
++      }
++
++      m_wiimote_buffer[_number].Pop(nw);
++
++      ++tries;
++      if (tries > m_target_buffer_size * 200 / 120)
++        break;
++    }
++
++    // If it still contains a normal input, it surely desynced
++    if (nw[1] != 1)
++    {
++      PanicAlertT("Netplay has desynced. There is no way to recover from this.");
++      return false;
++    }
++  }
++
++  return nw[0] == 1;
++}
++
+ // called from ---GUI--- thread and ---NETPLAY--- thread (client side)
+ bool NetPlayClient::StopGame()
+ {
+@@ -1274,6 +1352,17 @@ bool WiimoteEmu::Wiimote::NetPlay_GetWiimoteData(int wiimote, u8* data, u8 size,
+     return false;
+ }
+ 
++// Sync the info whether a button was pressed or not. Used for the reconnect on button press feature
++bool Wiimote::NetPlay_GetButtonPress(int wiimote, bool pressed)
++{
++  std::lock_guard<std::mutex> lk(crit_netplay_client);
++
++  if (netplay_client)
++    return netplay_client->WiimoteGetButtonPress(wiimote, pressed);
++  else
++    return pressed;
++}
++
+ // called from ---CPU--- thread
+ // so all players' games get the same time
+ //
+diff --git a/Source/Core/Core/NetPlayClient.h b/Source/Core/Core/NetPlayClient.h
+index 6e7f06c..2ce82d6 100644
+--- a/Source/Core/Core/NetPlayClient.h
++++ b/Source/Core/Core/NetPlayClient.h
+@@ -85,6 +85,7 @@ class NetPlayClient : public TraversalClientClient
+ 
+   // Send and receive pads values
+   bool WiimoteUpdate(int _number, u8* data, const u8 size, u8 reporting_mode);
++  bool WiimoteGetButtonPress(int _number, bool pressed);
+   bool GetNetPads(int pad_nb, GCPadStatus* pad_status);
+ 
+   void OnTraversalStateChanged() override;
