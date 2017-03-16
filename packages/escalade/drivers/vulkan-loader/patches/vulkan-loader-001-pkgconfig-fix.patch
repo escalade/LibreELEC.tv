@@ -1,0 +1,35 @@
+From 6517e06a2de27c7f2890acec693e773002bdf181 Mon Sep 17 00:00:00 2001
+From: leigh123linux <leigh123linux@googlemail.com>
+Date: Wed, 15 Mar 2017 09:59:36 +0000
+Subject: [PATCH] Fix useless pkconfig file and install location
+
+---
+ loader/CMakeLists.txt | 2 +-
+ loader/vulkan.pc.in   | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/loader/CMakeLists.txt b/loader/CMakeLists.txt
+index 76f6d52..ec17e69 100644
+--- a/loader/CMakeLists.txt
++++ b/loader/CMakeLists.txt
+@@ -155,6 +155,6 @@ else()
+         endforeach()
+         configure_file("vulkan.pc.in" "vulkan.pc" @ONLY)
+         install(FILES       "${CMAKE_CURRENT_BINARY_DIR}/vulkan.pc"
+-                DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
++                DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+     endif()
+ endif()
+diff --git a/loader/vulkan.pc.in b/loader/vulkan.pc.in
+index b0dacbc..46048d2 100644
+--- a/loader/vulkan.pc.in
++++ b/loader/vulkan.pc.in
+@@ -1,6 +1,6 @@
+ prefix=@CMAKE_INSTALL_PREFIX@
+-exec_prefix=${prefix}
+-libdir=${exec_prefix}/lib
++exec_prefix=@CMAKE_INSTALL_PREFIX@
++libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+ includedir=${prefix}/include/vulkan
+ 
+ Name: @CMAKE_PROJECT_NAME@

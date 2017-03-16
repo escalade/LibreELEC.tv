@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="vulkan-loader"
-PKG_VERSION="c89bef4"
+PKG_VERSION="72d7ec3"
 PKG_ARCH="any"
 PKG_LICENSE="Apache 2.0"
 PKG_SITE="https://www.khronos.org"
@@ -42,12 +42,4 @@ pre_configure_target() {
   cd ..
   ./update_external_sources.sh
   cd -
-}
-
-makeinstall_target() {
-  mkdir -p $INSTALL/usr/lib
-  cp -r loader/libvulkan.so* $INSTALL/usr/lib/
-  cp -r loader/libvulkan.so* $SYSROOT_PREFIX/usr/lib/
-  mkdir -p $INSTALL/usr/bin
-  cp demos/vulkaninfo $INSTALL/usr/bin
 }
