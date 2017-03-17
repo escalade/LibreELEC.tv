@@ -35,6 +35,9 @@ if [ `echo $1 | grep -i .zip | wc -l` -eq 1 ]; then
   done
   echo -e $ARGS >> $CONFIG
   fs-uae $CONFIG > /tmp/fs-uae.log 2>&1
+#Check if we are loading a configuration file
+elif [ `echo $1 | grep -i .fs-uae | wc -l` -eq 1 ]; then
+  fs-uae "$1" > /tmp/fs-uae.log 2>&1
 else
   # Check for AGA game
   if [ `echo $1 | egrep 'AGA|CD32' | wc -l` -eq 1 -o `echo "$TMP_DIR"/* | egrep 'AGA|CD32' | wc -l` -eq 1 ]; then
