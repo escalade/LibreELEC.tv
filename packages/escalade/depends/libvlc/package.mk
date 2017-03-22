@@ -23,7 +23,7 @@ PKG_LICENSE="GPL"
 PKG_SITE="http://www.videolan.org"
 PKG_URL="http://get.videolan.org/vlc/$PKG_VERSION/vlc-$PKG_VERSION.tar.xz"
 PKG_SOURCE_DIR="vlc-$PKG_VERSION"
-PKG_DEPENDS_TARGET="toolchain ffmpeg2"
+PKG_DEPENDS_TARGET="toolchain ffmpeg2 libmad"
 PKG_SECTION="escalade/depends"
 PKG_SHORTDESC="VLC library"
 
