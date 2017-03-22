@@ -1,0 +1,15 @@
+--- a/makefile	2017-02-27 11:16:19.764459072 +0000
++++ b/makefile	2017-02-27 11:17:13.827792060 +0000
+@@ -336,9 +336,9 @@
+ else
+ PYTHON := $(PYTHON_EXECUTABLE)
+ endif
+-CC := $(SILENT)gcc
+-LD := $(SILENT)g++
+-CXX:= $(SILENT)g++
++CC ?= $(SILENT)gcc
++LD ?= $(SILENT)g++
++CXX?= $(SILENT)g++
+ 
+ #-------------------------------------------------
+ # specify OSD layer: windows, sdl, etc.
