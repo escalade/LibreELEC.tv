@@ -40,6 +40,7 @@ PKG_CONFIGURE_OPTS_TARGET="--sysconfdir=/etc/ssh \
                            --disable-wtmp \
                            --disable-wtmpx \
                            --without-rpath \
+                           --with-privsep-user=nobody \
                            --with-ssl-engine \
                            --disable-pututline \
                            --disable-pututxline \
