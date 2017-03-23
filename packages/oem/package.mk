@@ -31,15 +31,12 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 OEM_APPS_COMMON=" \
-  addons-to-image \
   dstat \
   htop \
   nmon-system \
   plexmediaserver-script \
   rsync \
   sdl-jstest \
-  sonarr \
-  SABnzbd \
   tcpdump \
   transmission \
   ttf-tlwg \
