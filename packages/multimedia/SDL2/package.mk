@@ -22,6 +22,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.libsdl.org/"
 PKG_URL="https://github.com/spurious/SDL-mirror/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="SDL-mirror-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain cmake:host yasm:host alsa-lib systemd dbus"
 PKG_SECTION="multimedia"
 PKG_SHORTDESC="SDL2: A cross-platform Graphic API"
@@ -50,10 +51,6 @@ if [[ "$PROJECT" =~ "RPi" ]]; then
   PKG_CMAKE_OPTS_TARGET="$PKG_CMAKE_OPTS_TARGET -DVIDEO_X11=OFF"
   PKG_DEPENDS_TARGET="$PKG_DEPENDS_TARGET bcm2835-driver"
 fi
-
-post_unpack() {
-  mv $BUILD/SDL-mirror-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
-}
 
 post_makeinstall_target() {
   $SED "s:\(['=\" ]\)/usr:\\1$SYSROOT_PREFIX/usr:g" $SYSROOT_PREFIX/usr/bin/sdl2-config
