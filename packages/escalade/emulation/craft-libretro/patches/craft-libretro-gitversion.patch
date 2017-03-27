@@ -1,0 +1,11 @@
+--- a/Makefile.common	2017-03-27 01:34:53.471424827 +0200
++++ b/Makefile.common	2017-03-27 01:35:07.001556922 +0200
+@@ -2,7 +2,7 @@
+ DEPS_DIR              = $(ROOT_DIR)/deps
+ LIBRETRO_DIR			 = $(ROOT_DIR)/libretro
+ LIBRETRO_COMM_DIR     = $(ROOT_DIR)/deps/libretro-common
+-GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
++GIT_VERSION ?= $(shell git describe --abbrev=4 --dirty --always --tags)
+ 
+ ifeq ($(HAVE_OPENGL),0)
+ else
