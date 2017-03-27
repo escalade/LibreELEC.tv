@@ -38,7 +38,6 @@ OEM_APPS_COMMON=" \
   rsync \
   sdl-jstest \
   tcpdump \
-  transmission \
   ttf-tlwg \
   unfs3 \
   vim"
