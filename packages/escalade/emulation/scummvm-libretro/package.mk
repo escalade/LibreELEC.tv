@@ -42,6 +42,7 @@ configure_target() {
 }
 
 make_target() {
+  export GIT_VERSION=$PKG_VERSION
   export CXXFLAGS="$CXXFLAGS -DHAVE_POSIX_MEMALIGN=1"
   export LDFLAGS="$LDFLAGS -lmt32emu"
   export ar="$AR cru"
