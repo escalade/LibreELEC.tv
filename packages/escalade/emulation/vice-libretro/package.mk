@@ -17,12 +17,11 @@
 ################################################################################
 
 PKG_NAME="vice-libretro"
-PKG_VERSION="136461f"
+PKG_VERSION="054da71"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="http://vice-emu.sf.net"
-PKG_URL="https://github.com/r-type/vice3.0-libretro/archive/$PKG_VERSION.tar.gz"
-PKG_SOURCE_DIR="vice3.0-libretro-$PKG_VERSION*"
+PKG_URL="https://github.com/libretro/vice-libretro/archive/$PKG_VERSION.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="VICE C64 libretro"
@@ -31,5 +30,11 @@ PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
 make_target() {
+  strip_lto
   make -f Makefile.libretro CC=$CC
+}
+
+makeinstall_target() {
+  mkdir -p $INSTALL/usr/lib/libretro
+  cp *.so $INSTALL/usr/lib/libretro/
 }
