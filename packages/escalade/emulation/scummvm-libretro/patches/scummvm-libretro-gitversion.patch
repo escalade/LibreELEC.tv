@@ -1,0 +1,11 @@
+--- a/backends/platform/libretro/build/Makefile	2017-03-27 01:55:28.304392852 +0200
++++ b/backends/platform/libretro/build/Makefile	2017-03-27 01:55:35.074469898 +0200
+@@ -29,7 +29,7 @@
+ endif
+ 
+ TARGET_NAME := scummvm
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+ 	CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif
