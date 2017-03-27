@@ -1,0 +1,11 @@
+--- a/Makefile	2017-03-27 01:04:43.077042469 +0200
++++ b/Makefile	2017-03-27 01:05:03.743911006 +0200
+@@ -44,7 +44,7 @@
+ CORE_DEFINE := -DWANT_WSWAN_EMU
+ 
+ TARGET_NAME := mednafen_wswan
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+ 	CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif
