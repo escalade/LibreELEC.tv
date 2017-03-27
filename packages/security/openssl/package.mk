@@ -61,6 +61,7 @@ pre_configure_host() {
 }
 
 configure_host() {
+  export MAKEFLAGS=-j1
   cd $ROOT/$PKG_BUILD/.$HOST_NAME
   ./Configure --prefix=/ $PKG_CONFIGURE_OPTS_SHARED linux-x86_64 $CFLAGS $LDFLAGS
 }
@@ -88,6 +89,7 @@ pre_configure_target() {
 }
 
 configure_target() {
+  export MAKEFLAGS=-j1
   cd $ROOT/$PKG_BUILD/.$TARGET_NAME
   ./Configure --prefix=/usr $PKG_CONFIGURE_OPTS_SHARED $PLATFORM_FLAGS $OPENSSL_TARGET $CFLAGS $LDFLAGS
 }
