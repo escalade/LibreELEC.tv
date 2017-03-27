@@ -36,6 +36,10 @@ post_unpack() {
   mv $BUILD/tyrquake-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
+pre_build_target() {
+  export GIT_VERSION=$PKG_VERSION
+}
+
 makeinstall_target() {
   mkdir -p $INSTALL/usr/lib/libretro
   cp tyrquake_libretro.so $INSTALL/usr/lib/libretro/

@@ -1,0 +1,11 @@
+--- a/Makefile	2017-03-27 02:04:09.073407474 +0200
++++ b/Makefile	2017-03-27 02:04:17.420162311 +0200
+@@ -2,7 +2,7 @@
+ FRONTEND_SUPPORTS_RGB565=1
+ TARGET_NAME=tyrquake
+ STATIC_LINKING=0
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+ 	CFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif
