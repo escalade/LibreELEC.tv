@@ -1,0 +1,9 @@
+--- a/Makefile.libretro	2017-03-27 02:02:16.308876316 +0200
++++ b/Makefile.libretro	2017-03-27 02:02:21.822268526 +0200
+@@ -1,5 +1,5 @@
+ DEBUG=0
+-GIT_VERSION := " $(shell git rev-parse --short HEAD)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD)"
+ HAVE_GRIFFIN=0
+ STATIC_LINKING=0
+ STATIC_LINKING_LINK=0

@@ -36,6 +36,10 @@ post_unpack() {
   mv $BUILD/snes9x2010-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
 }
 
+pre_build_target() {
+  export GIT_VERSION=$PKG_VERSION
+}
+
 make_target() {
   make -f Makefile.libretro
 }
