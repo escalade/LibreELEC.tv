@@ -5,9 +5,9 @@ ConditionPathExists=/storage/.cache/services/samba.conf
 
 [Service]
 Type=forking
-PIDFile=/run/samba/smbd.pid
+PIDFile=/var/run/smbd-smb.conf.pid
 LimitNOFILE=16384
-ExecStart=/usr/sbin/smbd
+ExecStart=/usr/bin/smbd --configfile=/run/samba/smb.conf
 ExecStartPre=/usr/lib/samba/samba-config
 ExecReload=/bin/kill -HUP $MAINPID
 TimeoutStopSec=1s

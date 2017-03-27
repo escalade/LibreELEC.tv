@@ -5,8 +5,8 @@ ConditionPathExists=/storage/.cache/services/samba.conf
 
 [Service]
 Type=forking
-PIDFile=/run/samba/nmbd.pid
-ExecStart=/usr/sbin/nmbd
+PIDFile=/var/run/nmbd-smb.conf.pid
+ExecStart=/usr/bin/nmbd --configfile=/run/samba/smb.conf
 ExecReload=/bin/kill -HUP $MAINPID
 TimeoutStopSec=1s
 Restart=always

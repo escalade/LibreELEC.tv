@@ -36,7 +36,12 @@ fi
 
 # handle external drives
 if [ "$SAMBA_AUTOSHARE" == "true" ] ; then
-  echo -e "[Media]\n  path = /media\n  available = yes\n  browsable = yes\n  public = yes\n  writable = yes\n" >> $SMB_CONF
+  for dir in /media/* ; do
+    if [ -d "$dir" ] ; then
+      name=$(basename "$dir")
+      echo -e "[$name]\n  path = $dir\n  available = yes\n  browsable = yes\n  public = yes\n  writable = yes\n" >> $SMB_CONF
+    fi
+  done
 fi
 
 # only letters & numbers permitted for username & password
@@ -57,5 +62,5 @@ if [ "$SAMBA_SECURE" == "true" -a ! "$SAMBA_USERNAME" == "" -a ! "$SAMBA_PASSWOR
 else
   sed -e 's|^.[ \t]*.public.=.*|  public = yes |' -i $SMB_CONF
   sed -e 's|^.[ \t]*.username map.=.*||' -i $SMB_CONF
-  sed -e 's|^.[ \t]*.security.=.*|  security = user|' -i $SMB_CONF
+  sed -e 's|^.[ \t]*.security.=.*|  security = share|' -i $SMB_CONF
 fi
