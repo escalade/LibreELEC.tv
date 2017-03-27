@@ -1,0 +1,11 @@
+--- a/desmume/Makefile.libretro	2017-03-27 01:15:52.156909219 +0200
++++ b/desmume/Makefile.libretro	2017-03-27 01:16:06.163714078 +0200
+@@ -17,7 +17,7 @@
+ 
+ TARGET_NAME := desmume
+ CORE_DIR := src
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+ 	CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif
