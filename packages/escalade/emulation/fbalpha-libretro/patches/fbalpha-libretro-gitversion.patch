@@ -1,0 +1,11 @@
+--- a/makefile.libretro	2017-03-27 19:31:32.716103782 +0200
++++ b/makefile.libretro	2017-03-27 19:31:38.746159490 +0200
+@@ -64,7 +64,7 @@
+ TARGET_NAME := fbalpha
+ 
+ # GIT HASH
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+    FBA_DEFINES += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif

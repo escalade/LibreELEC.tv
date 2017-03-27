@@ -19,11 +19,12 @@
 ################################################################################
 
 PKG_NAME="fbalpha-libretro"
-PKG_VERSION="eabd66a"
+PKG_VERSION="1eb106e"
 PKG_ARCH="any"
 PKG_LICENSE="Non-commercial"
 PKG_SITE="https://github.com/libretro/fbalpha"
 PKG_URL="https://github.com/libretro/fbalpha/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="fbalpha-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="Port of Final Burn Alpha to Libretro."
@@ -32,8 +33,8 @@ PKG_LONGDESC="Currently, FB Alpha supports games on Capcom CPS-1 and CPS-2 hardw
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
-  mv $BUILD/fbalpha-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
+pre_build_target() {
+  export GIT_VERSION=$PKG_VERSION
 }
 
 make_target() {
