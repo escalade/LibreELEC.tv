@@ -1,0 +1,31 @@
+diff --git a/Makefile.libretro b/Makefile.libretro
+index 58483e6..09b6871 100644
+--- a/Makefile.libretro
++++ b/Makefile.libretro
+@@ -44,6 +44,10 @@ include $(BUILD_DIR)/Makefile.osx_x86_64
+ else
+ 
+ TARGET_NAME := fuse
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
++ifneq ($(GIT_VERSION)," unknown")
++	CFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
++endif
+ 
+ LOG_PERFORMANCE = 1
+ HAVE_COMPAT = 0
+diff --git a/src/libretro.c b/src/libretro.c
+index 053d1b5..44d770b 100644
+--- a/src/libretro.c
++++ b/src/libretro.c
+@@ -397,7 +397,10 @@
+ {
+    memcpy(version + sizeof(PACKAGE_VERSION), fuse_githash, 7);
+    info->library_name = PACKAGE_NAME;
+-   info->library_version = version;
++#ifndef GIT_VERSION
++#define GIT_VERSION ""
++#endif
++   info->library_version = PACKAGE_VERSION GIT_VERSION;
+    info->need_fullpath = false;
+    info->block_extract = false;
+    info->valid_extensions = "tzx|tap|z80|rzx|scl|trd";

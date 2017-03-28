@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="fuse-libretro"
-PKG_VERSION="35d28b1"
+PKG_VERSION="f834c9b"
 PKG_URL="https://github.com/libretro/fuse-libretro/archive/$PKG_VERSION.tar.gz"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
@@ -31,6 +31,10 @@ PKG_LONGDESC="A port of the Fuse Unix Spectrum Emulator to libretro "
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+
+pre_build_target() {
+  export GIT_VERSION=$PKG_VERSION
+}
 
 make_target() {
   case $PROJECT in
