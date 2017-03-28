@@ -1,0 +1,11 @@
+--- a/Makefile	2017-03-28 11:53:17.884837601 +0200
++++ b/Makefile	2017-03-28 11:53:22.774880822 +0200
+@@ -62,7 +62,7 @@
+ endif
+ 
+ TARGET_NAME	:= gpsp
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+ 	CFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif
