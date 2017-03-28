@@ -17,11 +17,12 @@
 ################################################################################
 
 PKG_NAME="yabause-libretro"
-PKG_VERSION="dac3c5a"
+PKG_VERSION="c8f4c57"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/yabause"
 PKG_URL="https://github.com/libretro/yabause/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="yabause-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="libretro"
 PKG_SHORTDESC="Port of Yabause to libretro."
@@ -30,8 +31,8 @@ PKG_LONGDESC="Port of Yabause to libretro."
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
-  mv $BUILD/yabause-$PKG_VERSION* $BUILD/$PKG_NAME-$PKG_VERSION
+pre_build_target() {
+  export GIT_VERSION=$PKG_VERSION
 }
 
 make_target() {

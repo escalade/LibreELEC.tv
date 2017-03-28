@@ -1,0 +1,11 @@
+--- a/libretro/Makefile	2017-03-28 11:59:35.591513772 +0200
++++ b/libretro/Makefile	2017-03-28 11:59:48.448294349 +0200
+@@ -33,7 +33,7 @@
+ 
+ TARGET_NAME = yabause
+ CC_AS ?= $(CC)
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+ 	CFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif
