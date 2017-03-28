@@ -1,0 +1,11 @@
+--- a/Makefile.libretro	2017-03-28 11:43:30.196331080 +0200
++++ b/Makefile.libretro	2017-03-28 11:43:37.579729027 +0200
+@@ -22,7 +22,7 @@
+ CFLAGS ?=
+ 
+ TARGET_NAME := pcsx_rearmed
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+ 	CFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif

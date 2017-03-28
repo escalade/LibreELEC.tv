@@ -19,11 +19,12 @@
 ################################################################################
 
 PKG_NAME="pcsx_rearmed-libretro"
-PKG_VERSION="751c8c2"
+PKG_VERSION="abdcbf0"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/pcsx_rearmed"
 PKG_URL="https://github.com/libretro/pcsx_rearmed/archive/$PKG_VERSION.tar.gz"
+PKG_SOURCE_DIR="pcsx_rearmed-$PKG_VERSION*"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_SECTION="emulation"
 PKG_SHORTDESC="ARM optimized PCSX fork"
@@ -32,13 +33,13 @@ PKG_LONGDESC="PCSX ReARMed is yet another PCSX fork based on the PCSX-Reloaded p
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
 
-post_unpack() {
-  mv $BUILD/pcsx_rearmed* $BUILD/$PKG_NAME-$PKG_VERSION
-}
-
 configure_target() {
   cd ../
   rm -rf .$TARGET_NAME
+}
+
+pre_build_target() {
+  export GIT_VERSION=$PKG_VERSION
 }
 
 make_target() {
