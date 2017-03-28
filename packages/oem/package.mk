@@ -84,7 +84,7 @@ OEM_EMU_GENERIC=" \
   unclutter"
 
 OEM_EMU_RPI=" \
-  gpsp \
+  gpsp-libretro \
   mame2003-libretro \
   uae4arm \
   pcsx_rearmed-libretro \
