@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="parallel-n64-libretro"
-PKG_VERSION="22a68c6"
+PKG_VERSION="a9101ca"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/parallel-n64"
@@ -32,6 +32,10 @@ PKG_AUTORECONF="no"
 
 pre_configure_target() {
   strip_lto
+}
+
+pre_build_target() {
+  export GIT_VERSION=$PKG_VERSION
 }
 
 make_target() {
