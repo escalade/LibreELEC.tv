@@ -1,0 +1,10 @@
+--- a/lib/wiper/wiperPosix.c	2017-03-31 09:56:38.119701258 +0200
++++ b/lib/wiper/wiperPosix.c	2017-03-31 09:57:12.973338393 +0200
+@@ -52,6 +52,7 @@
+ #include "mntinfo.h"
+ #include "posix.h"
+ #include "util.h"
++#include "sys/sysmacros.h"
+ 
+ 
+ /* Number of bytes per disk sector */
