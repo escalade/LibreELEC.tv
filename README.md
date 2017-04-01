@@ -27,6 +27,11 @@ or
 # touch /storage/.backup
 ```
 
+**Switch between EmulationStation and RetroArch as the emulator frontend**
+```
+# edit /storage/.config/emulator-frontend.conf
+```
+
 **Emulationstation arguments in /storage/.config/emulationstation/emulationstation.conf**
 ```
 EMULATIONSTATION_OPTS="--ignore-gamelist --no-splash"
