@@ -1,20 +1,11 @@
---- a/Makefile.libretro	2017-03-27 01:36:46.479194710 +0200
-+++ b/Makefile.libretro	2017-03-27 01:36:52.435919520 +0200
-@@ -1,5 +1,5 @@
- DEBUG = 0
--GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
-+GIT_VERSION ?= $(shell git describe --abbrev=4 --dirty --always --tags)
- HAVE_VFS_FD := 1
- CORE_DIR := .
- BUILD_DIR := libretro-build
---- a/libretro-build/Makefile.common	2017-03-27 01:42:59.236165480 +0200
-+++ b/libretro-build/Makefile.common	2017-03-27 01:43:56.466723805 +0200
-@@ -2,7 +2,7 @@
- RETRODEFS ?= -D__LIBRETRO__ -DMINIMAL_CORE=2 -DM_CORE_GBA -DM_CORE_GB
+--- a/Makefile.libretro	2017-04-03 19:59:41.290823855 +0200
++++ b/Makefile.libretro	2017-04-03 19:59:50.164238918 +0200
+@@ -75,7 +75,7 @@
+ DEFINES :=
  
- INCLUDES  += -I$(CORE_DIR)/src -I$(CORE_DIR)/src/arm
--RETRODEFS += -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DINLINE=inline -DCOLOR_16_BIT -DCOLOR_5_6_5 -DRESAMPLE_LIBRARY=2 -DM_PI=3.14159265358979323846 -DPATH_MAX=4096 -DSSIZE_MAX=32767 -DGIT_VERSION=\"0.5.2\"
-+RETRODEFS += -DHAVE_STDINT_H -DHAVE_INTTYPES_H -DINLINE=inline -DCOLOR_16_BIT -DCOLOR_5_6_5 -DRESAMPLE_LIBRARY=2 -DM_PI=3.14159265358979323846 -DPATH_MAX=4096 -DSSIZE_MAX=32767 -DGIT_VERSION=\"$(GIT_VERSION)\"
- 
- ifneq ($(DEBUG), 1)
- 	RETRODEFS += -DNDEBUG
+ # GIT HASH
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+    DEFINES += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif
