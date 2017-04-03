@@ -1,0 +1,11 @@
+--- a/libretro/Makefile	2017-04-03 20:51:37.281132447 +0200
++++ b/libretro/Makefile	2017-04-03 20:51:42.621190001 +0200
+@@ -23,7 +23,7 @@
+ CC			?= gcc
+ TARGET_NAME	= snes9x
+ LIBM		= -lm
+-GIT_VERSION := " $(shell git rev-parse --short HEAD || echo unknown)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD || echo unknown)"
+ ifneq ($(GIT_VERSION)," unknown")
+ 	CXXFLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
+ endif
