@@ -17,22 +17,22 @@
  endif
  
  NAME  = amiberry-sdl2
-@@ -32,9 +32,9 @@
- #GEN_PROFILE=1
- #USE_PROFILE=1
+@@ -27,9 +27,9 @@
+ 
+ #DEBUG=1
  
 -SDL_CFLAGS = `sdl2-config --cflags --libs`
 +SDL_CFLAGS = `$(SYSROOT_PREFIX)/usr/bin/sdl2-config --cflags --libs`
  
--DEFS +=  `xml2-config --cflags`
+-DEFS += `xml2-config --cflags`
 +DEFS +=  `$(SYSROOT_PREFIX)/usr/bin/xml2-config --cflags`
- DEFS += -DCPU_arm -DARMV6_ASSEMBLY -DAMIBERRY -DPICASSO96
- DEFS += -DWITH_INGAME_WARNING -DRASPBERRY -DCAPSLOCK_DEBIAN_WORKAROUND
+ DEFS += -DARMV6_ASSEMBLY -DAMIBERRY -DCPU_arm
+ DEFS += -DCAPSLOCK_DEBIAN_WORKAROUND
  DEFS += -DROM_PATH_PREFIX=\"./\" -DDATA_PREFIX=\"./data/\" -DSAVE_PREFIX=\"./saves/\"
-@@ -45,7 +45,7 @@
- MORE_CFLAGS += -fexceptions -fpermissive
+@@ -41,7 +41,7 @@
+ MORE_CFLAGS += -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
  
- LDFLAGS += -lpthread -lm -lz -lpng -lrt -lxml2 -lFLAC -lmpg123 -ldl
+ LDFLAGS += -lpthread -lm -lz -lpng -lrt -lxml2 -lFLAC -lmpg123 -ldl -lprofiler -ltcmalloc
 -LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf -lguisan -L/opt/vc/lib -Lsrc/guisan/lib
 +LDFLAGS += -lSDL2 -lSDL2_image -lSDL2_ttf -lguisan -L$(SYSROOT_PREFIX)/usr/lib -Lsrc/guisan/lib
  
@@ -40,7 +40,7 @@
  MORE_CFLAGS += -Ofast -pipe
 --- a/src/guisan/Makefile	2017-02-26 00:39:25.589472265 +0100
 +++ b/src/guisan/Makefile	2017-02-26 00:39:39.182924185 +0100
-@@ -2,7 +2,7 @@
+@@ -2,11 +2,11 @@
    
  AR      = ar
  
@@ -49,3 +49,8 @@
  SOURCE	= $(foreach dir,$(DIRS),$(wildcard $(dir)/*.cpp))
  OBJS    = $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SOURCE)))
  
+-INCLUDE	=-I./include `sdl2-config --cflags`
++INCLUDE	=-I./include `$(SYSROOT_PREFIX)/usr/bin/sdl2-config --cflags`
+ CFLAGS  = -g -w -O3  $(INCLUDE)
+ CXXFLAGS= $(CFLAGS)
+   
