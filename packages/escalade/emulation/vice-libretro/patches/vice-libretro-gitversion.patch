@@ -1,0 +1,9 @@
+--- a/Makefile.libretro	2017-04-03 20:02:39.512465984 +0200
++++ b/Makefile.libretro	2017-04-03 20:03:00.555993285 +0200
+@@ -1,5 +1,5 @@
+ DEBUG=0
+-GIT_VERSION := $(shell git describe --abbrev=4 --dirty --always --tags)
++GIT_VERSION ?= $(shell git describe --abbrev=4 --dirty --always --tags)
+ 
+ UNAME=$(shell uname -a)
+ 

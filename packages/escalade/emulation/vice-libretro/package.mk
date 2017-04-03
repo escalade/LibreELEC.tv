@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="vice-libretro"
-PKG_VERSION="054da71"
+PKG_VERSION="0738c11"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="http://vice-emu.sf.net"
@@ -28,6 +28,10 @@ PKG_SHORTDESC="VICE C64 libretro"
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+
+pre_build_target() {
+  export GIT_VERSION=$PKG_VERSION
+}
 
 make_target() {
   strip_lto
