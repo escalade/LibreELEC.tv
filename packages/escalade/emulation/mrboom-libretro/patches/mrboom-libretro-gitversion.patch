@@ -1,0 +1,11 @@
+--- a/Makefile	2017-04-05 12:10:13.564647818 +0200
++++ b/Makefile	2017-04-05 12:10:21.881389176 +0200
+@@ -2,7 +2,7 @@
+ 
+ STATIC_LINKING := 0
+ AR             := ar
+-GIT_VERSION := " $(shell git rev-parse --short HEAD)"
++GIT_VERSION ?= " $(shell git rev-parse --short HEAD)"
+ 
+ ifeq ($(platform),)
+ platform = unix
