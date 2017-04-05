@@ -58,6 +58,7 @@ OEM_EMU_COMMON=" \
   genesis-plus-gx-libretro \
   emulationstation \
   mgba-libretro \
+  mrboom-libretro \
   mupen64plus-libretro \
   nxengine-libretro \
   quicknes-libretro \
@@ -67,7 +68,9 @@ OEM_EMU_COMMON=" \
   scraper \
   scummvm-libretro \
   snes9x2010-libretro \
+  transmission \
   tyrquake-libretro \
+  vice-libretro \
   vice"
 
 OEM_EMU_GENERIC=" \
