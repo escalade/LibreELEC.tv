@@ -19,7 +19,7 @@
 ################################################################################
 
 PKG_NAME="pcsx_rearmed-libretro"
-PKG_VERSION="abdcbf0"
+PKG_VERSION="511848c"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/pcsx_rearmed"
@@ -51,7 +51,7 @@ make_target() {
       make -f Makefile.libretro platform=rpi2
       ;;
     *)
-      make -f Makefile.libretro USE_DYNAREC=1 BUILTIN_GPU=neon
+      make -f Makefile.libretro
       ;;
   esac
 }
