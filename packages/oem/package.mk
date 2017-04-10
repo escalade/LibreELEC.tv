@@ -36,6 +36,7 @@ OEM_APPS_COMMON=" \
   nmon-system \
   plexmediaserver-script \
   rsync \
+  SABnzbd \
   sdl-jstest \
   tcpdump \
   ttf-tlwg \
