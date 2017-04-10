@@ -136,11 +136,9 @@ post_makeinstall_target() {
   rm -rf $INSTALL/usr/share/i18n/charmaps
 
 # add UTF-8 charmap for Generic (charmap is needed for installer)
-  if [ "$PROJECT" = "Generic" ]; then
-    mkdir -p $INSTALL/usr/share/i18n/charmaps
-    cp -PR $ROOT/$PKG_BUILD/localedata/charmaps/UTF-8 $INSTALL/usr/share/i18n/charmaps
-    gzip $INSTALL/usr/share/i18n/charmaps/UTF-8
-  fi
+  mkdir -p $INSTALL/usr/share/i18n/charmaps
+  cp -PR $ROOT/$PKG_BUILD/localedata/charmaps/UTF-8 $INSTALL/usr/share/i18n/charmaps
+  gzip $INSTALL/usr/share/i18n/charmaps/UTF-8
 
   if [ ! "$GLIBC_LOCALES" = yes ]; then
     rm -rf $INSTALL/usr/share/i18n/locales
@@ -148,6 +146,9 @@ post_makeinstall_target() {
     mkdir -p $INSTALL/usr/share/i18n/locales
       cp -PR $ROOT/$PKG_BUILD/localedata/locales/POSIX $INSTALL/usr/share/i18n/locales
   fi
+
+# allow defining locales on /storage
+  ln -s /storage/.config/locale $INSTALL/usr/lib/locale
 
 # create default configs
   mkdir -p $INSTALL/etc
