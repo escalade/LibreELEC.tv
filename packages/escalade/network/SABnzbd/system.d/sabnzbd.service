@@ -7,6 +7,7 @@ After=network-online.service
 Restart=always
 RestartSec=10s
 TimeoutStartSec=0
+Environment=LANG=en_US.UTF-8
 ExecStart=/opt/sabnzbd/SABnzbd.py \
           -l 0 \
           -b 0 \
