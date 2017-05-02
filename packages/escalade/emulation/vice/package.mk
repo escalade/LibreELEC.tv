@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="vice"
-PKG_VERSION="3.0"
+PKG_VERSION="3.1"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv3"
 PKG_SITE="http://vice-emu.sourceforge.net/"
