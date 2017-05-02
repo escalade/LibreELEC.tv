@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="vulkan-loader"
-PKG_VERSION="1.0.42.2"
+PKG_VERSION="1.0.46.0"
 PKG_ARCH="any"
 PKG_LICENSE="Apache 2.0"
 PKG_SITE="https://www.khronos.org"
