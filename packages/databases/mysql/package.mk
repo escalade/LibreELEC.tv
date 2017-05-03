@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="mysql"
-PKG_VERSION="5.7.17"
+PKG_VERSION="5.7.18"
 PKG_ARCH="any"
 PKG_LICENSE="LGPL"
 PKG_SITE="http://www.mysql.com"
@@ -30,6 +30,10 @@ PKG_LONGDESC="MySQL is a SQL (Structured Query Language) database server. SQL is
 
 PKG_IS_ADDON="no"
 PKG_AUTORECONF="no"
+
+pre_configure_target() {
+  export CXXFLAGS="$CXXFLAGS -std=gnu++98"
+}
 
 post_unpack() {
   sed -i 's|GET_TARGET_PROPERTY(LIBMYSQL_OS_OUTPUT_NAME libmysql OUTPUT_NAME)|SET(LIBMYSQL_OS_OUTPUT_NAME "mysqlclient")|' $ROOT/$PKG_BUILD/scripts/CMakeLists.txt
