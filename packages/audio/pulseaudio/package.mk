@@ -101,6 +101,9 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-silent-rules \
                            --with-soxr \
                            --with-module-dir=/usr/lib/pulse"
 
+pre_configure_target() {
+  export CFLAGS="$CFLAGS -fopenmp"
+}
 post_makeinstall_target() {
   rm -rf $INSTALL/usr/bin/esdcompat
   rm -rf $INSTALL/usr/include
