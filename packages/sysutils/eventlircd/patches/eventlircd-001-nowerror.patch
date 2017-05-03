@@ -1,0 +1,10 @@
+--- a/configure.ac	2017-05-03 13:27:50.407614750 +0200
++++ b/configure.ac	2017-05-03 13:28:01.744392420 +0200
+@@ -125,7 +125,6 @@
+ fi
+ AX_C_CHECK_FLAG([-flto],[],[],[CFLAGS="$CFLAGS -flto"],[])
+ AX_C_CHECK_FLAG([-fvisibility=hidden],[],[],[CFLAGS="$CFLAGS -fvisibility=hidden"],[])
+-AX_C_CHECK_FLAG([-Werror],[],[],[CFLAGS="$CFLAGS -Werror"],[])
+ AX_C_CHECK_FLAG([-Wall],[],[],[CFLAGS="$CFLAGS -Wall"],[])
+ AX_C_CHECK_FLAG([-Wextra],[],[],[CFLAGS="$CFLAGS -Wextra"],[])
+ AX_C_CHECK_FLAG([-Wcast-qual],[],[],[CFLAGS="$CFLAGS -Wcast-qual"],[])
