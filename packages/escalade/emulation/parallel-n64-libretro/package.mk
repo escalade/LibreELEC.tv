@@ -17,7 +17,7 @@
 ################################################################################
 
 PKG_NAME="parallel-n64-libretro"
-PKG_VERSION="a9101ca"
+PKG_VERSION="571a477"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://github.com/libretro/parallel-n64"
@@ -53,7 +53,7 @@ make_target() {
       make platform=armv7-neon-gles-cortex-a9
       ;;
     Generic)
-      make WITH_DYNAREC=$TARGET_ARCH
+      make WITH_DYNAREC=$TARGET_ARCH HAVE_PARALLEL=0
       ;;
   esac
 }
