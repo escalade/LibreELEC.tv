@@ -60,6 +60,8 @@ MAKE="$ROOT/$TOOLCHAIN/bin/make"
 MAKEINSTALL="$ROOT/$TOOLCHAIN/bin/make -j1 DESTDIR=$SYSROOT_PREFIX install"
 SED="sed -i"
 
+unset LD_LIBRARY_PATH
+
 # set package metadata
   PKG_NAME="$1"
   PKG_VERSION="0.0invalid"
@@ -192,12 +194,8 @@ fi
 export MAKEFLAGS=-j$CONCURRENCY_MAKE_LEVEL
 export PKG_CONFIG=$ROOT/$TOOLCHAIN/bin/pkg-config
 
-if [ -z "$PATH" -o "$PATH" = "${PATH#$ROOT/$TOOLCHAIN/bin:}" ]; then
-  export PATH="$ROOT/$TOOLCHAIN/bin:$ROOT/$TOOLCHAIN/sbin:$PATH"
-fi
-
-if [ -z "$LD_LIBRARY_PATH" -o "$LD_LIBRARY_PATH" = "${LD_LIBRARY_PATH#$ROOT/$TOOLCHAIN/lib:}" ]; then
-  export LD_LIBRARY_PATH="$ROOT/$TOOLCHAIN/lib:$LD_LIBRARY_PATH"
+if [[ -z "$PATH" || ( "$PATH" != "$ROOT/$TOOLCHAIN/bin:$ROOT/$TOOLCHAIN/sbin" && "$PATH" = "${PATH#$ROOT/$TOOLCHAIN/bin:$ROOT/$TOOLCHAIN/sbin:}" ) ]]; then
+  export PATH="$ROOT/$TOOLCHAIN/bin:$ROOT/$TOOLCHAIN/sbin${PATH:+":$PATH"}"
 fi
 
 VERSION_SUFFIX=$TARGET_ARCH
