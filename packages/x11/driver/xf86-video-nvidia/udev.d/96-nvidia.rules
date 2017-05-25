@@ -352,6 +352,7 @@ ATTRS{device}=="0x1c8d", GOTO="configure_nvidia"
 ATTRS{device}=="0x1cb1", GOTO="configure_nvidia"
 ATTRS{device}=="0x1cb2", GOTO="configure_nvidia"
 ATTRS{device}=="0x1cb3", GOTO="configure_nvidia"
+ATTRS{device}=="0x1d01", GOTO="configure_nvidia"
 GOTO="configure_nvidia-legacy"
 
 LABEL="configure_nvidia"
