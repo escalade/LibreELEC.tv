@@ -1,0 +1,5383 @@
+diff --git a/README.md b/README.md
+index 5c427b2..1019706 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,6 @@
+ # Enhanced DosBox Fork
+ 
+-This is an enhanced fork of DosBox. It is currently in sync with revision 4156.
++This is an enhanced fork of DosBox. It is currently in sync with revision 4254.
+ 
+ ## Requirements 
+ 
+diff --git a/VERSION b/VERSION
+index 3ea25f5..a6e956f 100644
+--- a/VERSION
++++ b/VERSION
+@@ -1 +1 @@
+-0.74
++0.74-2
+diff --git a/configure.ac b/configure.ac
+index c86f6c9..a059814 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -413,13 +413,20 @@ else
+ fi
+ 
+ AH_TEMPLATE(C_SSHOT,[Define to 1 to enable screenshots, requires libpng])
++AC_ARG_ENABLE(screenshots,AC_HELP_STRING([--disable-screenshots],[Disable screenshots and movie recording]),,enable_screenshots=yes)
+ AC_CHECK_HEADER(png.h,have_png_h=yes,)
+ AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, ,-lz)
+-if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
+-  LIBS="$LIBS -lpng -lz"
+-  AC_DEFINE(C_SSHOT,1)
++AC_MSG_CHECKING([whether screenshots will be enabled])
++if test x$enable_screenshots = xyes; then 
++    if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
++    LIBS="$LIBS -lpng -lz"
++    AC_DEFINE(C_SSHOT,1)
++    AC_MSG_RESULT([yes])
++  else
++    AC_MSG_RESULT([no, can't find libpng.])
++  fi
+ else
+-  AC_MSG_WARN([Can't find libpng, screenshot support disabled])
++  AC_MSG_RESULT([no])
+ fi
+ 
+ AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_net])
+@@ -555,6 +562,9 @@ AC_CHECK_HEADER([sys/mman.h], [
+ AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
+ ])
+ 
++dnl Check for realpath. Used on Linux
++AC_CHECK_FUNCS([realpath])
++
+ dnl Setpriority
+ AH_TEMPLATE(C_SET_PRIORITY,[Define to 1 if you have setpriority support])
+ AC_MSG_CHECKING(for setpriority support)
+diff --git a/include/Makefile.am b/include/Makefile.am
+index 5c89f48..570d78c 100644
+--- a/include/Makefile.am
++++ b/include/Makefile.am
+@@ -22,7 +22,6 @@ mapper.h \
+ mem.h \
+ midi.h \
+ mixer.h \
+-modules.h \
+ mouse.h \
+ paging.h \
+ pci_bus.h \
+diff --git a/include/bios_disk.h b/include/bios_disk.h
+index 2d17518..9493601 100644
+--- a/include/bios_disk.h
++++ b/include/bios_disk.h
+@@ -75,8 +75,10 @@ void incrementFDD(void);
+ 
+ #define MAX_HDD_IMAGES 2
+ 
+-extern imageDisk *imageDiskList[2 + MAX_HDD_IMAGES];
+-extern imageDisk *diskSwap[20];
++#define MAX_DISK_IMAGES (2 + MAX_HDD_IMAGES)
++
++extern imageDisk *imageDiskList[MAX_DISK_IMAGES];
++extern imageDisk *diskSwap[MAX_SWAPPABLE_DISKS];
+ extern Bit32s swapPosition;
+ extern Bit16u imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
+ extern RealPt imgDTAPtr; /* Real memory location of temporary DTA pointer for fat image disk access */
+diff --git a/include/callback.h b/include/callback.h
+index 0163206..97bf5d1 100644
+--- a/include/callback.h
++++ b/include/callback.h
+@@ -27,7 +27,8 @@
+ typedef Bitu (*CallBack_Handler)(void);
+ extern CallBack_Handler CallBack_Handlers[];
+ 
+-enum { CB_RETN,CB_RETF,CB_RETF8,CB_IRET,CB_IRETD,CB_IRET_STI,CB_IRET_EOI_PIC1,
++enum { CB_RETN,CB_RETF,CB_RETF8,CB_RETF_STI,CB_RETF_CLI,
++		CB_IRET,CB_IRETD,CB_IRET_STI,CB_IRET_EOI_PIC1,
+ 		CB_IRQ0,CB_IRQ1,CB_IRQ9,CB_IRQ12,CB_IRQ12_RET,CB_IRQ6_PCJR,CB_MOUSE,
+ 		CB_INT29,CB_INT16,CB_HOOKABLE,CB_TDE_IRET,CB_IPXESR,CB_IPXESR_RET,
+ 		CB_INT21,CB_INT13,CB_VESA_WAIT,CB_VESA_PM };
+diff --git a/include/cpu.h b/include/cpu.h
+index 69557d0..5f7f7f9 100644
+--- a/include/cpu.h
++++ b/include/cpu.h
+@@ -71,6 +71,7 @@ extern CPU_Decoder * cpudecoder;
+ Bits CPU_Core_Normal_Run(void);
+ Bits CPU_Core_Normal_Trap_Run(void);
+ Bits CPU_Core_Simple_Run(void);
++Bits CPU_Core_Simple_Trap_Run(void);
+ Bits CPU_Core_Full_Run(void);
+ Bits CPU_Core_Dyn_X86_Run(void);
+ Bits CPU_Core_Dyn_X86_Trap_Run(void);
+diff --git a/include/cross.h b/include/cross.h
+index 5e65ebb..fdcfcf7 100644
+--- a/include/cross.h
++++ b/include/cross.h
+@@ -105,4 +105,5 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
+ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
+ void close_directory(dir_information* dirp);
+ 
++FILE *fopen_wrap(const char *path, const char *mode);
+ #endif
+diff --git a/include/dma.h b/include/dma.h
+index a062432..196e4b4 100644
+--- a/include/dma.h
++++ b/include/dma.h
+@@ -86,8 +86,8 @@ private:
+ 	bool flipflop;
+ 	DmaChannel *DmaChannels[4];
+ public:
+-	IO_ReadHandleObject DMA_ReadHandler[0x11];
+-	IO_WriteHandleObject DMA_WriteHandler[0x11];
++	IO_ReadHandleObject DMA_ReadHandler[0x12];
++	IO_WriteHandleObject DMA_WriteHandler[0x12];
+ 	DmaController(Bit8u num) {
+ 		flipflop = false;
+ 		ctrlnum = num;		/* first or second DMA controller */
+diff --git a/include/dos_system.h b/include/dos_system.h
+index 0147cbd..7ef98bc 100644
+--- a/include/dos_system.h
++++ b/include/dos_system.h
+@@ -128,8 +128,8 @@ public:
+ 	bool UpdateDateTimeFromHost(void);   
+ 	void FlagReadOnlyMedium(void);
+ 	void Flush(void);
++	FILE * fhandle; //todo handle this properly
+ private:
+-	FILE * fhandle;
+ 	bool read_only_medium;
+ 	enum { NONE,READ,WRITE } last_action;
+ };
+@@ -162,6 +162,8 @@ public:
+ 
+ 	void		CacheOut			(const char* path, bool ignoreLastDir = false);
+ 	void		AddEntry			(const char* path, bool checkExist = false);
++	void		AddEntryDirOverlay	(const char* path, bool checkExist = false);
++
+ 	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
+ 
+ 	void		EmptyCache			(void);
+@@ -172,7 +174,7 @@ public:
+ 	public:
+ 		CFileInfo(void) {
+ 			orgname[0] = shortname[0] = 0;
+-			isDir = false;
++			isOverlayDir = isDir = false;
+ 			id = MAX_OPENDIRS;
+ 			nextEntry = shortNr = 0;
+ 		}
+@@ -183,6 +185,7 @@ public:
+ 		};
+ 		char		orgname		[CROSS_LEN];
+ 		char		shortname	[DOS_NAMELENGTH_ASCII];
++		bool		isOverlayDir;
+ 		bool		isDir;
+ 		Bit16u		id;
+ 		Bitu		nextEntry;
+@@ -206,7 +209,7 @@ private:
+ 	CFileInfo*	FindDirInfo		(const char* path, char* expandedPath);
+ 	bool		RemoveSpaces		(char* str);
+ 	bool		OpenDir			(CFileInfo* dir, const char* path, Bit16u& id);
+-	void		CreateEntry		(CFileInfo* dir, const char* name, bool query_directory);
++	void		CreateEntry		(CFileInfo* dir, const char* name, bool is_directory);
+ 	void		CopyEntry		(CFileInfo* dir, CFileInfo* from);
+ 	Bit16u		GetFreeID		(CFileInfo* dir);
+ 	void		Clear			(void);
+diff --git a/include/fpu.h b/include/fpu.h
+index 3611545..2b7f942 100644
+--- a/include/fpu.h
++++ b/include/fpu.h
+@@ -19,6 +19,11 @@
+ #ifndef DOSBOX_FPU_H
+ #define DOSBOX_FPU_H
+ 
++#ifndef DOSBOX_DOSBOX_H
++//So the right config.h gets included for C_DEBUG
++#include "dosbox.h"
++#endif
++
+ #ifndef DOSBOX_MEM_H
+ #include "mem.h"
+ #endif
+@@ -74,9 +79,9 @@ enum FPU_Tag {
+ };
+ 
+ enum FPU_Round {
+-	ROUND_Nearest = 0,		
++	ROUND_Nearest = 0,
+ 	ROUND_Down    = 1,
+-	ROUND_Up      = 2,	
++	ROUND_Up      = 2,
+ 	ROUND_Chop    = 3
+ };
+ 
+@@ -150,5 +155,22 @@ static INLINE void FPU_SET_C3(Bitu C){
+ 	if(C) fpu.sw |= 0x4000;
+ }
+ 
++#define DB_FPU_STACK_CHECK_NONE 0
++#define DB_FPU_STACK_CHECK_LOG  1
++#define DB_FPU_STACK_CHECK_EXIT 2
++//NONE is 0.74 behavior: not care about stack overflow/underflow
++//Overflow is always logged/exited on.
++//Underflow can be controlled with by this. 
++//LOG is giving a message when encountered
++//EXIT is to hard exit.
++//Currently pop is ignored in release mode and overflow is exit.
++//in debug mode: pop will log and overflow is exit. 
++#if C_DEBUG
++#define DB_FPU_STACK_CHECK_POP DB_FPU_STACK_CHECK_LOG
++#define DB_FPU_STACK_CHECK_PUSH DB_FPU_STACK_CHECK_EXIT
++#else
++#define DB_FPU_STACK_CHECK_POP DB_FPU_STACK_CHECK_NONE
++#define DB_FPU_STACK_CHECK_PUSH DB_FPU_STACK_CHECK_EXIT
++#endif
+ 
+ #endif
+diff --git a/include/modules.h b/include/modules.h
+deleted file mode 100644
+index 6bbeffc..0000000
+--- a/include/modules.h
++++ /dev/null
+@@ -1,180 +0,0 @@
+-/* Standard data types used */
+-
+-typedef unsigned char Bit8u;
+-typedef signed char Bit8s;
+-typedef unsigned short Bit16u;
+-typedef signed short Bit16s;
+-typedef unsigned long Bit32u;
+-typedef signed long Bit32s;
+-#if defined(_MSC_VER)
+-typedef unsigned __int64 Bit64u;
+-typedef signed __int64 Bit64s;
+-#else
+-typedef unsigned long long int Bit64u;
+-typedef signed long long int Bit64s;
+-#endif
+-
+-
+-
+-/* Setting up pointers to all subfunctions */
+-#ifdef MODULE_WANT_IO_READ
+-typedef Bit8u (* IO_ReadHandler)(Bit32u port);
+-static void (* IO_RegisterReadHandler)(Bit32u port,IO_ReadHandler handler,char * name);
+-static void (* IO_FreeReadHandler)(Bit32u port);
+-#endif
+-
+-#ifdef MODULE_WANT_IO_WRITE
+-typedef void (* IO_WriteHandler)(Bit32u port,Bit8u value);
+-static void (* IO_RegisterWriteHandler)(Bit32u port,IO_WriteHandler handler,char * name);
+-static void (* IO_FreeWriteHandler)(Bit32u port);
+-#endif
+-
+-#ifdef MODULE_WANT_IRQ_EOI
+-typedef void (* IRQ_EOIHandler)(void);
+-static void (* IRQ_RegisterEOIHandler)(Bit32u irq,IRQ_EOIHandler handler,char * name);
+-static void (* IRQ_FreeEOIHandler)(Bit32u irq);
+-#endif
+-
+-#ifdef MODULE_WANT_IRQ 
+-static void (* IRQ_Activate)(Bit32u irq);
+-static void (* IRQ_Deactivate)(Bit32u irq);
+-#endif
+-
+-#ifdef MODULE_WANT_TIMER
+-typedef void (* TIMER_MicroHandler)(void);
+-static  void (* TIMER_RegisterMicroHandler)(TIMER_MicroHandler handler,Bit32u micro);
+-#endif
+-
+-#ifdef MODULE_WANT_TIMER_TICK
+-typedef void (* TIMER_TickHandler)(Bit32u ticks);
+-static  void (* TIMER_RegisterTickHandler)(TIMER_TickHandler handler);
+-#endif
+-
+-/* 
+-	4 8-bit and 4 16-bit channels you can read data from 
+-	16-bit reads are word sized
+-*/
+-
+-#ifdef MODULE_WANT_DMA_READ
+-static void (* DMA_8_Read)(Bit32u chan,Bit8u * data,Bit16u size);
+-static void (* DMA_16_Read)(Bit32u chan,Bit8u * data,Bit16u size);
+-#endif
+-
+-/* 
+-	4 8-bit and 4 16-bit channels you can write data from 
+-	16-bit writes are word sized
+-*/
+-
+-#ifdef MODULE_WANT_DMA_READ
+-static void (* DMA_8_Write)(Bit32u chan,Bit8u * data,Bit16u size);
+-static void (* DMA_16_Write)(Bit32u chan,Bit8u * data,Bit16u size);
+-#endif
+-
+-
+-#ifdef MODULE_WANT_MIXER 
+-/* 	The len here means the amount of samples needed not the buffersize it needed to fill */
+-typedef void (* MIXER_MixHandler)(Bit8u * sampdate,Bit32u len);
+-
+-/* Different types if modes a mixer channel can work in */
+-#define MIXER_8MONO		0
+-#define MIXER_8STEREO	1
+-#define MIXER_16MONO	2
+-#define MIXER_16STEREO	3
+-struct MIXER_Channel;
+-
+-#define MAX_AUDIO ((1<<(16-1))-1)
+-#define MIN_AUDIO -(1<<(16-1))
+-
+-MIXER_Channel *(* MIXER_AddChannel)(MIXER_MixHandler handler,Bit32u freq,char * name);
+-void (* MIXER_SetVolume)(MIXER_Channel * chan,Bit8u vol);
+-void (* MIXER_SetFreq)(MIXER_Channel * chan,Bit32u freq);
+-void (* MIXER_SetMode)(MIXER_Channel * chan,Bit8u mode);
+-void (* MIXER_Enable)(MIXER_Channel * chan,bool enable);
+-#endif
+-
+-typedef bool (* MODULE_FindHandler)(char * name,void * * function);
+-typedef char *(* MODULE_StartHandler)(MODULE_FindHandler find_handler);
+-
+-#define MODULE_START_PROC "ModuleStart"
+-
+-#ifdef MODULE_START_FUNCTION
+-#include <stdio.h>
+-
+-#define GET_FUNCTION(a)													\
+-	if (!find_handler(#a ,(void * *) &a)) {								\
+-		return "Can't find requested function";							\
+-	};
+-
+-
+-#if defined (WIN32)
+-#include <windows.h>
+-BOOL APIENTRY DllMain( HANDLE hModule, 
+-                       DWORD  ul_reason_for_call, 
+-                       LPVOID lpReserved
+-					 )
+-{
+-    return TRUE;
+-}
+-
+-extern "C" {
+-__declspec(dllexport) 
+-#endif 
+-char * ModuleStart (MODULE_FindHandler find_handler) {
+-
+-#ifdef MODULE_WANT_IRQ_EOI
+-GET_FUNCTION(IRQ_RegisterEOIHandler);
+-GET_FUNCTION(IRQ_FreeEOIHandler);
+-#endif 
+-
+-#ifdef MODULE_WANT_IRQ 
+-GET_FUNCTION(IRQ_Activate);
+-GET_FUNCTION(IRQ_Deactivate);
+-#endif
+-
+-#ifdef MODULE_WANT_IO_READ
+-GET_FUNCTION(IO_RegisterReadHandler);
+-GET_FUNCTION(IO_FreeReadHandler);
+-#endif
+-
+-#ifdef MODULE_WANT_IO_WRITE
+-GET_FUNCTION(IO_RegisterWriteHandler);
+-GET_FUNCTION(IO_FreeWriteHandler);
+-#endif
+-
+-#ifdef MODULE_WANT_TIMER
+-GET_FUNCTION(TIMER_RegisterMicroHandler);
+-#endif
+-
+-#ifdef MODULE_WANT_TIMER_TICKS
+-GET_FUNCTION(TIMER_RegisterTickHandler);
+-#endif
+-
+-#ifdef MODULE_WANT_DMA_READ
+-GET_FUNCTION(DMA_8_Read);
+-GET_FUNCTION(DMA_16_Read);
+-#endif
+-
+-#ifdef MODULE_WANT_DMA_WRITE
+-GET_FUNCTION(DMA_8_Write);
+-GET_FUNCTION(DMA_16_Write);
+-#endif
+-
+-#ifdef MODULE_WANT_MIXER
+-GET_FUNCTION(MIXER_AddChannel);
+-GET_FUNCTION(MIXER_SetVolume);
+-GET_FUNCTION(MIXER_SetFreq);
+-GET_FUNCTION(MIXER_SetMode);
+-GET_FUNCTION(MIXER_Enable);
+-#endif
+-
+-return MODULE_START_FUNCTION;
+-
+-}
+-#if defined (WIN32)
+-}
+-#endif 
+-
+-
+-
+-#endif
+-
+diff --git a/include/paging.h b/include/paging.h
+index b39f74e..235f043 100644
+--- a/include/paging.h
++++ b/include/paging.h
+@@ -48,9 +48,11 @@ class PageDirectory;
+ #define PFLAG_READABLE		0x1
+ #define PFLAG_WRITEABLE		0x2
+ #define PFLAG_HASROM		0x4
+-#define PFLAG_HASCODE		0x8				//Page contains dynamic code
++#define PFLAG_HASCODE32		0x8				//Page contains 32-bit dynamic code
+ #define PFLAG_NOCODE		0x10			//No dynamic code can be generated here
+ #define PFLAG_INIT			0x20			//No dynamic code can be generated here
++#define PFLAG_HASCODE16		0x40			//Page contains 16-bit dynamic code
++#define PFLAG_HASCODE		(PFLAG_HASCODE32|PFLAG_HASCODE16)
+ 
+ #define LINK_START	((1024+64)/4)			//Start right after the HMA
+ 
+@@ -224,7 +226,7 @@ void PAGING_InitTLBBank(tlb_entry **bank);
+ 
+ static INLINE tlb_entry *get_tlb_entry(PhysPt address) {
+ 	Bitu index=(address>>12);
+-	if (TLB_BANKS && (index > TLB_SIZE)) {
++	if (TLB_BANKS && (index >= TLB_SIZE)) {
+ 		Bitu bank=(address>>BANK_SHIFT) - 1;
+ 		if (!paging.tlbh_banks[bank])
+ 			PAGING_InitTLBBank(&paging.tlbh_banks[bank]);
+diff --git a/include/setup.h b/include/setup.h
+index 30e6503..c9b80d3 100644
+--- a/include/setup.h
++++ b/include/setup.h
+@@ -43,7 +43,7 @@
+ 
+ #ifndef CH_CSTDIO
+ #define CH_CSTDIO
+-#include <cstdio>
++#include <stdio.h>
+ #endif
+ 
+ 
+diff --git a/include/shell.h b/include/shell.h
+index d585f3e..dc8ede0 100644
+--- a/include/shell.h
++++ b/include/shell.h
+@@ -35,11 +35,11 @@
+ #define CMD_MAXCMDS 20
+ #define CMD_OLDSIZE 4096
+ extern Bitu call_shellstop;
++class DOS_Shell;
++
+ /* first_shell is used to add and delete stuff from the shell env 
+  * by "external" programs. (config) */
+-extern Program * first_shell;
+-
+-class DOS_Shell;
++extern DOS_Shell * first_shell;
+ 
+ class BatchFile {
+ public:
+diff --git a/src/cpu/callback.cpp b/src/cpu/callback.cpp
+index 25c91ae..a249118 100644
+--- a/src/cpu/callback.cpp
++++ b/src/cpu/callback.cpp
+@@ -173,6 +173,26 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
+ 		phys_writeb(physAddress+0x00,(Bit8u)0xCA);		//A RETF 8 Instruction
+ 		phys_writew(physAddress+0x01,(Bit16u)0x0008);
+ 		return (use_cb?7:3);
++	case CB_RETF_STI:
++		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		//STI
++		if (use_cb) {
++			phys_writeb(physAddress+0x01,(Bit8u)0xFE);	//GRP 4
++			phys_writeb(physAddress+0x02,(Bit8u)0x38);	//Extra Callback instruction
++			phys_writew(physAddress+0x03,(Bit16u)callback);	//The immediate word
++			physAddress+=4;
++		}
++		phys_writeb(physAddress+0x01,(Bit8u)0xCB);		//A RETF Instruction
++		return (use_cb?6:2);
++	case CB_RETF_CLI:
++		phys_writeb(physAddress+0x00,(Bit8u)0xFA);		//CLI
++		if (use_cb) {
++			phys_writeb(physAddress+0x01,(Bit8u)0xFE);	//GRP 4
++			phys_writeb(physAddress+0x02,(Bit8u)0x38);	//Extra Callback instruction
++			phys_writew(physAddress+0x03,(Bit16u)callback);	//The immediate word
++			physAddress+=4;
++		}
++		phys_writeb(physAddress+0x01,(Bit8u)0xCB);		//A RETF Instruction
++		return (use_cb?6:2);
+ 	case CB_IRET:
+ 		if (use_cb) {
+ 			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
+@@ -282,26 +302,32 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
+ 		return (use_cb?0x0e:0x0a);
+ 	case CB_IRQ12:	// ps2 mouse int74
+ 		if (!use_cb) E_Exit("int74 callback must implement a callback handler!");
+-		phys_writeb(physAddress+0x00,(Bit8u)0x1e);		// push ds
+-		phys_writeb(physAddress+0x01,(Bit8u)0x06);		// push es
+-		phys_writew(physAddress+0x02,(Bit16u)0x6066);	// pushad
+-		phys_writeb(physAddress+0x04,(Bit8u)0xfc);		// cld
+-		phys_writeb(physAddress+0x05,(Bit8u)0xfb);		// sti
+-		phys_writeb(physAddress+0x06,(Bit8u)0xFE);		//GRP 4
+-		phys_writeb(physAddress+0x07,(Bit8u)0x38);		//Extra Callback instruction
+-		phys_writew(physAddress+0x08,(Bit16u)callback);			//The immediate word
+-		return 0x0a;
++		phys_writeb(physAddress+0x00,(Bit8u)0xfb);		// sti
++		phys_writeb(physAddress+0x01,(Bit8u)0x1e);		// push ds
++		phys_writeb(physAddress+0x02,(Bit8u)0x06);		// push es
++		phys_writew(physAddress+0x03,(Bit16u)0x6066);	// pushad
++		phys_writeb(physAddress+0x05,(Bit8u)0xFE);		//GRP 4
++		phys_writeb(physAddress+0x06,(Bit8u)0x38);		//Extra Callback instruction
++		phys_writew(physAddress+0x07,(Bit16u)callback);			//The immediate word
++		phys_writeb(physAddress+0x09,(Bit8u)0x50);		// push ax
++		phys_writew(physAddress+0x0a,(Bit16u)0x20b0);	// mov al, 0x20
++		phys_writew(physAddress+0x0c,(Bit16u)0xa0e6);	// out 0xa0, al
++		phys_writew(physAddress+0x0e,(Bit16u)0x20e6);	// out 0x20, al
++		phys_writeb(physAddress+0x10,(Bit8u)0x58);		// pop ax
++		phys_writeb(physAddress+0x11,(Bit8u)0xfc);		// cld
++		phys_writeb(physAddress+0x12,(Bit8u)0xCB);		//A RETF Instruction
++		return 0x13;
+ 	case CB_IRQ12_RET:	// ps2 mouse int74 return
+-		if (use_cb) {
+-			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
+-			phys_writeb(physAddress+0x01,(Bit8u)0x38);	//Extra Callback instruction
+-			phys_writew(physAddress+0x02,(Bit16u)callback);		//The immediate word
+-			physAddress+=4;
+-		}
+ 		phys_writeb(physAddress+0x00,(Bit8u)0xfa);		// cli
+ 		phys_writew(physAddress+0x01,(Bit16u)0x20b0);	// mov al, 0x20
+ 		phys_writew(physAddress+0x03,(Bit16u)0xa0e6);	// out 0xa0, al
+ 		phys_writew(physAddress+0x05,(Bit16u)0x20e6);	// out 0x20, al
++		if (use_cb) {
++			phys_writeb(physAddress+0x07,(Bit8u)0xFE);	//GRP 4
++			phys_writeb(physAddress+0x08,(Bit8u)0x38);	//Extra Callback instruction
++			phys_writew(physAddress+0x09,(Bit16u)callback);		//The immediate word
++			physAddress+=4;
++		}
+ 		phys_writew(physAddress+0x07,(Bit16u)0x6166);	// popad
+ 		phys_writeb(physAddress+0x09,(Bit8u)0x07);		// pop es
+ 		phys_writeb(physAddress+0x0a,(Bit8u)0x1f);		// pop ds
+diff --git a/src/cpu/core_dyn_x86.cpp b/src/cpu/core_dyn_x86.cpp
+index 70c0091..8cec0fe 100644
+--- a/src/cpu/core_dyn_x86.cpp
++++ b/src/cpu/core_dyn_x86.cpp
+@@ -362,7 +362,7 @@ run_block:
+ 		{
+ 			Bitu temp_ip=SegPhys(cs)+reg_eip;
+ 			CodePageHandler * temp_handler=(CodePageHandler *)get_tlb_readhandler(temp_ip);
+-			if (temp_handler->flags & PFLAG_HASCODE) {
++			if (temp_handler->flags & (cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16)) {
+ 				block=temp_handler->FindCacheBlock(temp_ip & 4095);
+ 				if (!block) goto restart_core;
+ 				cache.block.running->LinkTo(ret==BR_Link2,block);
+diff --git a/src/cpu/core_dyn_x86/cache.h b/src/cpu/core_dyn_x86/cache.h
+index ca96bef..f0325c2 100644
+--- a/src/cpu/core_dyn_x86/cache.h
++++ b/src/cpu/core_dyn_x86/cache.h
+@@ -73,7 +73,7 @@ public:
+ 	void SetupAt(Bitu _phys_page,PageHandler * _old_pagehandler) {
+ 		phys_page=_phys_page;
+ 		old_pagehandler=_old_pagehandler;
+-		flags=old_pagehandler->flags|PFLAG_HASCODE;
++		flags=old_pagehandler->flags|(cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16);
+ 		flags&=~PFLAG_WRITEABLE;
+ 		active_blocks=0;
+ 		active_count=16;
+@@ -517,7 +517,7 @@ static void cache_init(bool enable) {
+ 
+ #if (C_HAVE_MPROTECT)
+ 			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
+-				LOG_MSG("Setting excute permission on the code cache has failed!");
++				LOG_MSG("Setting execute permission on the code cache has failed!");
+ #endif
+ 			CacheBlock * block=cache_getblock();
+ 			cache.block.first=block;
+@@ -612,7 +612,7 @@ static void cache_reset(void) {
+ 
+ #if (C_HAVE_MPROTECT)
+ 			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
+-				LOG_MSG("Setting excute permission on the code cache has failed!");
++				LOG_MSG("Setting execute permission on the code cache has failed!");
+ #endif
+ 		}
+ 
+diff --git a/src/cpu/core_dyn_x86/decoder.h b/src/cpu/core_dyn_x86/decoder.h
+index c34052f..0682ddd 100644
+--- a/src/cpu/core_dyn_x86/decoder.h
++++ b/src/cpu/core_dyn_x86/decoder.h
+@@ -2370,7 +2370,9 @@ restart_prefix:
+ 		case 0xca:dyn_ret_far(decode_fetchw());goto finish_block;
+ 		case 0xcb:dyn_ret_far(0);goto finish_block;
+ 		/* Interrupt */
+-//		case 0xcd:dyn_interrupt(decode_fetchb());goto finish_block;
++#if !(C_DEBUG)
++		case 0xcd:dyn_interrupt(decode_fetchb());goto finish_block;
++#endif
+ 		/* IRET */
+ 		case 0xcf:dyn_iret();goto finish_block;
+ 
+diff --git a/src/cpu/core_dyn_x86/risc_x86.h b/src/cpu/core_dyn_x86/risc_x86.h
+index 379906f..c283ff0 100644
+--- a/src/cpu/core_dyn_x86/risc_x86.h
++++ b/src/cpu/core_dyn_x86/risc_x86.h
+@@ -388,7 +388,7 @@ static void gen_dop_byte_imm_mem(DualOps op,DynReg * dr1,Bit8u di1,void* data) {
+ 	case DOP_AND:	tmp=0x0522; break;
+ 	case DOP_OR:	tmp=0x050a; break;
+ 	case DOP_TEST:	tmp=0x0584; goto nochange;	//Doesn't change
+-	case DOP_MOV:	tmp=0x0585; break;
++	case DOP_MOV:	tmp=0x058A; break;
+ 	default:
+ 		IllegalOption("gen_dop_byte_imm_mem");
+ 	}
+@@ -769,6 +769,7 @@ static void gen_call_function(void * func,char const* ops,...) {
+ 			}
+ 			ops++;
+ 		}
++		va_end(params);
+ 
+ #if defined (MACOSX)
+ 		/* align stack */
+diff --git a/src/cpu/core_dynrec.cpp b/src/cpu/core_dynrec.cpp
+index e0e32be..5ce2709 100644
+--- a/src/cpu/core_dynrec.cpp
++++ b/src/cpu/core_dynrec.cpp
+@@ -159,16 +159,14 @@ CacheBlockDynRec * LinkBlocks(BlockReturn ret) {
+ 	// the last instruction was a control flow modifying instruction
+ 	Bitu temp_ip=SegPhys(cs)+reg_eip;
+ 	CodePageHandlerDynRec * temp_handler=(CodePageHandlerDynRec *)get_tlb_readhandler(temp_ip);
+-	if (temp_handler->flags & PFLAG_HASCODE) {
++	if (temp_handler->flags & (cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16)) {
+ 		// see if the target is an already translated block
+ 		block=temp_handler->FindCacheBlock(temp_ip & 4095);
+-		if (!block) return NULL;
+-
+-		// found it, link the current block to
+-		cache.block.running->LinkTo(ret==BR_Link2,block);
+-		return block;
++		if (block) { // found it, link the current block to
++			cache.block.running->LinkTo(ret==BR_Link2,block);
++		}
+ 	}
+-	return NULL;
++	return block;
+ }
+ 
+ /*
+diff --git a/src/cpu/core_dynrec/cache.h b/src/cpu/core_dynrec/cache.h
+index b1f705c..2ee2378 100644
+--- a/src/cpu/core_dynrec/cache.h
++++ b/src/cpu/core_dynrec/cache.h
+@@ -96,7 +96,7 @@ public:
+ 		old_pagehandler=_old_pagehandler;
+ 
+ 		// adjust flags
+-		flags=old_pagehandler->flags|PFLAG_HASCODE;
++		flags=old_pagehandler->flags|(cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16);
+ 		flags&=~PFLAG_WRITEABLE;
+ 
+ 		active_blocks=0;
+@@ -603,7 +603,7 @@ static void cache_init(bool enable) {
+ 
+ #if (C_HAVE_MPROTECT)
+ 			if(mprotect(cache_code_link_blocks,CACHE_TOTAL+CACHE_MAXSIZE+PAGESIZE_TEMP,PROT_WRITE|PROT_READ|PROT_EXEC))
+-				LOG_MSG("Setting excute permission on the code cache has failed");
++				LOG_MSG("Setting execute permission on the code cache has failed");
+ #endif
+ 			CacheBlockDynRec * block=cache_getblock();
+ 			cache.block.first=block;
+diff --git a/src/cpu/core_dynrec/decoder.h b/src/cpu/core_dynrec/decoder.h
+index c34e9a7..2444abd 100644
+--- a/src/cpu/core_dynrec/decoder.h
++++ b/src/cpu/core_dynrec/decoder.h
+@@ -446,7 +446,9 @@ restart_prefix:
+ 		case 0xcb:dyn_ret_far(0);goto finish_block;
+ 
+ 		// int/iret
++#if !(C_DEBUG)
+ 		case 0xcd:dyn_interrupt(decode_fetchb());goto finish_block;
++#endif
+ 		case 0xcf:dyn_iret();goto finish_block;
+ 
+ //		case 0xd4: AAM missing
+diff --git a/src/cpu/core_dynrec/decoder_basic.h b/src/cpu/core_dynrec/decoder_basic.h
+index 363c1df..10314ba 100644
+--- a/src/cpu/core_dynrec/decoder_basic.h
++++ b/src/cpu/core_dynrec/decoder_basic.h
+@@ -120,7 +120,7 @@ static struct DynDecode {
+ 
+ 	// modrm state of the current instruction (if used)
+ 	struct {
+-		Bitu val;
++//		Bitu val;
+ 		Bitu mod;
+ 		Bitu rm;
+ 		Bitu reg;
+@@ -130,21 +130,30 @@ static struct DynDecode {
+ 
+ static bool MakeCodePage(Bitu lin_addr,CodePageHandlerDynRec * &cph) {
+ 	Bit8u rdval;
++	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
+ 	//Ensure page contains memory:
+ 	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
+ 
+ 	PageHandler * handler=get_tlb_readhandler(lin_addr);
+ 	if (handler->flags & PFLAG_HASCODE) {
+-		// this is a codepage handler, and the one that we're looking for
++		// this is a codepage handler, make sure it matches current code size
+ 		cph=(CodePageHandlerDynRec *)handler;
+-		return false;
++		if (handler->flags & cflag) return false;
++		// wrong code size/stale dynamic code, drop it
++		cph->ClearRelease();
++		cph=0;
++		// handler was changed, refresh
++		handler=get_tlb_readhandler(lin_addr);
+ 	}
+ 	if (handler->flags & PFLAG_NOCODE) {
+ 		if (PAGING_ForcePageInit(lin_addr)) {
+ 			handler=get_tlb_readhandler(lin_addr);
+ 			if (handler->flags & PFLAG_HASCODE) {
+ 				cph=(CodePageHandlerDynRec *)handler;
+-				return false;
++				if (handler->flags & cflag) return false;
++				cph->ClearRelease();
++				cph=0;
++				handler=get_tlb_readhandler(lin_addr);
+ 			}
+ 		}
+ 		if (handler->flags & PFLAG_NOCODE) {
+@@ -372,10 +381,10 @@ static bool decode_fetchd_imm(Bitu & val) {
+ 
+ // modrm decoding helper
+ static void INLINE dyn_get_modrm(void) {
+-	decode.modrm.val=decode_fetchb();
+-	decode.modrm.mod=(decode.modrm.val >> 6) & 3;
+-	decode.modrm.reg=(decode.modrm.val >> 3) & 7;
+-	decode.modrm.rm=(decode.modrm.val & 7);
++	Bitu val=decode_fetchb();
++	decode.modrm.mod=(val >> 6) & 3;
++	decode.modrm.reg=(val >> 3) & 7;
++	decode.modrm.rm=(val & 7);
+ }
+ 
+ 
+diff --git a/src/cpu/core_dynrec/decoder_opcodes.h b/src/cpu/core_dynrec/decoder_opcodes.h
+index cd460b9..2ed2d5c 100644
+--- a/src/cpu/core_dynrec/decoder_opcodes.h
++++ b/src/cpu/core_dynrec/decoder_opcodes.h
+@@ -444,14 +444,23 @@ static void dyn_push_word_imm(Bitu imm) {
+ static void dyn_pop_ev(void) {
+ 	dyn_get_modrm();
+ 	if (decode.modrm.mod<3) {
+-/*		dyn_fill_ea(FC_ADDR);
+-		gen_protect_addr_reg();
+-		dyn_read_word(FC_ADDR,FC_OP1,decode.big_op);	// dummy read to trigger possible page faults */
++		// save original ESP
++		MOV_REG_WORD32_TO_HOST_REG(FC_OP2,DRC_REG_ESP);
++		gen_protect_reg(FC_OP2);
+ 		if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
+ 		else gen_call_function_raw((void*)&dynrec_pop_word);
+ 		dyn_fill_ea(FC_ADDR);
+-//		gen_restore_addr_reg();
+-		dyn_write_word(FC_ADDR,FC_RETOP,decode.big_op);
++		gen_mov_regs(FC_OP2,FC_RETOP);
++		gen_mov_regs(FC_OP1,FC_ADDR);
++		if (decode.big_op) gen_call_function_raw((void *)&mem_writed_checked_drc);
++		else gen_call_function_raw((void *)&mem_writew_checked_drc);
++		gen_extend_byte(false,FC_RETOP); // bool -> dword
++		DRC_PTR_SIZE_IM no_fault = gen_create_branch_on_zero(FC_RETOP, true);
++		// restore original ESP
++		gen_restore_reg(FC_OP2);
++		MOV_REG_WORD32_FROM_HOST_REG(FC_OP2,DRC_REG_ESP);
++		dyn_check_exception(FC_RETOP);
++		gen_fill_branch(no_fault);
+ 	} else {
+ 		if (decode.big_op) gen_call_function_raw((void*)&dynrec_pop_dword);
+ 		else gen_call_function_raw((void*)&dynrec_pop_word);
+diff --git a/src/cpu/core_dynrec/dyn_fpu.h b/src/cpu/core_dynrec/dyn_fpu.h
+index cdb3e72..f532fe2 100644
+--- a/src/cpu/core_dynrec/dyn_fpu.h
++++ b/src/cpu/core_dynrec/dyn_fpu.h
+@@ -68,7 +68,8 @@ static INLINE void dyn_fpu_top_swapped() {
+ }
+ 
+ static void dyn_eatree() {
+-	Bitu group=(decode.modrm.val >> 3) & 7;
++//	Bitu group = (decode.modrm.val >> 3) & 7;
++	Bitu group = decode.modrm.reg&7; //It is already that, but compilers.
+ 	switch (group){
+ 	case 0x00:		// FADD ST,STi
+ 		gen_call_function_R((void*)&FPU_FADD_EA,FC_OP1);
+@@ -102,7 +103,8 @@ static void dyn_eatree() {
+ 
+ static void dyn_fpu_esc0(){
+ 	dyn_get_modrm(); 
+-	if (decode.modrm.val >= 0xc0) { 
++//	if (decode.modrm.val >= 0xc0) {
++	if (decode.modrm.mod == 3) { 
+ 		dyn_fpu_top();
+ 		switch (decode.modrm.reg){
+ 		case 0x00:		//FADD ST,STi
+@@ -144,7 +146,8 @@ static void dyn_fpu_esc0(){
+ 
+ static void dyn_fpu_esc1(){
+ 	dyn_get_modrm();  
+-	if (decode.modrm.val >= 0xc0) { 
++//	if (decode.modrm.val >= 0xc0) { 
++	if (decode.modrm.mod == 3) {
+ 		switch (decode.modrm.reg){
+ 		case 0x00: /* FLD STi */
+ 			gen_mov_word_to_reg(FC_OP1,(void*)(&TOP),true);
+@@ -331,7 +334,8 @@ static void dyn_fpu_esc1(){
+ 
+ static void dyn_fpu_esc2(){
+ 	dyn_get_modrm();  
+-	if (decode.modrm.val >= 0xc0) { 
++//	if (decode.modrm.val >= 0xc0) { 
++	if (decode.modrm.mod == 3) {
+ 		switch(decode.modrm.reg){
+ 		case 0x05:
+ 			switch(decode.modrm.rm){
+@@ -363,7 +367,8 @@ static void dyn_fpu_esc2(){
+ 
+ static void dyn_fpu_esc3(){
+ 	dyn_get_modrm();  
+-	if (decode.modrm.val >= 0xc0) { 
++//	if (decode.modrm.val >= 0xc0) { 
++	if (decode.modrm.mod == 3) {
+ 		switch (decode.modrm.reg) {
+ 		case 0x04:
+ 			switch (decode.modrm.rm) {
+@@ -427,7 +432,8 @@ static void dyn_fpu_esc3(){
+ 
+ static void dyn_fpu_esc4(){
+ 	dyn_get_modrm();  
+-	if (decode.modrm.val >= 0xc0) { 
++//	if (decode.modrm.val >= 0xc0) { 
++	if (decode.modrm.mod == 3) {
+ 		switch(decode.modrm.reg){
+ 		case 0x00:	/* FADD STi,ST*/
+ 			dyn_fpu_top_swapped();
+@@ -475,7 +481,8 @@ static void dyn_fpu_esc4(){
+ 
+ static void dyn_fpu_esc5(){
+ 	dyn_get_modrm();  
+-	if (decode.modrm.val >= 0xc0) { 
++//	if (decode.modrm.val >= 0xc0) { 
++	if (decode.modrm.mod == 3) {
+ 		dyn_fpu_top();
+ 		switch(decode.modrm.reg){
+ 		case 0x00: /* FFREE STi */
+@@ -545,7 +552,8 @@ static void dyn_fpu_esc5(){
+ 
+ static void dyn_fpu_esc6(){
+ 	dyn_get_modrm();  
+-	if (decode.modrm.val >= 0xc0) { 
++//	if (decode.modrm.val >= 0xc0) { 
++	if (decode.modrm.mod == 3) {
+ 		switch(decode.modrm.reg){
+ 		case 0x00:	/*FADDP STi,ST*/
+ 			dyn_fpu_top_swapped();
+@@ -601,7 +609,8 @@ static void dyn_fpu_esc6(){
+ 
+ static void dyn_fpu_esc7(){
+ 	dyn_get_modrm();  
+-	if (decode.modrm.val >= 0xc0) { 
++//	if (decode.modrm.val >= 0xc0) { 
++	if (decode.modrm.mod == 3) {
+ 		switch (decode.modrm.reg){
+ 		case 0x00: /* FFREEP STi */
+ 			dyn_fpu_top();
+diff --git a/src/cpu/core_dynrec/risc_x64.h b/src/cpu/core_dynrec/risc_x64.h
+index 5c7e59d..955c754 100644
+--- a/src/cpu/core_dynrec/risc_x64.h
++++ b/src/cpu/core_dynrec/risc_x64.h
+@@ -56,11 +56,16 @@ typedef Bit8u HostReg;
+ // then define DRC_PROTECT_ADDR_REG above
+ #define FC_ADDR HOST_EBX
+ 
++#if defined (_WIN64)
++#define FC_OP1 HOST_ECX
++#define FC_OP2 HOST_EDX
++#else
+ // register that holds the first parameter
+ #define FC_OP1 HOST_EDI
+ 
+ // register that holds the second parameter
+ #define FC_OP2 HOST_ESI
++#endif
+ 
+ // special register that holds the third parameter for _R3 calls (byte accessible)
+ #define FC_OP3 HOST_EAX
+@@ -78,17 +83,12 @@ typedef Bit8u HostReg;
+ 
+ // move a full register from reg_src to reg_dst
+ static void gen_mov_regs(HostReg reg_dst,HostReg reg_src) {
++	if (reg_dst==reg_src) return;
+ 	cache_addb(0x8b);					// mov reg_dst,reg_src
+ 	cache_addb(0xc0+(reg_dst<<3)+reg_src);
+ }
+ 
+-// move a 64bit constant value into a full register
+-static void gen_mov_reg_qword(HostReg dest_reg,Bit64u imm) {
+-	cache_addb(0x48);
+-	cache_addb(0xb8+dest_reg);			// mov dest_reg,imm
+-	cache_addq(imm);
+-}
+-
++static void gen_mov_reg_qword(HostReg dest_reg,Bit64u imm);
+ 
+ // This function generates an instruction with register addressing and a memory location
+ static INLINE void gen_reg_memaddr(HostReg reg,void* data,Bit8u op,Bit8u prefix=0) {
+@@ -190,6 +190,17 @@ static void gen_mov_dword_to_reg_imm(HostReg dest_reg,Bit32u imm) {
+ 	cache_addd(imm);
+ }
+ 
++// move a 64bit constant value into a full register
++static void gen_mov_reg_qword(HostReg dest_reg,Bit64u imm) {
++	if (imm==(Bit32u)imm) {
++		gen_mov_dword_to_reg_imm(dest_reg, (Bit32u)imm);
++		return;
++	}
++	cache_addb(0x48);
++	cache_addb(0xb8+dest_reg);			// mov dest_reg,imm
++	cache_addq(imm);
++}
++
+ // move 32bit (dword==true) or 16bit (dword==false) of a register into memory
+ static void gen_mov_word_from_reg(HostReg src_reg,void* dest,bool dword,Bit8u prefix=0) {
+ 	gen_reg_memaddr(src_reg,dest,0x89,(dword?prefix:0x66));		// mov [data],reg
+@@ -259,6 +270,7 @@ static void gen_add(HostReg reg,void* op) {
+ 
+ // add a 32bit constant value to a full register
+ static void gen_add_imm(HostReg reg,Bit32u imm) {
++	if (!imm) return;
+ 	cache_addw(0xc081+(reg<<8));		// add reg,imm
+ 	cache_addd(imm);
+ }
+@@ -286,11 +298,13 @@ static void INLINE gen_mov_direct_ptr(void* dest,DRC_PTR_SIZE_IM imm) {
+ 
+ // add an 8bit constant value to a memory value
+ static void gen_add_direct_byte(void* dest,Bit8s imm) {
++	if (!imm) return;
+ 	gen_memaddr(0x4,dest,1,imm,0x83);	// add [data],imm
+ }
+ 
+ // add a 32bit (dword==true) or 16bit (dword==false) constant value to a memory value
+ static void gen_add_direct_word(void* dest,Bit32u imm,bool dword) {
++	if (!imm) return;
+ 	if ((imm<128) && dword) {
+ 		gen_add_direct_byte(dest,(Bit8s)imm);
+ 		return;
+@@ -300,11 +314,13 @@ static void gen_add_direct_word(void* dest,Bit32u imm,bool dword) {
+ 
+ // subtract an 8bit constant value from a memory value
+ static void gen_sub_direct_byte(void* dest,Bit8s imm) {
++	if (!imm) return;
+ 	gen_memaddr(0x2c,dest,1,imm,0x83);
+ }
+ 
+ // subtract a 32bit (dword==true) or 16bit (dword==false) constant value from a memory value
+ static void gen_sub_direct_word(void* dest,Bit32u imm,bool dword) {
++	if (!imm) return;
+ 	if ((imm<128) && dword) {
+ 		gen_sub_direct_byte(dest,(Bit8s)imm);
+ 		return;
+@@ -359,58 +375,17 @@ static INLINE void gen_lea(HostReg dest_reg,Bitu scale,Bits imm) {
+ 
+ // generate a call to a parameterless function
+ static void INLINE gen_call_function_raw(void * func) {
+-	cache_addb(0x48); 
+-	cache_addw(0xec83); 
+-	cache_addb(0x08);	// sub rsp,0x08 (align stack to 16 byte boundary)
+-
+-	cache_addb(0x48);
+-	cache_addb(0xb8);	// mov reg,imm64
++	cache_addw(0xb848);
+ 	cache_addq((Bit64u)func);
+ 	cache_addw(0xd0ff);
+-
+-	cache_addb(0x48); 
+-	cache_addw(0xc483); 
+-	cache_addb(0x08);	// add rsp,0x08 (reset alignment)
+ }
+ 
+ // generate a call to a function with paramcount parameters
+ // note: the parameters are loaded in the architecture specific way
+ // using the gen_load_param_ functions below
+ static Bit64u INLINE gen_call_function_setup(void * func,Bitu paramcount,bool fastcall=false) {
+-	// align the stack
+-	cache_addb(0x48);
+-	cache_addw(0xc48b);		// mov rax,rsp
+-
+-	cache_addb(0x48);
+-	cache_addw(0xec83);		// sub rsp,0x08
+-	cache_addb(0x08);		// 0x08==return address pushed onto stack by call
+-
+-	cache_addb(0x48);
+-	cache_addw(0xe483);		// and esp,0xfffffffffffffff0
+-	cache_addb(0xf0);
+-
+-	cache_addb(0x48);
+-	cache_addw(0xc483);		// add rsp,0x08
+-	cache_addb(0x08);
+-
+-	// stack is 16 byte aligned now
+-
+-
+-	cache_addb(0x50);		// push rax (==old rsp)
+-
+-	// returned address relates to where the address is stored in gen_call_function_raw
+-	Bit64u proc_addr=(Bit64u)cache.pos-4;
+-
+-	// Do the actual call to the procedure
+-	cache_addb(0x48);
+-	cache_addb(0xb8);		// mov reg,imm64
+-	cache_addq((Bit64u)func);
+-
+-	cache_addw(0xd0ff);
+-
+-	// restore stack
+-	cache_addb(0x5c);		// pop rsp
+-
++	Bit64u proc_addr = (Bit64u)cache.pos;
++	gen_call_function_raw(func);
+ 	return proc_addr;
+ }
+ 
+@@ -425,14 +400,14 @@ static void INLINE gen_load_param_imm(Bitu imm,Bitu param) {
+ 		case 1:			// mov param2,imm32
+ 			gen_mov_dword_to_reg_imm(FC_OP2,(Bit32u)imm);
+ 			break;
+-#if defined (_MSC_VER)
+-		case 2:			// mov r8,imm32
+-			cache_addw(0xb849);
+-			cache_addq((Bit32u)imm);
++#if defined (_WIN64)
++		case 2:			// mov r8d,imm32
++			cache_addw(0xb841);
++			cache_addd((Bit32u)imm);
+ 			break;
+-		case 3:			// mov r9,imm32
+-			cache_addw(0xb949);
+-			cache_addq((Bit32u)imm);
++		case 3:			// mov r9d,imm32
++			cache_addw(0xb941);
++			cache_addd((Bit32u)imm);
+ 			break;
+ #else
+ 		case 2:			// mov rdx,imm32
+@@ -458,7 +433,7 @@ static void INLINE gen_load_param_addr(DRC_PTR_SIZE_IM addr,Bitu param) {
+ 		case 1:			// mov param2,addr64
+ 			gen_mov_reg_qword(FC_OP2,addr);
+ 			break;
+-#if defined (_MSC_VER)
++#if defined (_WIN64)
+ 		case 2:			// mov r8,addr64
+ 			cache_addw(0xb849);
+ 			cache_addq(addr);
+@@ -491,14 +466,14 @@ static void INLINE gen_load_param_reg(Bitu reg,Bitu param) {
+ 		case 1:		// mov param2,reg&7
+ 			gen_mov_regs(FC_OP2,reg&7);
+ 			break;
+-#if defined (_MSC_VER)
++#if defined (_WIN64)
+ 		case 2:		// mov r8,reg&7
+-			cache_addb(0x49);
+-			gen_mov_regs(0,reg&7);
++			cache_addw(0x8949);
++			cache_addb(0xc0 + ((reg & 7) << 3));
+ 			break;
+ 		case 3:		// mov r9,reg&7
+-			cache_addb(0x49);
+-			gen_mov_regs(1,reg&7);
++			cache_addw(0x8949);
++			cache_addb(0xc1 + ((reg & 7) << 3));
+ 			break;
+ #else
+ 		case 2:		// mov rdx,reg&7
+@@ -524,18 +499,18 @@ static void INLINE gen_load_param_mem(Bitu mem,Bitu param) {
+ 		case 1:		// mov param2,[mem]
+ 			gen_mov_word_to_reg(FC_OP2,(void*)mem,true);
+ 			break;
+-#if defined (_MSC_VER)
+-		case 2:		// mov r8,[mem]
+-			gen_mov_word_to_reg(0,(void*)mem,true,0x49);	// 0x49, use x64 rX regs
++#if defined (_WIN64)
++		case 2:		// mov r8d,[mem]
++			gen_mov_word_to_reg(0,(void*)mem,true,0x44);	// 0x44, use x64 rXd regs
+ 			break;
+-		case 3:		// mov r9,[mem]
+-			gen_mov_word_to_reg(1,(void*)mem,true,0x49);	// 0x49, use x64 rX regs
++		case 3:		// mov r9d,[mem]
++			gen_mov_word_to_reg(1,(void*)mem,true,0x44);	// 0x44, use x64 rXd regs
+ 			break;
+ #else
+-		case 2:		// mov rdx,[mem]
++		case 2:		// mov edx,[mem]
+ 			gen_mov_word_to_reg(HOST_EDX,(void*)mem,true);
+ 			break;
+-		case 3:		// mov rcx,[mem]
++		case 3:		// mov ecx,[mem]
+ 			gen_mov_word_to_reg(HOST_ECX,(void*)mem,true);
+ 			break;
+ #endif
+@@ -626,16 +601,19 @@ static void gen_fill_branch_long(Bit64u data) {
+ 	*(Bit32u*)data=(Bit32u)((Bit64u)cache.pos-data-4);
+ }
+ 
+-
+ static void gen_run_code(void) {
+-	cache_addb(0x53);					// push rbx
+-	cache_addw(0xd0ff+(FC_OP1<<8));		// call rdi
+-	cache_addb(0x5b);					// pop  rbx
++	cache_addw(0x5355);     // push rbp,rbx
++	cache_addb(0x56);       // push rsi
++	cache_addd(0x20EC8348); // sub rsp, 32
++	cache_addb(0x48);cache_addw(0x2D8D);cache_addd(2); // lea rbp, [rip+2]
++	cache_addw(0xE0FF+(FC_OP1<<8)); // jmp FC_OP1
++	cache_addd(0x20C48348); // add rsp, 32
++	cache_addd(0xC35D5B5E); // pop rsi,rbx,rbp;ret
+ }
+ 
+ // return from a function
+ static void gen_return_function(void) {
+-	cache_addb(0xc3);		// ret
++	cache_addw(0xE5FF); // jmp rbp
+ }
+ 
+ #ifdef DRC_FLAGS_INVALIDATION
+@@ -650,94 +628,77 @@ static void gen_fill_function_ptr(Bit8u * pos,void* fct_ptr,Bitu flags_type) {
+ 		case t_ADDb:
+ 		case t_ADDw:
+ 		case t_ADDd:
+-			*(Bit32u*)(pos+0)=0xf001f889;	// mov eax,edi; add eax,esi
+-			*(Bit32u*)(pos+4)=0x90900eeb;	// skip
++			// mov eax,FC_OP1; add eax,FC_OP2
++			*(Bit32u*)(pos+0)=0xc001c089+(FC_OP1<<11)+(FC_OP2<<27);
++			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
++			return;
+ 		case t_ORb:
+ 		case t_ORw:
+ 		case t_ORd:
+-			*(Bit32u*)(pos+0)=0xf009f889;	// mov eax,edi; or eax,esi
+-			*(Bit32u*)(pos+4)=0x90900eeb;	// skip
++			// mov eax,FC_OP1; or eax,FC_OP2
++			*(Bit32u*)(pos+0)=0xc009c089+(FC_OP1<<11)+(FC_OP2<<27);
++			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
++			return;
+ 		case t_ANDb:
+ 		case t_ANDw:
+ 		case t_ANDd:
+-			*(Bit32u*)(pos+0)=0xf021f889;	// mov eax,edi; and eax,esi
+-			*(Bit32u*)(pos+4)=0x90900eeb;	// skip
++			// mov eax,FC_OP1; and eax,FC_OP2
++			*(Bit32u*)(pos+0)=0xc021c089+(FC_OP1<<11)+(FC_OP2<<27);
++			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
++			return;
+ 		case t_SUBb:
+ 		case t_SUBw:
+ 		case t_SUBd:
+-			*(Bit32u*)(pos+0)=0xf029f889;	// mov eax,edi; sub eax,esi
+-			*(Bit32u*)(pos+4)=0x90900eeb;	// skip
++			// mov eax,FC_OP1; sub eax,FC_OP2
++			*(Bit32u*)(pos+0)=0xc029c089+(FC_OP1<<11)+(FC_OP2<<27);
++			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
++			return;
+ 		case t_XORb:
+ 		case t_XORw:
+ 		case t_XORd:
+-			*(Bit32u*)(pos+0)=0xf031f889;	// mov eax,edi; xor eax,esi
+-			*(Bit32u*)(pos+4)=0x90900eeb;	// skip
++			// mov eax,FC_OP1; xor eax,FC_OP2
++			*(Bit32u*)(pos+0)=0xc031c089+(FC_OP1<<11)+(FC_OP2<<27);
++			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
++			return;
+ 		case t_CMPb:
+ 		case t_CMPw:
+ 		case t_CMPd:
+ 		case t_TESTb:
+ 		case t_TESTw:
+ 		case t_TESTd:
+-			*(Bit32u*)(pos+0)=0x909012eb;	// skip
++			*(Bit32u*)(pos+0)=0x90900aeb;	// skip
+ 			*(Bit32u*)(pos+4)=0x90909090;
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
++			return;
+ 		case t_INCb:
+ 		case t_INCw:
+ 		case t_INCd:
+-			*(Bit32u*)(pos+0)=0xc0fff889;	// mov eax,edi; inc eax
+-			*(Bit32u*)(pos+4)=0x90900eeb;	// skip
++			*(Bit32u*)(pos+0)=0xc0ffc089+(FC_OP1<<11); // mov eax,ecx; inc eax
++			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
++			return;
+ 		case t_DECb:
+ 		case t_DECw:
+ 		case t_DECd:
+-			*(Bit32u*)(pos+0)=0xc8fff889;	// mov eax,edi; dec eax
+-			*(Bit32u*)(pos+4)=0x90900eeb;	// skip
++			*(Bit32u*)(pos+0)=0xc8ffc089+(FC_OP1<<11); // mov eax, FC_OP1; dec eax
++			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
++			return;
+ 		case t_NEGb:
+ 		case t_NEGw:
+ 		case t_NEGd:
+-			*(Bit32u*)(pos+0)=0xd8f7f889;	// mov eax,edi; neg eax
+-			*(Bit32u*)(pos+4)=0x90900eeb;	// skip
++			*(Bit32u*)(pos+0)=0xd8f7c089+(FC_OP1<<11); // mov eax, FC_OP1; neg eax
++			*(Bit32u*)(pos+4)=0x909006eb;	// skip
+ 			*(Bit32u*)(pos+8)=0x90909090;
+-			*(Bit32u*)(pos+12)=0x90909090;
+-			*(Bit32u*)(pos+16)=0x90909090;
+-			break;
+-		default:
+-			*(Bit64u*)(pos+6)=(Bit64u)fct_ptr;		// fill function pointer
+-			break;
++			return;
+ 	}
+-#else
+-	*(Bit64u*)(pos+6)=(Bit64u)fct_ptr;		// fill function pointer
+ #endif
++	*(Bit64u*)(pos+2)=(Bit64u)fct_ptr;		// fill function pointer
+ }
+ #endif
+ 
+diff --git a/src/cpu/core_normal.cpp b/src/cpu/core_normal.cpp
+index 103657b..2f5004c 100644
+--- a/src/cpu/core_normal.cpp
++++ b/src/cpu/core_normal.cpp
+@@ -58,6 +58,8 @@ extern Bitu cycle_count;
+ #define CPU_PIC_CHECK 1
+ #define CPU_TRAP_CHECK 1
+ 
++#define CPU_TRAP_DECODER	CPU_Core_Normal_Trap_Run
++
+ #define OPCODE_NONE			0x000
+ #define OPCODE_0F			0x100
+ #define OPCODE_SIZE			0x200
+diff --git a/src/cpu/core_normal/prefix_none.h b/src/cpu/core_normal/prefix_none.h
+index 9221392..9b11635 100644
+--- a/src/cpu/core_normal/prefix_none.h
++++ b/src/cpu/core_normal/prefix_none.h
+@@ -564,7 +564,7 @@
+ 			CPU_CALL(false,newcs,newip,GETIP);
+ #if CPU_TRAP_CHECK
+ 			if (GETFLAG(TF)) {	
+-				cpudecoder=CPU_Core_Normal_Trap_Run;
++				cpudecoder=CPU_TRAP_DECODER;
+ 				return CBRET_NONE;
+ 			}
+ #endif
+@@ -579,7 +579,7 @@
+ 		if (CPU_POPF(false)) RUNEXCEPTION();
+ #if CPU_TRAP_CHECK
+ 		if (GETFLAG(TF)) {	
+-			cpudecoder=CPU_Core_Normal_Trap_Run;
++			cpudecoder=CPU_TRAP_DECODER;
+ 			goto decode_end;
+ 		}
+ #endif
+@@ -780,7 +780,7 @@
+ 			CPU_IRET(false,GETIP);
+ #if CPU_TRAP_CHECK
+ 			if (GETFLAG(TF)) {	
+-				cpudecoder=CPU_Core_Normal_Trap_Run;
++				cpudecoder=CPU_TRAP_DECODER;
+ 				return CBRET_NONE;
+ 			}
+ #endif
+@@ -919,7 +919,7 @@
+ 			CPU_JMP(false,newcs,newip,GETIP);
+ #if CPU_TRAP_CHECK
+ 			if (GETFLAG(TF)) {	
+-				cpudecoder=CPU_Core_Normal_Trap_Run;
++				cpudecoder=CPU_TRAP_DECODER;
+ 				return CBRET_NONE;
+ 			}
+ #endif
+@@ -1132,7 +1132,7 @@
+ 					CPU_CALL(false,newcs,newip,GETIP);
+ #if CPU_TRAP_CHECK
+ 					if (GETFLAG(TF)) {	
+-						cpudecoder=CPU_Core_Normal_Trap_Run;
++						cpudecoder=CPU_TRAP_DECODER;
+ 						return CBRET_NONE;
+ 					}
+ #endif
+@@ -1153,7 +1153,7 @@
+ 					CPU_JMP(false,newcs,newip,GETIP);
+ #if CPU_TRAP_CHECK
+ 					if (GETFLAG(TF)) {	
+-						cpudecoder=CPU_Core_Normal_Trap_Run;
++						cpudecoder=CPU_TRAP_DECODER;
+ 						return CBRET_NONE;
+ 					}
+ #endif
+diff --git a/src/cpu/core_prefetch.cpp b/src/cpu/core_prefetch.cpp
+index 036c6a9..c5ecb8d 100644
+--- a/src/cpu/core_prefetch.cpp
++++ b/src/cpu/core_prefetch.cpp
+@@ -59,6 +59,8 @@ extern Bitu cycle_count;
+ #define CPU_PIC_CHECK 1
+ #define CPU_TRAP_CHECK 1
+ 
++#define CPU_TRAP_DECODER	CPU_Core_Prefetch_Trap_Run
++
+ #define OPCODE_NONE			0x000
+ #define OPCODE_0F			0x100
+ #define OPCODE_SIZE			0x200
+diff --git a/src/cpu/core_simple.cpp b/src/cpu/core_simple.cpp
+index 19f1343..26cd07f 100644
+--- a/src/cpu/core_simple.cpp
++++ b/src/cpu/core_simple.cpp
+@@ -50,6 +50,8 @@ extern Bitu cycle_count;
+ #define CPU_PIC_CHECK 1
+ #define CPU_TRAP_CHECK 1
+ 
++#define CPU_TRAP_DECODER	CPU_Core_Simple_Trap_Run
++
+ #define OPCODE_NONE			0x000
+ #define OPCODE_0F			0x100
+ #define OPCODE_SIZE			0x200
+diff --git a/src/debug/debug_disasm.cpp b/src/debug/debug_disasm.cpp
+index 6d8d5bc..9b905f8 100644
+--- a/src/debug/debug_disasm.cpp
++++ b/src/debug/debug_disasm.cpp
+@@ -246,7 +246,7 @@ static char const * op386map1[256] = {
+   "int 03",           "int %Ib",         "into",           "iret",
+ /* d */
+   "%g1 %Eb,1",        "%g1 %Ev,1",       "%g1 %Eb,cl",     "%g1 %Ev,cl",
+-  "aam ; %Ib",        "aad ; %Ib",       "setalc",         "xlat",
++  "aam ; %Ib",        "aad ; %Ib",       "setalc",         "%P xlat",
+ #if 0
+   "esc 0,%Ib",        "esc 1,%Ib",       "esc 2,%Ib",      "esc 3,%Ib",
+   "esc 4,%Ib",        "esc 5,%Ib",       "esc 6,%Ib",      "esc 7,%Ib",
+@@ -490,6 +490,7 @@ static void uprintf(char const *s, ...)
+ 	va_list	arg_ptr;
+ 	va_start (arg_ptr, s);
+ 	vsprintf(ubufp, s, arg_ptr);
++	va_end(arg_ptr);
+ 	while (*ubufp)
+ 		ubufp++;
+ }
+diff --git a/src/dos/Makefile.am b/src/dos/Makefile.am
+index 747e03a..47d9e86 100644
+--- a/src/dos/Makefile.am
++++ b/src/dos/Makefile.am
+@@ -6,4 +6,4 @@ libdos_a_SOURCES = dos.cpp dos_devices.cpp dos_execute.cpp dos_files.cpp dos_ioc
+                    dos_misc.cpp dos_classes.cpp dos_programs.cpp dos_tables.cpp \
+ 		   drives.cpp drives.h drive_virtual.cpp drive_local.cpp drive_cache.cpp drive_fat.cpp \
+ 		   drive_iso.cpp dev_con.h dos_mscdex.cpp dos_keyboard_layout.cpp \
+-		   cdrom.h cdrom.cpp cdrom_image.cpp
++		   cdrom.h cdrom.cpp cdrom_image.cpp drive_overlay.cpp
+diff --git a/src/dos/cdrom_image.cpp b/src/dos/cdrom_image.cpp
+index 0e81a83..7f6bdb7 100644
+--- a/src/dos/cdrom_image.cpp
++++ b/src/dos/cdrom_image.cpp
+@@ -52,6 +52,7 @@ CDROM_Interface_Image::BinaryFile::BinaryFile(const char *filename, bool &error)
+ CDROM_Interface_Image::BinaryFile::~BinaryFile()
+ {
+ 	delete file;
++	file = NULL;
+ }
+ 
+ bool CDROM_Interface_Image::BinaryFile::read(Bit8u *buffer, int seek, int count)
+@@ -128,12 +129,13 @@ int CDROM_Interface_Image::AudioFile::getLength()
+ 
+ // initialize static members
+ int CDROM_Interface_Image::refCount = 0;
+-CDROM_Interface_Image* CDROM_Interface_Image::images[26];
++CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {};
+ CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player = {
+ 	NULL, NULL, NULL, {0}, 0, 0, 0, false, false, false, {0} };
+ 
+ 	
+ CDROM_Interface_Image::CDROM_Interface_Image(Bit8u subUnit)
++                      :subUnit(subUnit)
+ {
+ 	images[subUnit] = this;
+ 	if (refCount == 0) {
+@@ -205,7 +207,7 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr, unsigned char& trac
+ 	attr = tracks[track - 1].attr;
+ 	index = 1;
+ 	FRAMES_TO_MSF(player.currFrame + 150, &absPos.min, &absPos.sec, &absPos.fr);
+-	FRAMES_TO_MSF(player.currFrame - tracks[track - 1].start + 150, &relPos.min, &relPos.sec, &relPos.fr);
++	FRAMES_TO_MSF(player.currFrame - tracks[track - 1].start, &relPos.min, &relPos.sec, &relPos.fr);
+ 	return true;
+ }
+ 
+@@ -375,6 +377,7 @@ bool CDROM_Interface_Image::LoadIsoFile(char* filename)
+ 	track.file = new BinaryFile(filename, error);
+ 	if (error) {
+ 		delete track.file;
++		track.file = NULL;
+ 		return false;
+ 	}
+ 	track.number = 1;
+@@ -544,6 +547,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
+ #endif
+ 			if (error) {
+ 				delete track.file;
++				track.file = NULL;
+ 				success = false;
+ 			}
+ 		}
+diff --git a/src/dos/dos.cpp b/src/dos/dos.cpp
+index d5cb2b8..50bb107 100644
+--- a/src/dos/dos.cpp
++++ b/src/dos/dos.cpp
+@@ -497,7 +497,7 @@ static Bitu DOS_21Handler(void) {
+ 			if (drive < DOS_DRIVES && Drives[drive] && !Drives[drive]->isRemovable()) {
+ 				reg_al = 0x00;
+ 				SegSet16(ds,dos.tables.dpb);
+-				reg_bx = drive*5;//Faking the first entry (drive number) and media id
++				reg_bx = drive*9;
+ 				LOG(LOG_DOSMISC,LOG_ERROR)("Get drive parameter block.");
+ 			} else {
+ 				reg_al=0xff;
+@@ -1190,7 +1190,6 @@ static Bitu DOS_25Handler(void) {
+ 		SETFLAGBIT(CF,false);
+ 		reg_ax = 0;
+ 	}
+-	SETFLAGBIT(IF,true);
+     return CBRET_NONE;
+ }
+ static Bitu DOS_26Handler(void) {
+@@ -1202,7 +1201,6 @@ static Bitu DOS_26Handler(void) {
+ 		SETFLAGBIT(CF,false);
+ 		reg_ax = 0;
+ 	}
+-	SETFLAGBIT(IF,true);
+     return CBRET_NONE;
+ }
+ 
+@@ -1223,10 +1221,10 @@ public:
+ 	// iret
+ 	// retf  <- int 21 4c jumps here to mimic a retf Cyber
+ 
+-		callback[2].Install(DOS_25Handler,CB_RETF,"DOS Int 25");
++		callback[2].Install(DOS_25Handler,CB_RETF_STI,"DOS Int 25");
+ 		callback[2].Set_RealVec(0x25);
+ 
+-		callback[3].Install(DOS_26Handler,CB_RETF,"DOS Int 26");
++		callback[3].Install(DOS_26Handler,CB_RETF_STI,"DOS Int 26");
+ 		callback[3].Set_RealVec(0x26);
+ 
+ 		callback[4].Install(DOS_27Handler,CB_IRET,"DOS Int 27");
+diff --git a/src/dos/dos_execute.cpp b/src/dos/dos_execute.cpp
+index ba02cc5..b27decd 100644
+--- a/src/dos/dos_execute.cpp
++++ b/src/dos/dos_execute.cpp
+@@ -356,14 +356,6 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
+ 			maxsize=0xffff;
+ 			/* resize to full extent of memory block */
+ 			DOS_ResizeMemory(pspseg,&maxsize);
+-			/* now try to lock out memory above segment 0x2000 */
+-			if ((real_readb(0x2000,0)==0x5a) && (real_readw(0x2000,1)==0) && (real_readw(0x2000,3)==0x7ffe)) {
+-				/* MCB after PCJr graphics memory region is still free */
+-				if (pspseg+maxsize==0x17ff) {
+-					DOS_MCB cmcb((Bit16u)(pspseg-1));
+-					cmcb.SetType(0x5a);		// last block
+-				}
+-			}
+ 		}
+ 		loadseg=pspseg+16;
+ 		if (!iscom) {
+diff --git a/src/dos/dos_files.cpp b/src/dos/dos_files.cpp
+index 49d7eee..a627c0a 100644
+--- a/src/dos/dos_files.cpp
++++ b/src/dos/dos_files.cpp
+@@ -52,7 +52,7 @@ Bit8u DOS_GetDefaultDrive(void) {
+ 
+ void DOS_SetDefaultDrive(Bit8u drive) {
+ //	if (drive<=DOS_DRIVES && ((drive<2) || Drives[drive])) DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);
+-	if (drive<=DOS_DRIVES && ((drive<2) || Drives[drive])) {dos.current_drive = drive; DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);}
++	if (drive<DOS_DRIVES && ((drive<2) || Drives[drive])) {dos.current_drive = drive; DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);}
+ }
+ 
+ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
+@@ -1281,14 +1281,14 @@ bool DOS_FileExists(char const * const name) {
+ bool DOS_GetAllocationInfo(Bit8u drive,Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters) {
+ 	if (!drive) drive =  DOS_GetDefaultDrive();
+ 	else drive--;
+-	if (drive >= DOS_DRIVES || !Drives[drive] || Drives[drive]->isRemovable()) {
++	if (drive >= DOS_DRIVES || !Drives[drive]) {
+ 		DOS_SetError(DOSERR_INVALID_DRIVE);
+ 		return false;
+ 	}
+ 	Bit16u _free_clusters;
+ 	Drives[drive]->AllocationInfo(_bytes_sector,_sectors_cluster,_total_clusters,&_free_clusters);
+ 	SegSet16(ds,RealSeg(dos.tables.mediaid));
+-	reg_bx=RealOff(dos.tables.mediaid+drive*5);
++	reg_bx=RealOff(dos.tables.mediaid+drive*9);
+ 	return true;
+ }
+ 
+diff --git a/src/dos/dos_memory.cpp b/src/dos/dos_memory.cpp
+index 8cdd810..7a664a4 100644
+--- a/src/dos/dos_memory.cpp
++++ b/src/dos/dos_memory.cpp
+@@ -50,14 +50,7 @@ void DOS_FreeProcessMemory(Bit16u pspseg) {
+ 		if (mcb.GetPSPSeg()==pspseg) {
+ 			mcb.SetPSPSeg(MCB_FREE);
+ 		}
+-		if (mcb.GetType()==0x5a) {
+-			/* check if currently last block reaches up to the PCJr graphics memory */
+-			if ((machine==MCH_PCJR) && (mcb_segment+mcb.GetSize()==0x17fe) &&
+-			   (real_readb(0x17ff,0)==0x4d) && (real_readw(0x17ff,1)==8)) {
+-				/* re-enable the memory past segment 0x2000 */
+-				mcb.SetType(0x4d);
+-			} else break;
+-		}
++		if (mcb.GetType()==0x5a) break;
+ 		if (GCC_UNLIKELY(mcb.GetType()!=0x4d)) E_Exit("Corrupt MCB chain");
+ 		mcb_segment+=mcb.GetSize()+1;
+ 		mcb.SetPt(mcb_segment);
+@@ -307,10 +300,10 @@ bool DOS_FreeMemory(Bit16u segment) {
+ 
+ 
+ void DOS_BuildUMBChain(bool umb_active,bool ems_active) {
+-	if (umb_active  && (machine!=MCH_TANDY)) {
++	if (umb_active  && (!IS_TANDY_ARCH)) {
+ 		Bit16u first_umb_seg = 0xd000;
+ 		Bit16u first_umb_size = 0x2000;
+-		if(ems_active || (machine == MCH_PCJR)) first_umb_size = 0x1000;
++		if(ems_active) first_umb_size = 0x1000;
+ 
+ 		dos_infoblock.SetStartOfUMBChain(UMB_START_SEG);
+ 		dos_infoblock.SetUMBChainState(0);		// UMBs not linked yet
+@@ -391,7 +384,7 @@ void DOS_SetupMemory(void) {
+ 	 * buggy games, which compare against the interrupt table. (probably a 
+ 	 * broken linked list implementation) */
+ 	Bit16u ihseg = 0x70;
+-	Bit16u ihofs = 0x08;
++	Bit16u ihofs = 0xF4;
+ 	real_writeb(ihseg,ihofs,(Bit8u)0xCF);		//An IRET Instruction
+ 	RealSetVec(0x01,RealMake(ihseg,ihofs));		//BioMenace (offset!=4)
+ 	RealSetVec(0x02,RealMake(ihseg,ihofs));		//BioMenace (segment<0x8000)
+diff --git a/src/dos/dos_misc.cpp b/src/dos/dos_misc.cpp
+index ed180b3..163883c 100644
+--- a/src/dos/dos_misc.cpp
++++ b/src/dos/dos_misc.cpp
+@@ -90,7 +90,7 @@ static bool DOS_MultiplexFunctions(void) {
+ 				mem_writew(sftptr+sftofs+0x02,(Bit16u)(Files[reg_bx]->flags&3));	// file open mode
+ 				mem_writeb(sftptr+sftofs+0x04,(Bit8u)(Files[reg_bx]->attr));		// file attribute
+ 				mem_writew(sftptr+sftofs+0x05,0x40|drive);							// device info word
+-				mem_writed(sftptr+sftofs+0x07,RealMake(dos.tables.dpb,drive*5));	// dpb of the drive
++				mem_writed(sftptr+sftofs+0x07,RealMake(dos.tables.dpb,drive*9));	// dpb of the drive
+ 				mem_writew(sftptr+sftofs+0x0d,Files[reg_bx]->time);					// packed file time
+ 				mem_writew(sftptr+sftofs+0x0f,Files[reg_bx]->date);					// packed file date
+ 				Bit32u curpos=0;
+diff --git a/src/dos/dos_mscdex.cpp b/src/dos/dos_mscdex.cpp
+index bc46261..8a843d9 100644
+--- a/src/dos/dos_mscdex.cpp
++++ b/src/dos/dos_mscdex.cpp
+@@ -364,9 +364,11 @@ bool CMscdex::HasDrive(Bit16u drive) {
+ }
+ 
+ void CMscdex::ReplaceDrive(CDROM_Interface* newCdrom, Bit8u subUnit) {
+-	delete cdrom[subUnit];
++	if (cdrom[subUnit] != NULL) {
++		StopAudio(subUnit);
++		delete cdrom[subUnit];
++	}
+ 	cdrom[subUnit] = newCdrom;
+-	StopAudio(subUnit);
+ }
+ 
+ PhysPt CMscdex::GetDefaultBuffer(void) {
+@@ -679,23 +681,19 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
+ 			}
+ 			nameLength  = mem_readb(defBuffer+index+32);
+ 			MEM_StrCopy(defBuffer+index+33,entryName,nameLength);
++			// strip separator and file version number
++			char* separator = strchr(entryName,';');
++			if (separator) *separator = 0;
++			// strip trailing period
++			size_t entrylen = strlen(entryName);
++			if (entrylen>0 && entryName[entrylen-1]=='.') entryName[entrylen-1] = 0;
++
++
+ 			if (strcmp(entryName,useName)==0) {
+ 				//LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Get DirEntry : Found : %s",useName);
+ 				foundName = true;
+ 				break;
+ 			}
+-			/* Xcom Apocalipse searches for MUSIC. and expects to find MUSIC;1
+-			 * All Files on the CDROM are of the kind blah;1
+-			 */
+-			char* longername = strchr(entryName,';');
+-			if(longername) {
+-				*longername = 0;
+-				if (strcmp(entryName,useName)==0) {
+-					//LOG(LOG_MISC,LOG_ERROR)("MSCDEX: Get DirEntry : Found : %s",useName);
+-					foundName = true;
+-					break;
+-				}
+-			}
+ 			index += entryLength;
+ 		} while (index+33<=2048);
+ 		
+@@ -1260,6 +1258,11 @@ void MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit)
+ 	mscdex->ReplaceDrive(cdrom, subUnit);
+ }
+ 
++Bit8u MSCDEX_GetSubUnit(char driveLetter)
++{
++	return mscdex->GetSubUnit(driveLetter-'A');
++}
++
+ bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name)
+ {
+ 	return mscdex->GetVolumeName(subUnit,name);
+diff --git a/src/dos/dos_programs.cpp b/src/dos/dos_programs.cpp
+index 7baa374..ec6e0ef 100755
+--- a/src/dos/dos_programs.cpp
++++ b/src/dos/dos_programs.cpp
+@@ -58,6 +58,43 @@ Bitu DEBUG_EnableDebugger(void);
+ 
+ static Bitu ZDRIVE_NUM = 25;
+ 
++static const char* UnmountHelper(char umount) {
++	int i_drive;
++	if (umount < '0' || umount > 3+'0')
++		i_drive = toupper(umount) - 'A';
++	else
++		i_drive = umount - '0';
++
++	if (i_drive >= DOS_DRIVES || i_drive < 0)
++		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
++
++	if (i_drive < MAX_DISK_IMAGES && Drives[i_drive] == NULL && imageDiskList[i_drive] == NULL)
++		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
++
++	if (i_drive >= MAX_DISK_IMAGES && Drives[i_drive] == NULL)
++		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
++
++	if (Drives[i_drive]) {
++		switch (DriveManager::UnmountDrive(i_drive)) {
++			case 1: return MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL");
++			case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
++		}
++		Drives[i_drive] = 0;
++		mem_writeb(Real2Phys(dos.tables.mediaid)+i_drive*9,0);
++		if (i_drive == DOS_GetDefaultDrive()) {
++			DOS_SetDrive(ZDRIVE_NUM);
++		}
++
++	}
++
++	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
++		delete imageDiskList[i_drive];
++		imageDiskList[i_drive] = NULL;
++	}
++
++	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
++}
++
+ class MOUNT : public Program {
+ public:
+ 	void ListMounts(void) {
+@@ -119,27 +156,7 @@ public:
+ 
+ 		/* Check for unmounting */
+ 		if (cmd->FindString("-u",umount,false)) {
+-			umount[0] = toupper(umount[0]);
+-			int i_drive = umount[0]-'A';
+-				if (i_drive < DOS_DRIVES && i_drive >= 0 && Drives[i_drive]) {
+-					switch (DriveManager::UnmountDrive(i_drive)) {
+-					case 0:
+-						Drives[i_drive] = 0;
+-						mem_writeb(Real2Phys(dos.tables.mediaid)+i_drive*5,0);
+-						if(i_drive == DOS_GetDefaultDrive()) 
+-							DOS_SetDrive(ZDRIVE_NUM);
+-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS"),umount[0]);
+-						break;
+-					case 1:
+-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
+-						break;
+-					case 2:
+-						WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));
+-						break;
+-					}
+-				} else {
+-					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
+-				}
++			WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
+ 			return;
+ 		}
+ 		
+@@ -153,12 +170,12 @@ public:
+ 				/* remap drives */
+ 				Drives[i_newz] = Drives[25];
+ 				Drives[25] = 0;
+-				DOS_Shell *fs = static_cast<DOS_Shell *>(first_shell); //dynamic ?				
++				if (!first_shell) return; //Should not be possible
+ 				/* Update environment */
+ 				std::string line = "";
+ 				char ppp[2] = {newz[0],0};
+ 				std::string tempenv = ppp; tempenv += ":\\";
+-				if (fs->GetEnvStr("PATH",line)){
++				if (first_shell->GetEnvStr("PATH",line)){
+ 					std::string::size_type idx = line.find('=');
+ 					std::string value = line.substr(idx +1 , std::string::npos);
+ 					while ( (idx = value.find("Z:\\")) != std::string::npos ||
+@@ -167,13 +184,13 @@ public:
+ 					line = value;
+ 				}
+ 				if (!line.size()) line = tempenv;
+-				fs->SetEnv("PATH",line.c_str());
++				first_shell->SetEnv("PATH",line.c_str());
+ 				tempenv += "COMMAND.COM";
+-				fs->SetEnv("COMSPEC",tempenv.c_str());
++				first_shell->SetEnv("COMSPEC",tempenv.c_str());
+ 
+ 				/* Update batch file if running from Z: (very likely: autoexec) */
+-				if(fs->bf) {
+-					std::string &name = fs->bf->filename;
++				if(first_shell->bf) {
++					std::string &name = first_shell->bf->filename;
+ 					if(name.length() >2 &&  name[0] == 'Z' && name[1] == ':') name[0] = newz[0];
+ 				}
+ 				/* Change the active drive */
+@@ -190,14 +207,14 @@ public:
+ 		std::string type="dir";
+ 		cmd->FindString("-t",type,true);
+ 		bool iscdrom = (type =="cdrom"); //Used for mscdex bug cdrom label name emulation
+-		if (type=="floppy" || type=="dir" || type=="cdrom") {
++		if (type=="floppy" || type=="dir" || type=="cdrom" || type =="overlay") {
+ 			Bit16u sizes[4];
+ 			Bit8u mediaid;
+ 			std::string str_size;
+ 			if (type=="floppy") {
+ 				str_size="512,1,2880,2880";/* All space free */
+ 				mediaid=0xF0;		/* Floppy 1.44 media */
+-			} else if (type=="dir") {
++			} else if (type=="dir" || type == "overlay") {
+ 				// 512*32*32765==~500MB total size
+ 				// 512*32*16000==~250MB total free size
+ 				str_size="512,32,32765,16000";
+@@ -229,23 +246,29 @@ public:
+ 			}
+ 		   
+ 			cmd->FindString("-size",str_size,true);
+-			char number[20];const char * scan=str_size.c_str();
+-			Bitu index=0;Bitu count=0;
++			char number[21] = { 0 };const char * scan = str_size.c_str();
++			Bitu index = 0;Bitu count = 0;
+ 			/* Parse the str_size string */
+-			while (*scan) {
++			while (*scan && index < 20 && count < 4) {
+ 				if (*scan==',') {
+-					number[index]=0;sizes[count++]=atoi(number);
+-					index=0;
+-				} else number[index++]=*scan;
++					number[index] = 0;
++					sizes[count++] = atoi(number);
++					index = 0;
++				} else number[index++] = *scan;
+ 				scan++;
+ 			}
+-			number[index]=0;sizes[count++]=atoi(number);
++			if (count < 4) {
++				number[index] = 0; //always goes correct as index is max 20 at this point.
++				sizes[count] = atoi(number);
++			}
+ 		
+ 			// get the drive letter
+ 			cmd->FindCommand(1,temp_line);
+ 			if ((temp_line.size() > 2) || ((temp_line.size()>1) && (temp_line[1]!=':'))) goto showusage;
+-			drive=toupper(temp_line[0]);
+-			if (!isalpha(drive)) goto showusage;
++			int i_drive = toupper(temp_line[0]);
++			if (!isalpha(i_drive)) goto showusage;
++			if ((i_drive - 'A') >= DOS_DRIVES || (i_drive-'A') < 0 ) goto showusage;
++			drive = static_cast<char>(i_drive);
+ 
+ 			if (!cmd->FindCommand(2,temp_line)) goto showusage;
+ 			if (!temp_line.size()) goto showusage;
+@@ -358,7 +381,39 @@ public:
+ #else
+ 				if(temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
+ #endif
+-				newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
++				if(type == "overlay") {
++					//Ensure that the base drive exists:
++					if (!Drives[drive-'A']) { 
++						WriteOut("No basedrive mounted yet!");
++						return;
++					}
++					localDrive* ldp = dynamic_cast<localDrive*>(Drives[drive-'A']);
++					cdromDrive* cdp = dynamic_cast<cdromDrive*>(Drives[drive-'A']);
++					if (!ldp || cdp) {
++						WriteOut("Basedrive not compatible");
++						return;
++					}
++					std::string base = ldp->getBasedir();
++					Bit8u o_error = 0;
++					newdrive = new Overlay_Drive(base.c_str(),temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid,o_error);
++					//Erase old drive on success
++					if (newdrive) {
++						if (o_error) { 
++							if (o_error == 1) WriteOut("No mixing of relative and absolute paths. Overlay failed.");
++							else if (o_error == 2) WriteOut("overlay directory can not be the same as underlying file system.");
++							else WriteOut("Something went wrong");
++							delete newdrive;
++							return;
++						}
++						delete Drives[drive-'A'];
++						Drives[drive-'A'] = 0;
++					} else { 
++						WriteOut("overlaydrive construction failed.");
++						return;
++					}
++				} else {
++					newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
++				}
+ 			}
+ 		} else {
+ 			WriteOut(MSG_Get("PROGRAM_MOUNT_ILL_TYPE"),type.c_str());
+@@ -372,14 +427,15 @@ public:
+ 		if (!newdrive) E_Exit("DOS:Can't create drive");
+ 		Drives[drive-'A']=newdrive;
+ 		/* Set the correct media byte in the table */
+-		mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*5,newdrive->GetMediaByte());
+-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
++		mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*9,newdrive->GetMediaByte());
++		if (type != "overlay") WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),drive,newdrive->GetInfo());
++		else WriteOut("Overlay %s on drive %c mounted.\n",temp_line.c_str(),drive);
+ 		/* check if volume label is given and don't allow it to updated in the future */
+ 		if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
+ 		/* For hard drives set the label to DRIVELETTER_Drive.
+ 		 * For floppy drives set the label to DRIVELETTER_Floppy.
+ 		 * This way every drive except cdroms should get a label.*/
+-		else if(type == "dir") { 
++		else if(type == "dir" || type == "overlay") { 
+ 			label = drive; label += "_DRIVE";
+ 			newdrive->dirCache.SetLabel(label.c_str(),iscdrom,false);
+ 		} else if(type == "floppy") {
+@@ -418,9 +474,7 @@ public:
+ 
+ 		Bit16u seg,blocks;blocks=0xffff;
+ 		DOS_AllocateMemory(&seg,&blocks);
+-		if ((machine==MCH_PCJR) && (real_readb(0x2000,0)==0x5a) && (real_readw(0x2000,1)==0) && (real_readw(0x2000,3)==0x7ffe)) {
+-			WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),0x7ffe*16/1024);
+-		} else WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),blocks*16/1024);
++		WriteOut(MSG_Get("PROGRAM_MEM_CONVEN"),blocks*16/1024);
+ 
+ 		if (umb_start!=0xffff) {
+ 			DOS_LinkUMBsToMemChain(1);
+@@ -530,9 +584,9 @@ private:
+ 		//File not found on mounted filesystem. Try regular filesystem
+ 		std::string filename_s(filename);
+ 		Cross::ResolveHomedir(filename_s);
+-		tmpfile = fopen(filename_s.c_str(),"rb+");
++		tmpfile = fopen_wrap(filename_s.c_str(),"rb+");
+ 		if(!tmpfile) {
+-			if( (tmpfile = fopen(filename_s.c_str(),"rb")) ) {
++			if( (tmpfile = fopen_wrap(filename_s.c_str(),"rb")) ) {
+ 				//File exists; So can't be opened in correct mode => error 2
+ //				fclose(tmpfile);
+ //				if(tryload) error = 2;
+@@ -629,6 +683,9 @@ public:
+ 					continue;
+ 				}
+ 
++				if ( i >= MAX_SWAPPABLE_DISKS ) {
++					return; //TODO give a warning.
++				}
+ 				WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_OPEN"), temp_line.c_str());
+ 				Bit32u rombytesize;
+ 				FILE *usefile = getFSFile(temp_line.c_str(), &floppysize, &rombytesize);
+@@ -1096,26 +1153,7 @@ public:
+ 		std::string umount;
+ 		/* Check for unmounting */
+ 		if (cmd->FindString("-u",umount,false)) {
+-			umount[0] = toupper(umount[0]);
+-			int i_drive = umount[0]-'A';
+-				if (i_drive < DOS_DRIVES && i_drive >= 0 && Drives[i_drive]) {
+-					switch (DriveManager::UnmountDrive(i_drive)) {
+-					case 0:
+-						Drives[i_drive] = 0;
+-						if (i_drive == DOS_GetDefaultDrive()) 
+-							DOS_SetDrive(toupper('Z') - 'A');
+-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS"),umount[0]);
+-						break;
+-					case 1:
+-						WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"));
+-						break;
+-					case 2:
+-						WriteOut(MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS"));
+-						break;
+-					}
+-				} else {
+-					WriteOut(MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"),umount[0]);
+-				}
++			WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
+ 			return;
+ 		}
+ 
+@@ -1144,18 +1182,21 @@ public:
+ 			if ((type=="hdd") && (str_size.size()==0)) {
+ 				imgsizedetect=true;
+ 			} else {
+-				char number[20];
+-				const char * scan=str_size.c_str();
+-				Bitu index=0;Bitu count=0;
+-				
+-				while (*scan) {
++				char number[21] = { 0 };const char * scan = str_size.c_str();
++				Bitu index = 0;Bitu count = 0;
++				/* Parse the str_size string */
++				while (*scan && index < 20 && count < 4) {
+ 					if (*scan==',') {
+-						number[index]=0;sizes[count++]=atoi(number);
+-						index=0;
+-					} else number[index++]=*scan;
++						number[index] = 0;
++						sizes[count++] = atoi(number);
++						index = 0;
++					} else number[index++] = *scan;
+ 					scan++;
+ 				}
+-				number[index]=0;sizes[count++]=atoi(number);
++				if (count < 4) {
++					number[index] = 0; //always goes correct as index is max 20 at this point.
++					sizes[count] = atoi(number);
++				}
+ 			}
+ 		
+ 			if(fstype=="fat" || fstype=="iso") {
+@@ -1164,11 +1205,12 @@ public:
+ 					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
+ 					return;
+ 				}
+-				drive=toupper(temp_line[0]);
+-				if (!isalpha(drive)) {
++				int i_drive = toupper(temp_line[0]);
++				if (!isalpha(i_drive) || (i_drive - 'A') >= DOS_DRIVES || (i_drive - 'A') <0) {
+ 					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_DRIVE"));
+ 					return;
+ 				}
++				drive = static_cast<char>(i_drive);
+ 			} else if (fstype=="none") {
+ 				cmd->FindCommand(1,temp_line);
+ 				if ((temp_line.size() > 1) || (!isdigit(temp_line[0]))) {
+@@ -1176,7 +1218,7 @@ public:
+ 					return;
+ 				}
+ 				drive=temp_line[0];
+-				if ((drive<'0') || (drive>3+'0')) {
++				if ((drive<'0') || (drive>=(MAX_DISK_IMAGES+'0'))) {
+ 					WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
+ 					return;
+ 				}
+@@ -1236,7 +1278,7 @@ public:
+ 
+ 			if(fstype=="fat") {
+ 				if (imgsizedetect) {
+-					FILE * diskfile = fopen(temp_line.c_str(), "rb+");
++					FILE * diskfile = fopen_wrap(temp_line.c_str(), "rb+");
+ 					if (!diskfile) {
+ 						WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+ 						return;
+@@ -1292,7 +1334,7 @@ public:
+ 				DriveManager::InitializeDrive(drive - 'A');
+ 
+ 				// Set the correct media byte in the table 
+-				mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 5, mediaid);
++				mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 9, mediaid);
+ 				
+ 				/* Command uses dta so set it to our internal dta */
+ 				RealPt save_dta = dos.dta();
+@@ -1371,7 +1413,7 @@ public:
+ 				DriveManager::InitializeDrive(drive - 'A');
+ 				
+ 				// Set the correct media byte in the table 
+-				mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 5, mediaid);
++				mem_writeb(Real2Phys(dos.tables.mediaid) + (drive - 'A') * 9, mediaid);
+ 				
+ 				// Print status message (success)
+ 				WriteOut(MSG_Get("MSCDEX_SUCCESS"));
+@@ -1382,7 +1424,7 @@ public:
+ 				WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"), drive, tmp.c_str());
+ 
+ 			} else {
+-				FILE *newDisk = fopen(temp_line.c_str(), "rb+");
++				FILE *newDisk = fopen_wrap(temp_line.c_str(), "rb+");
+ 				if (!newDisk) {
+ 					WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
+ 					return;
+@@ -1405,7 +1447,7 @@ public:
+ 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),drive-'0',temp_line.c_str());
+ 		}
+ 
+-		// check if volume label is given. becareful for cdrom
++		// check if volume label is given. be careful for cdrom
+ 		//if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str());
+ 		return;
+ 	}
+diff --git a/src/dos/dos_tables.cpp b/src/dos/dos_tables.cpp
+index 5579da4..b7687d6 100644
+--- a/src/dos/dos_tables.cpp
++++ b/src/dos/dos_tables.cpp
+@@ -148,11 +148,13 @@ void DOS_SetupTables(void) {
+ 	dos_infoblock.SetFCBTable(RealMake(seg,0));
+ 
+ 	/* Create a fake DPB */
+-	dos.tables.dpb=DOS_GetMemory(10);
++	dos.tables.dpb=DOS_GetMemory(16);
+ 	dos.tables.mediaid=RealMake(dos.tables.dpb,0x17);	//Media ID offset in DPB
+ 	for (i=0;i<DOS_DRIVES;i++) {
+-		real_writeb(dos.tables.dpb,i*5,i);
+-		mem_writew(Real2Phys(dos.tables.mediaid)+i*5,0);
++		real_writeb(dos.tables.dpb,i*9,i);				// drive number
++		real_writeb(dos.tables.dpb,i*9+1,i);			// unit number
++		real_writew(dos.tables.dpb,i*9+2,0x0200);		// bytes per sector
++		mem_writew(Real2Phys(dos.tables.mediaid)+i*9,0);
+ 	}
+ 
+ 	/* Create a fake disk buffer head */
+diff --git a/src/dos/drive_cache.cpp b/src/dos/drive_cache.cpp
+index 00ef06d..00b7442 100644
+--- a/src/dos/drive_cache.cpp
++++ b/src/dos/drive_cache.cpp
+@@ -229,6 +229,73 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
+ 	}
+ }
+ 
++void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
++	// Get Last part...
++	char file	[CROSS_LEN];
++	char expand	[CROSS_LEN];
++	char dironly[CROSS_LEN + 1];
++
++	//When adding a directory, the directory we want to operate inside in is the above it. (which can go wrong if the directory already exists.)
++	strcpy(dironly,path);
++	char* post = strrchr(dironly,CROSS_FILESPLIT);
++
++	if (post) {
++#if defined (WIN32) 
++		//OS2 ?
++		if (post > dironly && *(post - 1) == ':' && (post - dironly) == 2) 
++			post++; //move away from X: as need to end up with x:
++#else
++	//Lets hope this is not really used.. (root folder specified as overlay)
++		if (post == dironly)
++			post++; //move away from / 
++#endif
++		*post = 0; //TODO take care of AddEntryDIR D:\\piet) (so mount d d:\ as base)
++		*(post + 1) = 0; //As FindDirInfo is skipping over the base directory
++	}
++	CFileInfo* dir = FindDirInfo(dironly,expand);
++	const char* pos = strrchr(path,CROSS_FILESPLIT);
++
++	if (pos) {
++		strcpy(file,pos + 1);	
++		// Check if directory already exists, then don't add new entry...
++		if (checkExists) {
++			Bits index = GetLongName(dir,file);
++			if (index >= 0) {
++				//directory already exists, but most likely empty. 
++				dir = dir->fileList[index];
++				if (dir->isOverlayDir && dir->fileList.empty()) {
++					//maybe care about searches ? but this function should only run on cache inits/refreshes.
++					//add dot entries
++					CreateEntry(dir,".",true);
++					CreateEntry(dir,"..",true);
++				}
++				return;
++			}
++		}
++
++		CreateEntry(dir,file,true);
++		
++
++		Bits index = GetLongName(dir,file);
++		if (index>=0) {
++			Bit32u i;
++			// Check if there are any open search dir that are affected by this...
++			if (dir) for (i=0; i<MAX_OPENDIRS; i++) {
++				if ((dirSearch[i]==dir) && ((Bit32u)index<=dirSearch[i]->nextEntry)) 
++					dirSearch[i]->nextEntry++;
++			}
++
++			dir = dir->fileList[index];
++			dir->isOverlayDir = true;
++			CreateEntry(dir,".",true);
++			CreateEntry(dir,"..",true);
++		}
++		//		LOG_DEBUG("DIR: Added Entry %s",path);
++	} else {
++		//		LOG_DEBUG("DIR: Error: Failed to add %s",path);	
++	}
++}
++
+ void DOS_Drive_Cache::DeleteEntry(const char* path, bool ignoreLastDir) {
+ 	CacheOut(path,ignoreLastDir);
+ 	if (dirSearch[srchNr] && (dirSearch[srchNr]->nextEntry>0)) dirSearch[srchNr]->nextEntry--;
+@@ -277,7 +344,7 @@ void DOS_Drive_Cache::CacheOut(const char* path, bool ignoreLastDir) {
+ }
+ 
+ bool DOS_Drive_Cache::IsCachedIn(CFileInfo* curDir) {
+-	return (curDir->fileList.size()>0);
++	return (curDir->isOverlayDir || curDir->fileList.size()>0);
+ }
+ 
+ 
+@@ -286,22 +353,22 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname) {
+ 	char expand[CROSS_LEN] = {0};
+ 	CFileInfo* curDir = FindDirInfo(fullname,expand);
+ 
++	const char* pos = strrchr(fullname,CROSS_FILESPLIT);
++	if (pos) pos++; else return false;
++
+ 	std::vector<CFileInfo*>::size_type filelist_size = curDir->longNameList.size();
+ 	if (GCC_UNLIKELY(filelist_size<=0)) return false;
+ 
+-	Bits low		= 0;
+-	Bits high		= (Bits)(filelist_size-1);
+-	Bits mid, res;
+-
+-	while (low<=high) {
+-		mid = (low+high)/2;
+-		res = strcmp(fullname,curDir->longNameList[mid]->orgname);
+-		if (res>0)	low  = mid+1; else
+-		if (res<0)	high = mid-1; 
+-		else {
+-			strcpy(shortname,curDir->longNameList[mid]->shortname);
++	// The orgname part of the list is not sorted (shortname is)! So we can only walk through it.
++	for(Bitu i = 0; i < filelist_size; i++) {
++#if defined (WIN32) || defined (OS2)                        /* Win 32 & OS/2*/
++		if (strcasecmp(pos,curDir->longNameList[i]->orgname) == 0) {
++#else
++		if (strcmp(pos,curDir->longNameList[i]->orgname) == 0) {
++#endif
++			strcpy(shortname,curDir->longNameList[i]->shortname);
+ 			return true;
+-		};
++		}
+ 	}
+ 	return false;
+ }
+@@ -675,9 +742,9 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, Bit16u& id) {
+ 	if (dirSearch[id]) {
+ 		// open dir
+ 		dir_information* dirp = open_directory(expandcopy);
+-		if (dirp) { 
++		if (dirp || dir->isOverlayDir) { 
+ 			// Reset it..
+-			close_directory(dirp);
++			if (dirp) close_directory(dirp);
+ 			strcpy(dirPath,expandcopy);
+ 			return true;
+ 		}
+diff --git a/src/dos/drive_fat.cpp b/src/dos/drive_fat.cpp
+index a58ae1e..f201400 100644
+--- a/src/dos/drive_fat.cpp
++++ b/src/dos/drive_fat.cpp
+@@ -705,7 +705,7 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
+ 		imgDTA    = new DOS_DTA(imgDTAPtr);
+ 	}
+ 
+-	diskfile = fopen(sysFilename, "rb+");
++	diskfile = fopen_wrap(sysFilename, "rb+");
+ 	if(!diskfile) {created_successfully = false;return;}
+ 	fseek(diskfile, 0L, SEEK_END);
+ 	filesize = (Bit32u)ftell(diskfile) / 1024L;
+@@ -737,7 +737,7 @@ fatDrive::fatDrive(const char *sysFilename, Bit32u bytesector, Bit32u cylsector,
+ 			}
+ 		}
+ 
+-		if(m==4) LOG_MSG("No good partiton found in image.");
++		if(m==4) LOG_MSG("No good partition found in image.");
+ 
+ 		partSectOff = startSector;
+ 	} else {
+diff --git a/src/dos/drive_iso.cpp b/src/dos/drive_iso.cpp
+index 2faa8ac..d586ef7 100644
+--- a/src/dos/drive_iso.cpp
++++ b/src/dos/drive_iso.cpp
+@@ -133,13 +133,22 @@ Bit16u isoFile::GetInformation(void) {
+ 	return 0x40;		// read-only drive
+ }
+ 
+-int  MSCDEX_RemoveDrive(char driveLetter);
+-int  MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
+-void MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit);
+-bool MSCDEX_HasDrive(char driveLetter);
+-bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
+-
+-isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &error) {
++int   MSCDEX_RemoveDrive(char driveLetter);
++int   MSCDEX_AddDrive(char driveLetter, const char* physicalPath, Bit8u& subUnit);
++void  MSCDEX_ReplaceDrive(CDROM_Interface* cdrom, Bit8u subUnit);
++bool  MSCDEX_HasDrive(char driveLetter);
++bool  MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
++Bit8u MSCDEX_GetSubUnit(char driveLetter);
++
++isoDrive::isoDrive(char driveLetter, const char *fileName, Bit8u mediaid, int &error)
++         :iso(false),
++          dataCD(false),
++          mediaid(0),
++          subUnit(0),
++          driveLetter('\0')
++ {
++	this->fileName[0]  = '\0';
++	this->discLabel[0] = '\0';
+ 	nextFreeDirIterator = 0;
+ 	memset(dirIterators, 0, sizeof(dirIterators));
+ 	memset(sectorHashEntries, 0, sizeof(sectorHashEntries));
+@@ -174,6 +183,7 @@ isoDrive::~isoDrive() { }
+ 
+ int isoDrive::UpdateMscdex(char driveLetter, const char* path, Bit8u& subUnit) {
+ 	if (MSCDEX_HasDrive(driveLetter)) {
++		subUnit = MSCDEX_GetSubUnit(driveLetter);
+ 		CDROM_Interface_Image* oldCdrom = CDROM_Interface_Image::images[subUnit];
+ 		CDROM_Interface* cdrom = new CDROM_Interface_Image(subUnit);
+ 		char pathCopy[CROSS_LEN];
+diff --git a/src/dos/drive_local.cpp b/src/dos/drive_local.cpp
+index 46ebb7d..702998b 100644
+--- a/src/dos/drive_local.cpp
++++ b/src/dos/drive_local.cpp
+@@ -39,16 +39,16 @@ bool localDrive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/)
+ 	CROSS_FILENAME(newname);
+ 	char* temp_name = dirCache.GetExpandName(newname); //Can only be used in till a new drive_cache action is preformed */
+ 	/* Test if file exists (so we need to truncate it). don't add to dirCache then */
+-	bool existing_file=false;
++	bool existing_file = false;
+ 	
+-	FILE * test=fopen(temp_name,"rb+");
++	FILE * test = fopen_wrap(temp_name,"rb+");
+ 	if(test) {
+ 		fclose(test);
+ 		existing_file=true;
+ 
+ 	}
+ 	
+-	FILE * hand=fopen(temp_name,"wb+");
++	FILE * hand = fopen_wrap(temp_name,"wb+");
+ 	if (!hand){
+ 		LOG_MSG("Warning: file creation failed: %s",newname);
+ 		return false;
+@@ -95,11 +95,11 @@ bool localDrive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
+ 		}
+ 	}
+ 
+-	FILE * hand=fopen(newname,type);
++	FILE * hand = fopen_wrap(newname,type);
+ //	Bit32u err=errno;
+ 	if (!hand) { 
+ 		if((flags&0xf) != OPEN_READ) {
+-			FILE * hmm=fopen(newname,"rb");
++			FILE * hmm = fopen_wrap(newname,"rb");
+ 			if (hmm) {
+ 				fclose(hmm);
+ 				LOG_MSG("Warning: file %s exists and failed to open in write mode.\nPlease Remove write-protection",newname);
+@@ -122,7 +122,7 @@ FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const
+ 	CROSS_FILENAME(newname);
+ 	dirCache.ExpandName(newname);
+ 
+-	return fopen(newname,type);
++	return fopen_wrap(newname,type);
+ }
+ 
+ bool localDrive::GetSystemFilename(char *sysName, char const * const dosName) {
+@@ -145,7 +145,7 @@ bool localDrive::FileUnlink(char * name) {
+ 		struct stat buffer;
+ 		if(stat(fullname,&buffer)) return false; // File not found.
+ 
+-		FILE* file_writable = fopen(fullname,"rb+");
++		FILE* file_writable = fopen_wrap(fullname,"rb+");
+ 		if(!file_writable) return false; //No acces ? ERROR MESSAGE NOT SET. FIXME ?
+ 		fclose(file_writable);
+ 
+@@ -450,7 +450,8 @@ bool localFile::Read(Bit8u * data,Bit16u * size) {
+ }
+ 
+ bool localFile::Write(Bit8u * data,Bit16u * size) {
+-	if ((this->flags & 0xf) == OPEN_READ) {	// check if file opened in read-only mode
++	Bit32u lastflags = this->flags & 0xf;
++	if (lastflags == OPEN_READ || lastflags == OPEN_READ_NO_MOD) {	// check if file opened in read-only mode
+ 		DOS_SetError(DOSERR_ACCESS_DENIED);
+ 		return false;
+ 	}
+@@ -558,7 +559,10 @@ bool MSCDEX_GetVolumeName(Bit8u subUnit, char* name);
+ 
+ 
+ cdromDrive::cdromDrive(const char driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error)
+-		   :localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid) {
++		   :localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid),
++		    subUnit(0),
++		    driveLetter('\0')
++{
+ 	// Init mscdex
+ 	error = MSCDEX_AddDrive(driveLetter,startdir,subUnit);
+ 	strcpy(info, "CDRom ");
+diff --git a/src/dos/drive_overlay.cpp b/src/dos/drive_overlay.cpp
+index e69de29..73f2f2d 100644
+--- a/src/dos/drive_overlay.cpp
++++ b/src/dos/drive_overlay.cpp
+@@ -0,0 +1,1182 @@
++/*
++ *  Copyright (C) 2002-2019  The DOSBox Team
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License along
++ *  with this program; if not, write to the Free Software Foundation, Inc.,
++ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ */
++
++#include "dosbox.h"
++#include "dos_inc.h"
++#include "drives.h"
++#include "support.h"
++#include "cross.h"
++#include "inout.h"
++#include "timer.h"
++
++#include <vector>
++#include <string>
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <time.h>
++#include <errno.h>
++
++#define OVERLAY_DIR 1
++bool logoverlay = false;
++using namespace std;
++
++#if defined (WIN32) || defined (OS2)				/* Win 32 & OS/2*/
++#define CROSS_DOSFILENAME(blah) 
++#else
++//Convert back to DOS PATH 
++#define	CROSS_DOSFILENAME(blah) strreplace(blah,'/','\\')
++#endif
++
++
++/* 
++ * design principles/limitations/requirements:
++ * 1) All filenames inside the overlay directories are UPPERCASE and conform to the 8.3 standard except for the special DBOVERLAY files.
++ * 2) Renaming directories is currently not supported.
++ *
++ * Point 2 is still being worked on.
++ */
++
++/* New rename for base directories:
++ * Alter shortname in the drive_cache: take care of order and long names. 
++ * update stored deleted files list in overlay. 
++ */
++
++//TODO recheck directories under linux with the filename_cache (as one adds the dos name (and runs cross_filename on the other))
++
++
++//TODO Check: Maybe handle file redirection in ccc (opening the new file), (call update datetime host there ?)
++
++
++/* For rename/delete(unlink)/makedir/removedir we need to rebuild the cache. (shouldn't be needed, 
++ * but cacheout/delete entry currently throw away the cached folder and rebuild it on read. 
++ * so we have to ensure the rebuilding is controlled through the overlay.
++ * In order to not reread the overlay directory contents, the information in there is cached and updated when
++ * it changes (when deleting a file or adding one)
++ */
++
++
++//directories that exist only in overlay can not be added to the drive_cache currently. 
++//Either upgrade addentry to support directories. (without actually caching stuff in! (code in testing))
++//Or create an empty directory in local drive base. 
++
++bool Overlay_Drive::RemoveDir(char * dir) {
++	//DOS_RemoveDir checks if directory exists.
++#if OVERLAY_DIR
++	if (logoverlay) LOG_MSG("Overlay: trying to remove directory: %s",dir);
++#else
++	E_Exit("Overlay: trying to remove directory: %s",dir);
++#endif
++	/* Overlay: Check if folder is empty (findfirst/next, skipping . and .. and breaking on first file found ?), if so, then it is not too tricky. */
++	if (is_dir_only_in_overlay(dir)) {
++		//The simple case
++		char odir[CROSS_LEN];
++		strcpy(odir,overlaydir);
++		strcat(odir,dir);
++		CROSS_FILENAME(odir);
++		int temp=rmdir(odir);
++		if (temp==0) {
++			remove_DOSdir_from_cache(dir);
++			char newdir[CROSS_LEN];
++			strcpy(newdir,basedir);
++			strcat(newdir,dir);
++			CROSS_FILENAME(newdir);
++			dirCache.DeleteEntry(newdir,true);
++			update_cache(false);
++		}
++		return (temp==0);
++	} else {
++		Bit16u olderror = dos.errorcode; //FindFirst/Next always set an errorcode, while RemoveDir itself shouldn't touch it if successful
++		DOS_DTA dta(dos.tables.tempdta);
++		char stardotstar[4] = {'*', '.', '*', 0};
++		dta.SetupSearch(0,(0xff & ~DOS_ATTR_VOLUME),stardotstar); //Fake drive as we don't use it.
++		bool ret = this->FindFirst(dir,dta,false);// DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
++		if (!ret) {
++			//Path not found. Should not be possible due to removedir doing a testdir, but lets be correct
++			DOS_SetError(DOSERR_PATH_NOT_FOUND);
++			return false;
++		}
++		bool empty = true;
++		do {
++			char name[DOS_NAMELENGTH_ASCII];Bit32u size;Bit16u date;Bit16u time;Bit8u attr;
++			dta.GetResult(name,size,date,time,attr);
++			if (logoverlay) LOG_MSG("RemoveDir found %s",name);
++			if (empty && strcmp(".",name ) && strcmp("..",name)) 
++				empty = false; //Neither . or .. so directory not empty.
++		} while ( (ret=this->FindNext(dta)) );
++		//Always exhaust list, so drive_cache entry gets invalidated/reused.
++		//FindNext is done, restore error code to old value. DOS_RemoveDir will set the right one if needed.
++		dos.errorcode = olderror;
++
++		if (!empty) return false;
++		if (logoverlay) LOG_MSG("directory empty! Hide it.");
++		//Directory is empty, mark it as deleted and create DBOVERLAY file.
++		//Ensure that overlap folder can not be created.
++		add_deleted_path(dir,true);
++		return true;
++	}
++}
++
++bool Overlay_Drive::MakeDir(char * dir) {
++	//DOS_MakeDir tries first, before checking if the directory already exists, so doing it here as well, so that case is handled.
++	if (TestDir(dir)) return false;
++	if (overlap_folder == dir) return false; //TODO Test
++#if OVERLAY_DIR
++	if (logoverlay) LOG_MSG("Overlay trying to make directory: %s",dir);
++#else
++	E_Exit("Overlay trying to make directory: %s",dir);
++#endif
++	/* Overlay: Create in Overlay only and add it to drive_cache + some entries else the drive_cache will try to access it. Needs an AddEntry for directories. */ 
++
++	if (is_deleted_path(dir) && localDrive::TestDir(dir)) {
++		//Was deleted before and exists (last one is safety check)
++		remove_deleted_path(dir,true);
++		return true;
++	}
++	char newdir[CROSS_LEN];
++	strcpy(newdir,overlaydir);
++	strcat(newdir,dir);
++	CROSS_FILENAME(newdir);
++#if defined (WIN32)						/* MS Visual C++ */
++	int temp=mkdir(newdir);
++#else
++	int temp=mkdir(newdir,0700);
++#endif
++	if (temp==0) {
++		char fakename[CROSS_LEN];
++		strcpy(fakename,basedir);
++		strcat(fakename,dir);
++		CROSS_FILENAME(fakename);
++		dirCache.AddEntryDirOverlay(fakename,true);
++		add_DOSdir_to_cache(dir);
++	}
++
++	return (temp==0);// || ((temp!=0) && (errno==EEXIST));
++}
++
++bool Overlay_Drive::TestDir(char * dir) {
++	//First check if directory exist exclusively in the overlay. 
++	//Currently using the update_cache cache, alternatively access the directory itself.
++
++	//Directories are stored without a trailing backslash
++	char tempdir[CROSS_LEN];
++	strcpy(tempdir,dir);
++	size_t templen = strlen(dir);
++	if (templen && tempdir[templen-1] == '\\') tempdir[templen-1] = 0;
++
++#if OVERLAY_DIR
++	if (is_dir_only_in_overlay(tempdir)) return true;
++#endif
++
++	//Next Check if the directory is marked as deleted or one of its leading directories is.
++	//(it still might exists in the localDrive)
++
++	if (is_deleted_path(tempdir)) return false; 
++
++	// Not exclusive to overlay nor marked as deleted. Pass on to LocalDrive
++	return localDrive::TestDir(dir);
++}
++
++
++class OverlayFile: public localFile {
++public:
++	OverlayFile(const char* name, FILE * handle):localFile(name,handle){
++		if (logoverlay) LOG_MSG("constructing OverlayFile: %s",name);
++	}
++	bool Write(Bit8u * data,Bit16u * size) {
++		Bit32u f = real_flags&0xf;
++		if (!overlay_active && (f == OPEN_READWRITE || f == OPEN_WRITE)) {
++			if (logoverlay) LOG_MSG("write detected, switching file for %s",GetName());
++			if (*data == 0) {
++				if (logoverlay) LOG_MSG("OPTIMISE: truncate on switch!!!!");
++			}
++			Bitu a = GetTicks();
++			bool r = create_copy();
++			if (GetTicks()-a >2) {
++				if (logoverlay) LOG_MSG("OPTIMISE: switching took %d",GetTicks()-a);
++			}
++			if (!r) return false;
++			overlay_active = true;
++			flags = real_flags;
++			
++		}
++		return localFile::Write(data,size);
++	}
++	bool create_copy();
++//private:
++	Bit32u real_flags;
++	bool overlay_active;
++};
++
++//Create leading directories of a file being overlayed if they exist in the original (localDrive).
++//This function is used to create copies of existing files, so all leading directories exist in the original.
++
++FILE* Overlay_Drive::create_file_in_overlay(char* dos_filename, char const* mode) {
++
++	if (logoverlay) LOG_MSG("create_file_in_overlay called %s %s",dos_filename,mode);
++	char newname[CROSS_LEN];
++	strcpy(newname,overlaydir); //TODO GOG make part of class and join in 
++	strcat(newname,dos_filename); //HERE we need to convert it to Linux TODO
++	CROSS_FILENAME(newname);
++
++	FILE* f = fopen_wrap(newname,mode);
++	//Check if a directories are part of the name:
++	char* dir = strrchr(dos_filename,'\\');
++	if (!f && dir && *dir) {
++		if (logoverlay) LOG_MSG("Overlay: warning creating a file inside a directory %s",dos_filename);
++		//ensure they exist, else make them in the overlay if they exist in the original....
++		Sync_leading_dirs(dos_filename);
++		//try again
++		f = fopen_wrap(newname,mode);
++	}
++
++	return f;
++}
++
++#ifndef BUFSIZ
++#define BUFSIZ 2048
++#endif
++
++//bool OverlayFile::create_copy(DOS_File * file, char* newname)
++bool OverlayFile::create_copy() {
++	//test if open/valid/etc
++	//ensure file position
++	if (logoverlay) LOG_MSG("create_copy called %s",GetName());
++
++	FILE* lhandle = this->fhandle;
++	fseek(lhandle,ftell(lhandle),SEEK_SET);
++	int location_in_old_file = ftell(lhandle);
++	fseek(lhandle,0L,SEEK_SET);
++	
++	FILE* newhandle = NULL;
++	Bit8u drive_set = GetDrive();
++	if (drive_set != 0xff && drive_set < DOS_DRIVES && Drives[drive_set]){
++		Overlay_Drive* od = dynamic_cast<Overlay_Drive*>(Drives[drive_set]);
++		if (od) {
++			newhandle = od->create_file_in_overlay(GetName(),"wb+"); //todo check wb+
++		}
++	}
++//	newhandle = create_file(newname,"wb+"); 
++	if (!newhandle) return false;
++	char buffer[BUFSIZ];
++	size_t s;
++	while ( (s = fread(buffer,1,BUFSIZ,lhandle)) ) fwrite(buffer, 1, s, newhandle);
++	fclose(lhandle);
++	//Set copied file handle to position of the old one 
++	fseek(newhandle,location_in_old_file,SEEK_SET);
++	this->fhandle = newhandle;
++	//Flags ?
++	if (logoverlay) LOG_MSG("success");
++	return true;
++}
++
++
++
++static OverlayFile* ccc(DOS_File* file) {
++	localFile* l = dynamic_cast<localFile*>(file);
++	if (!l) E_Exit("overlay input file is not a localFile");
++	//Create an overlayFile
++	OverlayFile* ret = new OverlayFile(l->GetName(),l->fhandle);
++	ret->flags = l->flags;
++	delete l;
++	return ret;
++}
++
++Overlay_Drive::Overlay_Drive(const char * startdir,const char* overlay, Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid,Bit8u &error)
++:localDrive(startdir,_bytes_sector,_sectors_cluster,_total_clusters,_free_clusters,_mediaid),special_prefix("DBOVERLAY") {
++	optimize_cache_v1 = true; //Try to not reread overlay files on deletes. Ideally drive_cache should be improved to handle deletes properly.
++	//Currently this flag does nothing, as the current behavior is to not reread due to caching everything.
++#if defined (WIN32)	
++	if (strcasecmp(startdir,overlay) == 0) {
++#else 
++	if (strcmp(startdir,overlay) == 0) {
++#endif
++		//overlay directory can not be the base directory
++		error = 2;
++		return;
++	}
++
++	std::string s(startdir);
++	std::string o(overlay);
++	bool s_absolute = Cross::IsPathAbsolute(s);
++	bool o_absolute = Cross::IsPathAbsolute(o);
++	error = 0;
++	if (s_absolute != o_absolute) { 
++		error = 1;
++		return;
++	}
++	strcpy(overlaydir,overlay);
++	char dirname[CROSS_LEN] = { 0 };
++	//Determine if overlaydir is part of the startdir.
++	convert_overlay_to_DOSname_in_base(dirname);
++
++
++	if(strlen(dirname) && dirname[strlen(dirname)-1] == '\\') dirname[strlen(dirname)-1] = 0;
++			
++	//add_deleted_path(dirname); //update_cache will add the overlap_folder
++	overlap_folder = dirname;
++
++	update_cache(true);
++}
++
++void Overlay_Drive::convert_overlay_to_DOSname_in_base(char* dirname ) 
++{
++	dirname[0] = 0;//ensure good return string
++	if (strlen(overlaydir) >= strlen(basedir) ) {
++		//Needs to be longer at least.
++#if defined (WIN32)
++//OS2 ?	
++		if (strncasecmp(overlaydir,basedir,strlen(basedir)) == 0) {
++#else
++		if (strncmp(overlaydir,basedir,strlen(basedir)) == 0) {
++#endif
++			//Beginning is the same.
++			char t[CROSS_LEN];
++			strcpy(t,overlaydir+strlen(basedir));
++
++			char* p = t;
++			char* b = t;
++
++			while ( (p =strchr(p,CROSS_FILESPLIT)) ) {
++				char directoryname[CROSS_LEN]={0};
++				char dosboxdirname[CROSS_LEN]={0};
++				strcpy(directoryname,dirname);
++				strncat(directoryname,b,p-b);
++
++				char d[CROSS_LEN];
++				strcpy(d,basedir);
++				strcat(d,directoryname);
++				CROSS_FILENAME(d);
++				//Try to find the corresponding directoryname in DOSBox.
++				if(!dirCache.GetShortName(d,dosboxdirname) ) {
++					//Not a long name, assume it is a short name instead
++					strncpy(dosboxdirname,b,p-b);
++					upcase(dosboxdirname);
++				}
++
++
++				strcat(dirname,dosboxdirname);
++				strcat(dirname,"\\");
++
++				if (logoverlay) LOG_MSG("HIDE directory: %s",dirname);
++
++
++				b=++p;
++
++			}
++		}
++	}
++}
++
++bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
++	const char* type;
++	switch (flags&0xf) {
++	case OPEN_READ:        type = "rb" ; break;
++	case OPEN_WRITE:       type = "rb+"; break;
++	case OPEN_READWRITE:   type = "rb+"; break;
++	case OPEN_READ_NO_MOD: type = "rb" ; break; //No modification of dates. LORD4.07 uses this
++	default:
++		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
++		return false;
++	}
++
++	//Flush the buffer of handles for the same file. (Betrayal in Antara)
++	Bit8u i,drive=DOS_DRIVES;
++	localFile *lfp;
++	for (i=0;i<DOS_DRIVES;i++) {
++		if (Drives[i]==this) {
++			drive=i;
++			break;
++		}
++	}
++	for (i=0;i<DOS_FILES;i++) {
++		if (Files[i] && Files[i]->IsOpen() && Files[i]->GetDrive()==drive && Files[i]->IsName(name)) {
++			lfp=dynamic_cast<localFile*>(Files[i]);
++			if (lfp) lfp->Flush();
++		}
++	}
++
++
++	//Todo check name first against local tree
++	//if name exists, use that one instead!
++	//overlay file.
++	char newname[CROSS_LEN];
++	strcpy(newname,overlaydir);
++	strcat(newname,name);
++	CROSS_FILENAME(newname);
++
++	FILE * hand = fopen_wrap(newname,type);
++	bool fileopened = false;
++	if (hand) {
++		if (logoverlay) LOG_MSG("overlay file opened %s",newname);
++		*file=new localFile(name,hand);
++		(*file)->flags=flags;
++		fileopened = true;
++	} else {
++		; //TODO error handling!!!! (maybe check if it exists and read only (should not happen with overlays)
++	}
++	bool overlayed = fileopened;
++
++	//File not present in overlay, try normal drive
++	//TODO take care of file being marked deleted.
++
++	if (!fileopened && !is_deleted_file(name)) fileopened = localDrive::FileOpen(file,name, OPEN_READ);
++	
++	
++	if (fileopened) {
++		if (logoverlay) LOG_MSG("file opened %s",name);
++		//Convert file to OverlayFile
++		OverlayFile* f = ccc(*file);
++		//Store original flags, as with overlay the files are opened read only and they switch on write
++		f->real_flags = flags; 
++		f->overlay_active = overlayed; //No need to switch if already in overlayed.
++		*file = f;
++	}
++	return fileopened;
++}
++
++
++bool Overlay_Drive::FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/) {
++
++	//TODO Check if it exists in the dirCache ? // fix addentry ?  or just double check (ld and overlay)
++	//AddEntry looks sound to me.. 
++	
++	FILE* f = create_file_in_overlay(name,"wb+");
++	if(!f) {
++		if (logoverlay) LOG_MSG("File creation in overlay system failed %s",name);
++		return false;
++	}
++	*file = new localFile(name,f);
++	(*file)->flags = OPEN_READWRITE;
++	OverlayFile* of = ccc(*file);
++	of->overlay_active = true;
++	of->real_flags = OPEN_READWRITE;
++	*file = of;
++	//create fake name for the drive cache
++	char fakename[CROSS_LEN];
++	strcpy(fakename,basedir);
++	strcat(fakename,name);
++	CROSS_FILENAME(fakename);
++	dirCache.AddEntry(fakename,true); //add it.
++	add_DOSname_to_cache(name);
++	remove_deleted_file(name,true);
++	return true;
++}
++void Overlay_Drive::add_DOSname_to_cache(const char* name) {
++	for (std::vector<std::string>::const_iterator itc = DOSnames_cache.begin(); itc != DOSnames_cache.end();itc++){
++		if (name == (*itc)) return;
++	}
++	DOSnames_cache.push_back(name);
++}
++void Overlay_Drive::remove_DOSname_from_cache(const char* name) {
++	for (std::vector<std::string>::iterator it = DOSnames_cache.begin(); it != DOSnames_cache.end();it++) {
++		if (name == (*it)) { DOSnames_cache.erase(it); return;}
++	}
++
++}
++
++bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
++	const char* lastdir = strrchr(dos_filename,'\\');
++	//If there are no directories, return success.
++	if (!lastdir) return true; 
++	
++	const char* leaddir = dos_filename;
++	while ( (leaddir=strchr(leaddir,'\\')) != 0) {
++		char dirname[CROSS_LEN] = {0};
++		strncpy(dirname,dos_filename,leaddir-dos_filename);
++
++		if (logoverlay) LOG_MSG("syncdir: %s",dirname);
++		//Test if directory exist in base.
++		char dirnamebase[CROSS_LEN] ={0};
++		strcpy(dirnamebase,basedir);
++		strcat(dirnamebase,dirname);
++		CROSS_FILENAME(dirnamebase);
++		struct stat basetest;
++		if (stat(dirCache.GetExpandName(dirnamebase),&basetest) == 0 && basetest.st_mode & S_IFDIR) {
++			if (logoverlay) LOG_MSG("base exists: %s",dirnamebase);
++			//Directory exists in base folder.
++			//Ensure it exists in overlay as well
++
++			struct stat overlaytest;
++			char dirnameoverlay[CROSS_LEN] ={0};
++			strcpy(dirnameoverlay,overlaydir);
++			strcat(dirnameoverlay,dirname);
++			CROSS_FILENAME(dirnameoverlay);
++			if (stat(dirnameoverlay,&overlaytest) == 0 ) {
++				//item exist. Check if it is a folder, if not a folder =>fail!
++				if ((overlaytest.st_mode & S_IFDIR) ==0) return false;
++			} else {
++				//folder does not exist, make it
++				if (logoverlay) LOG_MSG("creating %s",dirnameoverlay);
++#if defined (WIN32)						/* MS Visual C++ */
++				int temp = mkdir(dirnameoverlay);
++#else
++				int temp = mkdir(dirnameoverlay,0700);
++#endif
++				if (temp != 0) return false;
++			}
++		}
++		leaddir = leaddir + 1; //Move to next
++	} 
++
++	return true;
++}
++void Overlay_Drive::update_cache(bool read_directory_contents) {
++	Bitu a = GetTicks();
++	std::vector<std::string> specials;
++	std::vector<std::string> dirnames;
++	std::vector<std::string> filenames;
++	if (read_directory_contents) {
++		//Clear all lists
++		DOSnames_cache.clear();
++		DOSdirs_cache.clear();
++		deleted_files_in_base.clear();
++		deleted_paths_in_base.clear();
++		//Ensure hiding of the folder that contains the overlay, if it is part of the base folder.
++		add_deleted_path(overlap_folder.c_str(), false);
++	}
++
++	//Needs later to support stored renames and removals of files existing in the localDrive plane.
++	//and by taking in account if the file names are actually already renamed. 
++	//and taking in account that a file could have gotten an overlay version and then both need to be removed. 
++	//
++	//Also what about sequences were a base file gets copied to a working save game and then removed/renamed...
++	//copy should be safe as then the link with the original doesn't exist.
++	//however the working safe can be rather complicated after a rename and delete..
++
++	//Currently directories existing only in the overlay can not be added to drive cache:
++	//1. possible workaround create empty directory in base. Drawback would break the no-touching-of-base.
++	//2. double up Addentry to support directories, (and adding . and .. to the newly directory so it counts as cachedin.. and won't be recached, as otherwise
++	//   cache will realize we are faking it. 
++	//Working on solution 2.
++
++	//Random TODO: Does the root drive under DOS have . and .. ? 
++
++	//This function needs to be called after any localDrive function calling cacheout/deleteentry, as those throw away directories.
++	//either do this with a parameter stating the part that needs to be rebuild,(directory) or clear the cache by default and do it all.
++
++	std::vector<std::string>::iterator i;
++	std::string::size_type const prefix_lengh = special_prefix.length();
++	if (read_directory_contents) {
++		dir_information* dirp = open_directory(overlaydir);
++		if (dirp == NULL) return;
++		// Read complete directory
++		char dir_name[CROSS_LEN];
++		bool is_directory;
++		if (read_directory_first(dirp, dir_name, is_directory)) {
++			if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(dir_name);
++			else if (is_directory) dirnames.push_back(dir_name);
++			else filenames.push_back(dir_name);
++			while (read_directory_next(dirp, dir_name, is_directory)) {
++				if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(dir_name);
++				else if (is_directory) dirnames.push_back(dir_name);
++				else filenames.push_back(dir_name);
++			}
++		}
++		close_directory(dirp);
++		//parse directories to add them.
++
++
++		
++		for (i = dirnames.begin(); i != dirnames.end();i++) {
++			if ((*i) == ".") continue;
++			if ((*i) == "..") continue;
++			std::string testi(*i);
++			std::string::size_type ll = testi.length();
++			//TODO: Use the dirname\. and dirname\.. for creating fake directories in the driveCache.
++			if( ll >2 && testi[ll-1] == '.' && testi[ll-2] == CROSS_FILESPLIT) continue; 
++			if( ll >3 && testi[ll-1] == '.' && testi[ll-2] == '.' && testi[ll-3] == CROSS_FILESPLIT) continue;
++
++#if OVERLAY_DIR
++			char tdir[CROSS_LEN];
++			strcpy(tdir,(*i).c_str());
++			CROSS_DOSFILENAME(tdir);
++			bool dir_exists_in_base = localDrive::TestDir(tdir);
++#endif
++
++			char dir[CROSS_LEN];
++			strcpy(dir,overlaydir);
++			strcat(dir,(*i).c_str());
++			char dirpush[CROSS_LEN];
++			strcpy(dirpush,(*i).c_str());
++			static char end[2] = {CROSS_FILESPLIT,0};
++			strcat(dirpush,end); //Linux ?
++			dir_information* dirp = open_directory(dir);
++			if (dirp == NULL) continue;
++
++#if OVERLAY_DIR
++			//Good directory, add to DOSdirs_cache if not existing in localDrive. tested earlier to prevent problems with opendir
++			if (!dir_exists_in_base) add_DOSdir_to_cache(tdir);
++#endif
++
++			std::string backupi(*i);
++			// Read complete directory
++			char dir_name[CROSS_LEN];
++			bool is_directory; 
++			if (read_directory_first(dirp, dir_name, is_directory)) {
++				if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
++				else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
++				else filenames.push_back(string(dirpush)+dir_name);
++				while (read_directory_next(dirp, dir_name, is_directory)) {
++					if ((strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
++					else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
++					else filenames.push_back(string(dirpush)+dir_name);
++				}
++			}
++			close_directory(dirp);
++			for(i = dirnames.begin(); i != dirnames.end();i++) {
++				if ( (*i) == backupi) break; //find current directory again, for the next round.
++			}
++		}
++	}
++
++
++	if (read_directory_contents) {
++		for( i = filenames.begin(); i != filenames.end(); i++) {
++			char dosname[CROSS_LEN];
++			strcpy(dosname,(*i).c_str());
++			upcase(dosname);  //Should not be really needed, as uppercase in the overlay is a requirement...
++			CROSS_DOSFILENAME(dosname);
++			if (logoverlay) LOG_MSG("update cache add dosname %s",dosname);
++			DOSnames_cache.push_back(dosname);
++		}
++	}
++
++#if OVERLAY_DIR
++	for (i = DOSdirs_cache.begin(); i !=DOSdirs_cache.end(); i++) {
++		char fakename[CROSS_LEN];
++		strcpy(fakename,basedir);
++		strcat(fakename,(*i).c_str());
++		CROSS_FILENAME(fakename);
++		dirCache.AddEntryDirOverlay(fakename,true);
++	}
++#endif
++
++	for (i = DOSnames_cache.begin(); i != DOSnames_cache.end(); i++) {
++		char fakename[CROSS_LEN];
++		strcpy(fakename,basedir);
++		strcat(fakename,(*i).c_str());
++		CROSS_FILENAME(fakename);
++		dirCache.AddEntry(fakename,true);
++	}
++
++	if (read_directory_contents) {
++		for (i = specials.begin(); i != specials.end();i++) {
++			//Specials look like this DBOVERLAY_YYY_FILENAME.EXT or DIRNAME[\/]DBOVERLAY_YYY_FILENAME.EXT where 
++			//YYY is the operation involved. Currently only DEL is supported.
++			//DEL = file marked as deleted, (but exists in localDrive!)
++			std::string name(*i);
++			std::string special_dir("");
++			std::string special_file("");
++			std::string special_operation("");
++			std::string::size_type s = name.find(special_prefix);
++			if (s == std::string::npos) continue;
++			if (s) {
++				special_dir = name.substr(0,s);
++				name.erase(0,s);
++			}
++			name.erase(0,special_prefix.length()+1); //Erase DBOVERLAY_
++			s = name.find("_");
++			if (s == std::string::npos ||s == 0) continue;
++			special_operation = name.substr(0,s);
++			name.erase(0,s + 1);
++			special_file = name;
++			if (special_file.length() == 0) continue;
++			if (special_operation == "DEL") {
++				name = special_dir + special_file;
++				//CROSS_DOSFILENAME for strings:
++				while ( (s = name.find('/')) != std::string::npos) name.replace(s,1,"\\");
++				
++				add_deleted_file(name.c_str(),false);
++			} else if (special_operation == "RMD") {
++				name = special_dir + special_file;
++				//CROSS_DOSFILENAME for strings:
++				while ( (s = name.find('/')) != std::string::npos) name.replace(s,1,"\\");
++				add_deleted_path(name.c_str(),false);
++
++			} else {
++				if (logoverlay) LOG_MSG("unsupported operation %s on %s",special_operation.c_str(),(*i).c_str());
++			}
++
++		}
++	}
++	if (logoverlay) LOG_MSG("OPTIMISE: update cache took %d",GetTicks()-a);
++}
++
++bool Overlay_Drive::FindNext(DOS_DTA & dta) {
++
++	char * dir_ent;
++	struct stat stat_block;
++	char full_name[CROSS_LEN];
++	char dir_entcopy[CROSS_LEN];
++
++	Bit8u srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
++	Bit8u find_attr;
++
++	dta.GetSearchParams(srch_attr,srch_pattern);
++	Bit16u id = dta.GetDirID();
++
++again:
++	if (!dirCache.FindNext(id,dir_ent)) {
++		DOS_SetError(DOSERR_NO_MORE_FILES);
++		return false;
++	}
++	if(!WildFileCmp(dir_ent,srch_pattern)) goto again;
++
++	strcpy(full_name,srchInfo[id].srch_dir);
++	strcat(full_name,dir_ent);
++	
++	//GetExpandName might indirectly destroy dir_ent (by caching in a new directory 
++	//and due to its design dir_ent might be lost.)
++	//Copying dir_ent first
++	strcpy(dir_entcopy,dir_ent);
++	
++	//First try overlay:
++	char ovname[CROSS_LEN];
++	char relativename[CROSS_LEN];
++	strcpy(relativename,srchInfo[id].srch_dir);
++	//strip off basedir: //TODO cleanup
++	char* prel = relativename+strlen(basedir);
++	strcpy(ovname,overlaydir);
++	prel =full_name+strlen(basedir);
++
++	
++
++#if 0
++	//Check hidden/deleted directories first. TODO is this really needed. If the directory exist in the overlay things are weird anyway.
++	//the deleted paths are added to the deleted_files list.
++	if (is_deleted_dir(prel)) {
++		LOG_MSG("skipping early out deleted dir %s",prel);
++		goto again;
++	}
++#endif
++
++	strcat(ovname,full_name+strlen(basedir));
++	bool statok = ( stat(ovname,&stat_block)==0);
++
++	if (logoverlay) LOG_MSG("listing %s",dir_entcopy);
++	if (statok) {
++		if (logoverlay) LOG_MSG("using overlay data for %s : %s",full_name, ovname);
++	} else {
++		char preldos[CROSS_LEN];
++		strcpy(preldos,prel);
++		CROSS_DOSFILENAME(preldos);
++		if (is_deleted_file(preldos)) { //dir.. maybe lower or keep it as is TODO
++			if (logoverlay) LOG_MSG("skipping deleted file %s %s %s",preldos,full_name,ovname);
++			goto again;
++		}
++		if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) {
++			if (logoverlay) LOG_MSG("stat failed for %s . This should not happen.",dirCache.GetExpandName(full_name));
++			goto again;//No symlinks and such
++		}
++	}
++
++	if(stat_block.st_mode & S_IFDIR) find_attr=DOS_ATTR_DIRECTORY;
++	else find_attr=DOS_ATTR_ARCHIVE;
++ 	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
++
++	
++	/* file is okay, setup everything to be copied in DTA Block */
++	char find_name[DOS_NAMELENGTH_ASCII];Bit16u find_date,find_time;Bit32u find_size;
++
++	if(strlen(dir_entcopy)<DOS_NAMELENGTH_ASCII){
++		strcpy(find_name,dir_entcopy);
++		upcase(find_name);
++	} 
++
++	find_size=(Bit32u) stat_block.st_size;
++	struct tm *time;
++	if((time=localtime(&stat_block.st_mtime))!=0){
++		find_date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
++		find_time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
++	} else {
++		find_time=6; 
++		find_date=4;
++	}
++	dta.SetResult(find_name,find_size,find_date,find_time,find_attr);
++	return true;
++}
++
++
++
++bool Overlay_Drive::FileUnlink(char * name) {
++//TODO check the basedir for file existence in order if we need to add the file to deleted file list.
++	Bitu a = GetTicks();
++	if (logoverlay) LOG_MSG("calling unlink on %s",name);
++	char basename[CROSS_LEN];
++	strcpy(basename,basedir);
++	strcat(basename,name);
++	CROSS_FILENAME(basename);
++
++
++	char overlayname[CROSS_LEN];
++	strcpy(overlayname,overlaydir);
++	strcat(overlayname,name);
++	CROSS_FILENAME(overlayname);
++//	char *fullname = dirCache.GetExpandName(newname);
++	if (unlink(overlayname)) {
++		//Unlink failed for some reason try finding it.
++		struct stat buffer;
++		if(stat(overlayname,&buffer)) {
++			//file not found in overlay, check the basedrive
++			//Check if file not already deleted 
++			if (is_deleted_file(name)) return false;
++
++
++			char *fullname = dirCache.GetExpandName(basename);
++			if (stat(fullname,&buffer)) return false; // File not found in either, return file false.
++			//File does exist in normal drive.
++			//Maybe do something with the drive_cache.
++			add_deleted_file(name,true);
++			return true;
++//			E_Exit("trying to remove existing non-overlay file %s",name);
++		}
++		FILE* file_writable = fopen_wrap(overlayname,"rb+");
++		if(!file_writable) return false; //No access ? ERROR MESSAGE NOT SET. FIXME ?
++		fclose(file_writable);
++
++		//File exists and can technically be deleted, nevertheless it failed.
++		//This means that the file is probably open by some process.
++		//See if We have it open.
++		bool found_file = false;
++		for(Bitu i = 0;i < DOS_FILES;i++){
++			if(Files[i] && Files[i]->IsName(name)) {
++				Bitu max = DOS_FILES;
++				while(Files[i]->IsOpen() && max--) {
++					Files[i]->Close();
++					if (Files[i]->RemoveRef()<=0) break;
++				}
++				found_file=true;
++			}
++		}
++		if(!found_file) return false;
++		if (unlink(overlayname) == 0) { //Overlay file removed
++			//Mark basefile as deleted if it exists:
++			if (localDrive::FileExists(name)) add_deleted_file(name,true);
++			remove_DOSname_from_cache(name); //Should be an else ? although better safe than sorry.
++			//Handle this better
++			dirCache.DeleteEntry(basename);
++			update_cache(false);
++			//Check if it exists in the base dir as well
++			
++			return true;
++		}
++		return false;
++	} else { //Removed from overlay.
++		//TODO IF it exists in the basedir: and more locations above.
++		if (localDrive::FileExists(name)) add_deleted_file(name,true);
++		remove_DOSname_from_cache(name);
++		//TODODO remove from the update_cache cache as well
++		//Handle this better
++		//Check if it exists in the base dir as well
++		dirCache.DeleteEntry(basename);
++
++		update_cache(false);
++		if (logoverlay) LOG_MSG("OPTIMISE: unlink took %d",GetTicks()-a);
++		return true;
++	}
++}
++
++
++bool Overlay_Drive::GetFileAttr(char * name,Bit16u * attr) {
++	char overlayname[CROSS_LEN];
++	strcpy(overlayname,overlaydir);
++	strcat(overlayname,name);
++	CROSS_FILENAME(overlayname);
++
++	struct stat status;
++	if (stat(overlayname,&status)==0) {
++		*attr=DOS_ATTR_ARCHIVE;
++		if(status.st_mode & S_IFDIR) *attr|=DOS_ATTR_DIRECTORY;
++		return true;
++	}
++	//Maybe check for deleted path as well
++	if (is_deleted_file(name)) {
++		*attr = 0;
++		return false;
++	}
++	return localDrive::GetFileAttr(name,attr);
++
++}
++
++
++void Overlay_Drive::add_deleted_file(const char* name,bool create_on_disk) {
++	if (logoverlay) LOG_MSG("add del file %s",name);
++	if (!is_deleted_file(name)) {
++		deleted_files_in_base.push_back(name);
++		if (create_on_disk) add_special_file_to_disk(name, "DEL");
++
++	}
++}
++
++void Overlay_Drive::add_special_file_to_disk(const char* dosname, const char* operation) {
++	std::string name = create_filename_of_special_operation(dosname, operation);
++	char overlayname[CROSS_LEN];
++	strcpy(overlayname,overlaydir);
++	strcat(overlayname,name.c_str());
++	CROSS_FILENAME(overlayname);
++	FILE* f = fopen_wrap(overlayname,"wb+");
++	if (!f) {
++		Sync_leading_dirs(dosname);
++		f = fopen_wrap(overlayname,"wb+");
++	}
++	if (!f) E_Exit("Failed creation of %s",overlayname);
++	char buf[5] = {'e','m','p','t','y'};
++	fwrite(buf,5,1,f);
++	fclose(f);
++
++}
++void Overlay_Drive::remove_special_file_from_disk(const char* dosname, const char* operation) {
++	std::string name = create_filename_of_special_operation(dosname,operation);
++	char overlayname[CROSS_LEN];
++	strcpy(overlayname,overlaydir);
++	strcat(overlayname,name.c_str());
++	CROSS_FILENAME(overlayname);
++	if(unlink(overlayname) != 0) E_Exit("Failed removal of %s",overlayname);
++}
++
++std::string Overlay_Drive::create_filename_of_special_operation(const char* dosname, const char* operation) {
++
++	std::string res(dosname);
++	std::string::size_type s = res.rfind("\\"); //CHECK DOS or host endings.... on update_cache
++	if (s == std::string::npos) s = 0; else s++;
++	std::string oper = special_prefix +"_" +operation +"_";
++	res.insert(s,oper);
++	return res;
++
++
++}
++
++
++bool Overlay_Drive::is_dir_only_in_overlay(const char* name) {
++	if (!name || !*name) return false;
++	if (DOSdirs_cache.empty()) return false;
++	for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); it++) {
++		if (*it == name) return true;
++	}
++	return false;
++}
++
++bool Overlay_Drive::is_deleted_file(const char* name) {
++	if (!name || !*name) return false;
++	if (deleted_files_in_base.empty()) return false;
++	for(std::vector<std::string>::iterator it = deleted_files_in_base.begin(); it != deleted_files_in_base.end(); it++) {
++		if (*it == name) return true;
++	}
++	return false;
++}
++
++void Overlay_Drive::add_DOSdir_to_cache(const char* name) {
++	if (!name || !*name ) return; //Skip empty file.
++	LOG_MSG("Adding name to overlay_only_dir_cache %s",name);
++	if (!is_dir_only_in_overlay(name)) {
++		DOSdirs_cache.push_back(name); 
++	}
++}
++
++void Overlay_Drive::remove_DOSdir_from_cache(const char* name) {
++	for(std::vector<std::string>::iterator it = DOSdirs_cache.begin(); it != DOSdirs_cache.end(); it++) {
++		if ( *it == name) {
++			DOSdirs_cache.erase(it);
++			return;
++		}
++	}
++}
++
++void Overlay_Drive::remove_deleted_file(const char* name,bool create_on_disk) {
++	for(std::vector<std::string>::iterator it = deleted_files_in_base.begin(); it != deleted_files_in_base.end(); it++) {
++		if (*it == name) {
++			deleted_files_in_base.erase(it);
++			if (create_on_disk) remove_special_file_from_disk(name, "DEL");
++			return;
++		}
++	}
++}
++void Overlay_Drive::add_deleted_path(const char* name, bool create_on_disk) {
++	if (!name || !*name ) return; //Skip empty file.
++	if (logoverlay) LOG_MSG("add del path %s",name);
++	if (!is_deleted_path(name)) {
++		deleted_paths_in_base.push_back(name);
++		//Add it to deleted files as well, so it gets skipped in FindNext. 
++		//Maybe revise that.
++		if (create_on_disk) add_special_file_to_disk(name,"RMD");
++		add_deleted_file(name,false);
++	}
++}
++bool Overlay_Drive::is_deleted_path(const char* name) {
++	if (!name || !*name) return false;
++	if (deleted_paths_in_base.empty()) return false;
++	std::string sname(name);
++	std::string::size_type namelen = sname.length();;
++	for(std::vector<std::string>::iterator it = deleted_paths_in_base.begin(); it != deleted_paths_in_base.end(); it++) {
++		std::string::size_type blockedlen = (*it).length();
++		if (namelen < blockedlen) continue;
++		//See if input starts with name. 
++		std::string::size_type n = sname.find(*it);
++		if (n == 0 && (namelen == blockedlen) || *(name+blockedlen) =='\\' ) return true;
++	}
++	return false;
++}
++
++void Overlay_Drive::remove_deleted_path(const char* name, bool create_on_disk) {
++	for(std::vector<std::string>::iterator it = deleted_paths_in_base.begin(); it != deleted_paths_in_base.end(); it++) {
++		if (*it == name) {
++			deleted_paths_in_base.erase(it);
++			remove_deleted_file(name,false); //Rethink maybe.
++			if (create_on_disk) remove_special_file_from_disk(name,"RMD");
++			break;
++		}
++	}
++}
++
++bool Overlay_Drive::FileExists(const char* name) {
++	char overlayname[CROSS_LEN];
++	strcpy(overlayname,overlaydir);
++	strcat(overlayname,name);
++	CROSS_FILENAME(overlayname);
++	struct stat temp_stat;
++	if(stat(overlayname,&temp_stat)==0 && (temp_stat.st_mode & S_IFDIR)==0) return true;
++	
++	if (is_deleted_file(name)) return false;
++
++	return localDrive::FileExists(name);
++}
++
++#if 1
++bool Overlay_Drive::Rename(char * oldname,char * newname) {
++	//TODO with cache function!
++//Tricky function.
++//Renaming directories is currently not supported, due the drive_cache not handling that smoothly.
++//So oldname is directory => Exit!
++//If oldname is on overlay => simple rename.
++//if oldname is on base => copy file to overlay with new name and mark old file as deleted. 
++//More advanced version. keep track of the file being renamed in order to detect that the file is being renamed back. 
++	Bit16u attr=0;
++	if (!GetFileAttr(oldname,&attr)) E_Exit("rename, but source doesn't exist, should not happen %s",oldname);
++	if (attr&DOS_ATTR_DIRECTORY) {
++		//See if the directory exists only in the overlay, then it should be possible.
++#if OVERLAY_DIR
++		if (localDrive::TestDir(oldname)) E_Exit("Overlay: renaming base directory %s to %s not yet supported", oldname,newname);
++#endif
++		E_Exit("renaming directory %s to %s . Not yet supported in Overlay",oldname,newname); //TODO
++	}
++
++	Bitu a = GetTicks();
++	//First generate overlay names.
++	char overlaynameold[CROSS_LEN];
++	strcpy(overlaynameold,overlaydir);
++	strcat(overlaynameold,oldname);
++	CROSS_FILENAME(overlaynameold);
++
++	char overlaynamenew[CROSS_LEN];
++	strcpy(overlaynamenew,overlaydir);
++	strcat(overlaynamenew,newname);
++	CROSS_FILENAME(overlaynamenew);
++
++	//No need to check if the original is marked as deleted, as GetFileAttr would fail if it did.
++
++	//Check if overlay source file exists
++	struct stat tempstat;
++	int temp = -1; 
++	if (stat(overlaynameold,&tempstat) ==0) {
++		//Simple rename
++		temp = rename(overlaynameold,overlaynamenew);
++		//TODO CHECK if base has a file with same oldname!!!!! if it does mark it as deleted!!
++		if (localDrive::FileExists(oldname)) add_deleted_file(oldname,true);
++	} else {
++		Bitu aa = GetTicks();
++		//File exists in the basedrive. Make a copy and mark old one as deleted.
++		char newold[CROSS_LEN];
++		strcpy(newold,basedir);
++		strcat(newold,oldname);
++		CROSS_FILENAME(newold);
++		dirCache.ExpandName(newold);
++		FILE* o = fopen_wrap(newold,"rb");
++		if (!o) return false;
++		FILE* n = create_file_in_overlay(newname,"wb+");
++		if (!n) {fclose(o); return false;}
++		char buffer[BUFSIZ];
++		size_t s;
++		while ( (s = fread(buffer,1,BUFSIZ,o)) ) fwrite(buffer, 1, s, n);
++		fclose(o); fclose(n);
++
++		//File copied.
++		//Mark old file as deleted
++		add_deleted_file(oldname,true);
++		temp =0; //success
++		if (logoverlay) LOG_MSG("OPTIMISE: update rename with copy took %d",GetTicks()-aa);
++
++	}
++	if (temp ==0) {
++		//handle the drive_cache (a bit better)
++		//Ensure that the file is not marked as deleted anymore.
++		if (is_deleted_file(newname)) remove_deleted_file(newname,true);
++		dirCache.EmptyCache();
++		update_cache(true);
++		if (logoverlay) LOG_MSG("OPTIMISE: rename took %d",GetTicks()-a);
++
++	}
++	return (temp==0);
++
++}
++#endif
++
++bool Overlay_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
++	if (logoverlay) LOG_MSG("FindFirst in %s",_dir);
++	
++	if (is_deleted_path(_dir)) {
++		//No accidental listing of files in there.
++		DOS_SetError(DOSERR_PATH_NOT_FOUND);
++		return false;
++	}
++
++	return localDrive::FindFirst(_dir,dta,fcb_findfirst);
++}
++
++bool Overlay_Drive::FileStat(const char* name, FileStat_Block * const stat_block) {
++	char overlayname[CROSS_LEN];
++	strcpy(overlayname,overlaydir);
++	strcat(overlayname,name);
++	CROSS_FILENAME(overlayname);
++	struct stat temp_stat;
++	if(stat(overlayname,&temp_stat) != 0) {
++		if (is_deleted_file(name)) return false;
++		return localDrive::FileStat(name,stat_block);
++	}
++	/* Convert the stat to a FileStat */
++	struct tm *time;
++	if((time=localtime(&temp_stat.st_mtime))!=0) {
++		stat_block->time=DOS_PackTime((Bit16u)time->tm_hour,(Bit16u)time->tm_min,(Bit16u)time->tm_sec);
++		stat_block->date=DOS_PackDate((Bit16u)(time->tm_year+1900),(Bit16u)(time->tm_mon+1),(Bit16u)time->tm_mday);
++	} else {
++			// ... But this function is not used at the moment.
++	}
++	stat_block->size=(Bit32u)temp_stat.st_size;
++	return true;
++}
++
++Bits Overlay_Drive::UnMount(void) { 
++	delete this;
++	return 0; 
++}
++void Overlay_Drive::EmptyCache(void){
++	localDrive::EmptyCache();
++	update_cache(true);//lets rebuild it.
++}
++
+diff --git a/src/dos/drives.cpp b/src/dos/drives.cpp
+index 832eb91..62e281a 100644
+--- a/src/dos/drives.cpp
++++ b/src/dos/drives.cpp
+@@ -132,7 +132,7 @@ void DriveManager::InitializeDrive(int drive) {
+ 		driveInfo.currentDisk = 0;
+ 		DOS_Drive* disk = driveInfo.disks[driveInfo.currentDisk];
+ 		Drives[currentDrive] = disk;
+-		disk->Activate();
++		if (driveInfo.disks.size() > 1) disk->Activate();
+ 	}
+ }
+ 
+diff --git a/src/dos/drives.h b/src/dos/drives.h
+index 14f3831..773f150 100644
+--- a/src/dos/drives.h
++++ b/src/dos/drives.h
+@@ -21,6 +21,7 @@
+ #define _DRIVES_H__
+ 
+ #include <vector>
++#include <string>
+ #include <sys/types.h>
+ #include "dos_system.h"
+ #include "shell.h" /* for DOS_Shell */
+@@ -70,13 +71,16 @@ public:
+ 	virtual bool isRemote(void);
+ 	virtual bool isRemovable(void);
+ 	virtual Bits UnMount(void);
+-private:
++	const char* getBasedir() {return basedir;};
++protected:
+ 	char basedir[CROSS_LEN];
+-	friend void DOS_Shell::CMD_SUBST(char* args); 	
++private:
++	friend void DOS_Shell::CMD_SUBST(char* args);
++protected:
+ 	struct {
+ 		char srch_dir[CROSS_LEN];
+ 	} srchInfo[MAX_OPENDIRS];
+-
++private:
+ 	struct {
+ 		Bit16u bytes_sector;
+ 		Bit8u sectors_cluster;
+@@ -406,6 +410,57 @@ private:
+ 	VFILE_Block * search_file;
+ };
+ 
++class Overlay_Drive: public localDrive {
++public:
++	Overlay_Drive(const char * startdir,const char* overlay, Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid,Bit8u &error);
++
++	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
++	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u /*attributes*/);
++	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst);
++	virtual bool FindNext(DOS_DTA & dta);
++	virtual bool FileUnlink(char * name);
++	virtual bool GetFileAttr(char * name,Bit16u * attr);
++	virtual bool FileExists(const char* name);
++	virtual bool Rename(char * oldname,char * newname);
++	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
++	virtual void EmptyCache(void);
++
++	bool Sync_leading_dirs(const char* dos_filename);
++	FILE* create_file_in_overlay(char* dos_filename, char const* mode);
++	virtual Bits UnMount(void);
++	virtual bool TestDir(char * dir);
++	virtual bool RemoveDir(char * dir);
++	virtual bool MakeDir(char * dir);
++private:
++	char overlaydir[CROSS_LEN];
++	bool optimize_cache_v1;
++	void add_DOSname_to_cache(const char* name);
++	void remove_DOSname_from_cache(const char* name);
++	void add_DOSdir_to_cache(const char* name);
++	void remove_DOSdir_from_cache(const char* name);
++	void update_cache(bool read_directory_contents = false);
++	
++	std::vector<std::string> deleted_files_in_base; //Set is probably better, or some other solution (involving the disk).
++	std::vector<std::string> deleted_paths_in_base; //Currently only used to hide the overlay folder.
++	std::string overlap_folder;
++	void add_deleted_file(const char* name, bool create_on_disk);
++	void remove_deleted_file(const char* name, bool create_on_disk);
++	bool is_deleted_file(const char* name);
++	void add_deleted_path(const char* name, bool create_on_disk);
++	void remove_deleted_path(const char* name, bool create_on_disk);
++	bool is_deleted_path(const char* name);
++
++	bool is_dir_only_in_overlay(const char* name); //cached
++
+ 
++	void remove_special_file_from_disk(const char* dosname, const char* operation);
++	void add_special_file_to_disk(const char* dosname, const char* operation);
++	std::string create_filename_of_special_operation(const char* dosname, const char* operation);
++	void convert_overlay_to_DOSname_in_base(char* dirname );
++	//For caching the update_cache routine.
++	std::vector<std::string> DOSnames_cache; //Also set is probably better.
++	std::vector<std::string> DOSdirs_cache; //Can not blindly change its type. it is important that subdirs come after the parent directory.
++	const std::string special_prefix;
++};
+ 
+ #endif
+diff --git a/src/dosbox.cpp b/src/dosbox.cpp
+index 0e71544..5fcddbc 100644
+--- a/src/dosbox.cpp
++++ b/src/dosbox.cpp
+@@ -433,9 +433,9 @@ void DOSBOX_Init(void) {
+ 	Pint->SetMinMax(1,63);
+ 	Pint->Set_help(
+ 		"Amount of memory DOSBox has in megabytes.\n"
+-		"  This value is best left at its default to avoid problems with some games,\n"
+-		"  though few games might require a higher value.\n"
+-		"  There is generally no speed advantage when raising this value.");
++		"This value is best left at its default to avoid problems with some games,\n"
++		"though few games might require a higher value.\n"
++		"There is generally no speed advantage when raising this value.");
+ 	secprop->AddInitFunction(&CALLBACK_Init);
+ 	secprop->AddInitFunction(&PIC_Init);//done
+ 	secprop->AddInitFunction(&PROGRAMS_Init);
+@@ -578,10 +578,10 @@ void DOSBOX_Init(void) {
+ 
+ 	Pstring = secprop->Add_string("midiconfig",Property::Changeable::WhenIdle,"");
+ 	Pstring->Set_help("Special configuration options for the device driver. This is usually the id or part of the name of the device you want to use (find the id/name with mixer/listmidi).\n"
+-	                  "  Or in the case of coreaudio, you can specify a soundfont here.\n"
+-	                  "  When using a Roland MT-32 rev. 0 as midi output device, some games may require a delay in order to prevent 'buffer overflow' issues.\n"
+-	                  "  In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
+-	                  "  See the README/Manual for more details.");
++	                  "Or in the case of coreaudio, you can specify a soundfont here.\n"
++	                  "When using a Roland MT-32 rev. 0 as midi output device, some games may require a delay in order to prevent 'buffer overflow' issues.\n"
++	                  "In that case, add 'delaysysex', for example: midiconfig=2 delaysysex\n"
++	                  "See the README/Manual for more details.");
+ 
+ #ifdef C_FLUIDSYNTH
+ 	const char *fluiddrivers[] = {"pulseaudio", "alsa", "oss", "coreaudio", "dsound", "portaudio", "sndman", "jack", "file", "default",0};
+diff --git a/src/fpu/fpu_instructions.h b/src/fpu/fpu_instructions.h
+index 2e792d1..01b1502 100644
+--- a/src/fpu/fpu_instructions.h
++++ b/src/fpu/fpu_instructions.h
+@@ -16,7 +16,9 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
+-
++#ifndef DOSBOX_FPU_H
++#include "fpu.h"
++#endif
+ 
+ static void FPU_FINIT(void) {
+ 	FPU_SetCW(0x37F);
+@@ -43,7 +45,23 @@ static void FPU_FNOP(void){
+ 
+ static void FPU_PREP_PUSH(void){
+ 	TOP = (TOP - 1) &7;
+-	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) E_Exit("FPU stack overflow");
++#if DB_FPU_STACK_CHECK_PUSH > DB_FPU_STACK_CHECK_NONE
++	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) {
++#if DB_FPU_STACK_CHECK_PUSH == DB_FPU_STACK_CHECK_EXIT
++		E_Exit("FPU stack overflow");
++#else
++		if (fpu.cw&1) { // Masked ?
++			fpu.sw &= 0x1; //Invalid Operation
++			fpu.sw &= 0x40; //Stack Fault
++			FPU_SET_C1(1); //Register is used.
++			//No need to set 0x80 as the exception is masked.
++			LOG(LOG_FPU,LOG_ERROR)("Masked stack overflow encountered!");
++		} else {
++			E_Exit("FPU stack overflow"); //Exit as this is bad
++		}
++#endif
++	}
++#endif
+ 	fpu.tags[TOP] = TAG_Valid;
+ }
+ 
+@@ -56,7 +74,23 @@ static void FPU_PUSH(double in){
+ 
+ 
+ static void FPU_FPOP(void){
+-	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) E_Exit("FPU stack underflow");
++#if DB_FPU_STACK_CHECK_POP > DB_FPU_STACK_CHECK_NONE
++	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) {
++#if DB_FPU_STACK_CHECK_POP == DB_FPU_STACK_CHECK_EXIT
++		E_Exit("FPU stack underflow");
++#else
++		if (fpu.cw&1) { // Masked ?
++			fpu.sw &= 0x1; //Invalid Operation
++			fpu.sw &= 0x40; //Stack Fault
++			FPU_SET_C1(0); //Register is free.
++			//No need to set 0x80 as the exception is masked.
++			LOG(LOG_FPU,LOG_ERROR)("Masked stack underflow encountered!");
++		} else {
++			LOG_MSG("Unmasked Stack underflow!"); //Also log in release mode
++		}
++#endif
++	}
++#endif
+ 	fpu.tags[TOP]=TAG_Empty;
+ 	//maybe set zero in it as well
+ 	TOP = ((TOP+1)&7);
+diff --git a/src/fpu/fpu_instructions_x86.h b/src/fpu/fpu_instructions_x86.h
+index fd24522..d3898e0 100644
+--- a/src/fpu/fpu_instructions_x86.h
++++ b/src/fpu/fpu_instructions_x86.h
+@@ -16,7 +16,9 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
+-
++#ifndef DOSBOX_FPU_H
++#include "fpu.h"
++#endif
+ 
+ // #define WEAK_EXCEPTIONS
+ 
+@@ -957,12 +959,44 @@ static void FPU_FNOP(void){
+ 
+ static void FPU_PREP_PUSH(void){
+ 	TOP = (TOP - 1) &7;
+-	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) E_Exit("FPU stack overflow");
++#if DB_FPU_STACK_CHECK_PUSH > DB_FPU_STACK_CHECK_NONE
++	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) {
++#if DB_FPU_STACK_CHECK_PUSH == DB_FPU_STACK_CHECK_EXIT
++		E_Exit("FPU stack overflow");
++#else
++		if (fpu.cw&1) { // Masked ?
++			fpu.sw &= 0x1; //Invalid Operation
++			fpu.sw &= 0x40; //Stack Fault
++			FPU_SET_C1(1); //Register is used.
++			//No need to set 0x80 as the exception is masked.
++			LOG(LOG_FPU,LOG_ERROR)("Masked stack overflow encountered!");
++		} else {
++			E_Exit("FPU stack overflow"); //Exit as this is bad
++		}
++#endif
++	}
++#endif
+ 	fpu.tags[TOP] = TAG_Valid;
+ }
+ 
+ static void FPU_FPOP(void){
+-	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) E_Exit("FPU stack underflow");
++#if DB_FPU_STACK_CHECK_POP > DB_FPU_STACK_CHECK_NONE
++	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) {
++#if DB_FPU_STACK_CHECK_POP == DB_FPU_STACK_CHECK_EXIT
++		E_Exit("FPU stack underflow");
++#else
++		if (fpu.cw&1) { // Masked ?
++			fpu.sw &= 0x1; //Invalid Operation
++			fpu.sw &= 0x40; //Stack Fault
++			FPU_SET_C1(0); //Register is free.
++			//No need to set 0x80 as the exception is masked.
++			LOG(LOG_FPU,LOG_ERROR)("Masked stack underflow encountered!");
++		} else {
++			LOG_MSG("Unmasked Stack underflow!");
++		}
++#endif
++	}
++#endif
+ 	fpu.tags[TOP] = TAG_Empty;
+ 	TOP = ((TOP+1)&7);
+ }
+diff --git a/src/gui/render.cpp b/src/gui/render.cpp
+index 7d01104..a3f6844 100644
+--- a/src/gui/render.cpp
++++ b/src/gui/render.cpp
+@@ -377,11 +377,11 @@ forcenormal:
+ 	}
+ 	switch (render.src.bpp) {
+ 	case 8:
+-		render.src.start = ( render.src.width * 1) / sizeof(Bitu);
+-		if (gfx_flags & GFX_CAN_8)
+-			gfx_flags |= GFX_LOVE_8;
+-		else
+-			gfx_flags |= GFX_LOVE_32;
++			render.src.start = ( render.src.width * 1) / sizeof(Bitu);
++			if (gfx_flags & GFX_CAN_8)
++				gfx_flags |= GFX_LOVE_8;
++			else
++				gfx_flags |= GFX_LOVE_32;
+ 			break;
+ 	case 15:
+ 			render.src.start = ( render.src.width * 2) / sizeof(Bitu);
+diff --git a/src/gui/render_templates.h b/src/gui/render_templates.h
+index 59c0887..e1c1ddb 100644
+--- a/src/gui/render_templates.h
++++ b/src/gui/render_templates.h
+@@ -382,9 +382,9 @@ static void conc3d(Cache,SBPP,DBPP) (const void * s) {
+ 	line0[0]=P;				\
+ 	line0[1]=P;				\
+ 	line0[2]=P;				\
+-	line1[0]=0;				\
+-	line1[1]=0;				\
+-	line1[2]=0;				\
++	line1[0]=P;				\
++	line1[1]=P;				\
++	line1[2]=P;				\
+ 	line2[0]=0;				\
+ 	line2[1]=0;				\
+ 	line2[2]=0;
+diff --git a/src/gui/render_templates_hq.h b/src/gui/render_templates_hq.h
+index 9f67615..521158e 100644
+--- a/src/gui/render_templates_hq.h
++++ b/src/gui/render_templates_hq.h
+@@ -41,17 +41,17 @@ static inline bool diffYUV(Bit32u yuv1, Bit32u yuv2)
+ 	Bit32u mask;
+ 
+ 	diff = ((yuv1 & Ymask) - (yuv2 & Ymask));
+-	mask = diff >> 31; // -1 if value < 0, 0 otherwise
++	mask = ((Bit32s)diff) >> 31; // ~1/-1 if value < 0, 0 otherwise
+ 	diff = (diff ^ mask) - mask; //-1: ~value + 1; 0: value
+ 	if (diff > trY) return true;
+ 
+ 	diff = ((yuv1 & Umask) - (yuv2 & Umask));
+-	mask = diff >> 31; // -1 if value < 0, 0 otherwise
++	mask = ((Bit32s)diff)>> 31; // ~1/-1 if value < 0, 0 otherwise
+ 	diff = (diff ^ mask) - mask; //-1: ~value + 1; 0: value
+ 	if (diff > trU) return true;
+ 
+ 	diff = ((yuv1 & Vmask) - (yuv2 & Vmask));
+-	mask = diff >> 31; // -1 if value < 0, 0 otherwise
++	mask = ((Bit32s)diff) >> 31; // ~1/-1 if value < 0, 0 otherwise
+ 	diff = (diff ^ mask) - mask; //-1: ~value + 1; 0: value
+ 	if (diff > trV) return true;
+ 
+diff --git a/src/gui/sdl_gui.cpp b/src/gui/sdl_gui.cpp
+index 3986d39..90ddb1b 100644
+--- a/src/gui/sdl_gui.cpp
++++ b/src/gui/sdl_gui.cpp
+@@ -38,7 +38,6 @@
+ #include <assert.h>
+ 
+ extern Bit8u int10_font_14[256 * 14];
+-extern Program * first_shell;
+ extern bool MSG_Write(const char *);
+ extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, bool paused);
+ 
+@@ -454,10 +453,9 @@ public:
+ 		if (arg == "OK") section->data = *(std::string*)content->getText();
+ 		if (arg == "OK" || arg == "Cancel") close();
+ 		else if (arg == "Append Shell Commands") {
+-			DOS_Shell *s = static_cast<DOS_Shell *>(first_shell);
+-			std::list<std::string>::reverse_iterator i = s->l_history.rbegin();
++			std::list<std::string>::reverse_iterator i = first_shell->l_history.rbegin();
+ 			std::string lines = *(std::string*)content->getText();
+-			while (i != s->l_history.rend()) {
++			while (i != first_shell->l_history.rend()) {
+ 				lines += "\n";
+ 				lines += *i;
+ 				++i;
+@@ -569,7 +567,7 @@ public:
+ 			Section_prop *section = static_cast<Section_prop *>(sec);
+ 			new SectionEditor(getScreen(), 50, 30, section);
+ 		} else if (arg == "About") {
+-			new GUI::MessageBox(getScreen(), 200, 150, 280, "About DOSBox", "\nDOSBox 0.74\nAn emulator for old DOS Games\n\nCopyright 2002-2018\nThe DOSBox Team");
++			new GUI::MessageBox(getScreen(), 200, 150, 280, "About DOSBox", "\nDOSBox 0.74\nAn emulator for old DOS Games\n\nCopyright 2002-2019\nThe DOSBox Team");
+ 		} else if (arg == "Introduction") {
+ 			new GUI::MessageBox(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO"));
+ 		} else if (arg == "Getting Started") {
+diff --git a/src/gui/sdlmain.cpp b/src/gui/sdlmain.cpp
+index 7d72fc3..5088f16 100755
+--- a/src/gui/sdlmain.cpp
++++ b/src/gui/sdlmain.cpp
+@@ -189,7 +189,8 @@ struct SDL_Block {
+ 		bool autoenable;
+ 		bool requestlock;
+ 		bool locked;
+-		Bitu sensitivity;
++		int xsensitivity;
++		int ysensitivity;
+ 	} mouse;
+ 	SDL_Rect updateRects[1024];
+ 	Bitu num_joysticks;
+@@ -283,7 +284,7 @@ static void GFX_SetIcon() {
+ 	/* Set Icon (must be done before any sdl_setvideomode call) */
+ 	/* But don't set it on OS X, as we use a nicer external icon there. */
+ 	/* Made into a separate call, so it can be called again when we restart the graphics output on win32 */
+-#if WORDS_BIGENDIAN
++#ifdef WORDS_BIGENDIAN
+ 	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0xff000000,0x00ff0000,0x0000ff00,0);
+ #else
+ 	SDL_Surface* logos= SDL_CreateRGBSurfaceFrom((void*)logo,32,32,32,128,0x000000ff,0x0000ff00,0x00ff0000,0);
+@@ -922,15 +923,18 @@ dosurface:
+ 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+ 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+ 
+-		if (sdl.opengl.bilinear) {
+-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+-		} else {
++		if (!sdl.opengl.bilinear || ( (sdl.clip.h % height) == 0 && (sdl.clip.w % width) == 0) ) {
+ 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+ 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
++		} else {
++			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
++			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+ 		}
+ 
+-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA, GL_UNSIGNED_BYTE, sdl.opengl.framebuf);
++		Bit8u* emptytex = new Bit8u[texsize * texsize * 4];
++		memset((void*) emptytex, 0, texsize * texsize * 4);
++		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texsize, texsize, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, (const GLvoid*)emptytex);
++		delete [] emptytex;
+ 
+ 		glClearColor (0.0, 0.0, 0.0, 1.0);
+ 		glShadeModel (GL_FLAT);
+@@ -1461,7 +1465,9 @@ static void GUI_StartUp(Section * sec) {
+ 	sdl.mouse.autoenable=section->Get_bool("autolock");
+ 	if (!sdl.mouse.autoenable) SDL_ShowCursor(SDL_DISABLE);
+ 	sdl.mouse.autolock=false;
+-	sdl.mouse.sensitivity=section->Get_int("sensitivity");
++	Prop_multival* p3 = section->Get_multival("sensitivity");
++	sdl.mouse.xsensitivity = p3->GetSection()->Get_int("xsens");
++	sdl.mouse.ysensitivity = p3->GetSection()->Get_int("ysens");
+ 	std::string output=section->Get_string("output");
+ 
+ 	/* Setup Mouse correctly if fullscreen */
+@@ -1667,10 +1673,10 @@ void Mouse_AutoLock(bool enable) {
+ 
+ static void HandleMouseMotion(SDL_MouseMotionEvent * motion) {
+ 	if (sdl.mouse.locked || !sdl.mouse.autoenable)
+-		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.sensitivity/100.0f,
+-						  (float)motion->yrel*sdl.mouse.sensitivity/100.0f,
+-						  (float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.sensitivity/100.0f,
+-						  (float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.sensitivity/100.0f,
++		Mouse_CursorMoved((float)motion->xrel*sdl.mouse.xsensitivity/100.0f,
++						  (float)motion->yrel*sdl.mouse.ysensitivity/100.0f,
++						  (float)(motion->x-sdl.clip.x)/(sdl.clip.w-1)*sdl.mouse.xsensitivity/100.0f,
++						  (float)(motion->y-sdl.clip.y)/(sdl.clip.h-1)*sdl.mouse.ysensitivity/100.0f,
+ 						  sdl.mouse.locked);
+ }
+ 
+@@ -1679,7 +1685,7 @@ static void HandleMouseButton(SDL_MouseButtonEvent * button) {
+ 	case SDL_PRESSED:
+ 		if (sdl.mouse.requestlock && !sdl.mouse.locked) {
+ 			GFX_CaptureMouse();
+-			// Dont pass klick to mouse handler
++			// Don't pass click to mouse handler
+ 			break;
+ 		}
+ 		if (!sdl.mouse.autoenable && sdl.mouse.autolock && button->button == SDL_BUTTON_MIDDLE) {
+@@ -1960,12 +1966,12 @@ void Config_Add_SDL() {
+ 
+ 	Pstring = sdl_sec->Add_string("fullresolution",Property::Changeable::Always,"0x0");
+ 	Pstring->Set_help("What resolution to use for fullscreen: original, desktop or a fixed size (e.g. 1024x768).\n"
+-	                  "  Using your monitor's native resolution with aspect=true might give the best results.\n"
+-			  "  If you end up with small window on a large screen, try an output different from surface.");
++	                  "Using your monitor's native resolution with aspect=true might give the best results.\n"
++			  "If you end up with small window on a large screen, try an output different from surface.");
+ 
+ 	Pstring = sdl_sec->Add_string("windowresolution",Property::Changeable::Always,"original");
+ 	Pstring->Set_help("Scale the window to this size IF the output device supports hardware scaling.\n"
+-	                  "  (output=surface does not!)");
++	                  "(output=surface does not!)");
+ 
+ 	const char* outputs[] = {
+ 		"surface",
+@@ -1981,10 +1987,10 @@ void Config_Add_SDL() {
+ 
+ 	Pstring = sdl_sec->Add_string("gl.shader",Property::Changeable::Always,"");
+ 	Pstring->Set_help("What set of GLSL shaders to use with an OpenGL output. Keep empty if this is not desired.\n"
+-	                  "  Note that in case it is used, the respective shader files must be found in the \"shaders\" subdirectory\n"
+-	                  "  relatively to where the default DOSBox configuration fiel is stored. For shader file naming convention,\n"
+-	                  "  suppose that you have a pair of shader files ready: mysample.vert and mysample.frag.\n"
+-	                  "  Then shader=mysample should be set.\n");
++	                  "Note that in case it is used, the respective shader files must be found in the \"shaders\" subdirectory\n"
++	                  "relatively to where the default DOSBox configuration fiel is stored. For shader file naming convention,\n"
++	                  "suppose that you have a pair of shader files ready: mysample.vert and mysample.frag.\n"
++	                  "Then shader=mysample should be set.\n");
+ 
+ 	const char* renderers[] = {
+ 		"auto",
+@@ -2001,9 +2007,13 @@ void Config_Add_SDL() {
+ 	Pbool = sdl_sec->Add_bool("autolock",Property::Changeable::Always,true);
+ 	Pbool->Set_help("Mouse will automatically lock, if you click on the screen. (Press CTRL-F10 to unlock)");
+ 
+-	Pint = sdl_sec->Add_int("sensitivity",Property::Changeable::Always,100);
+-	Pint->SetMinMax(1,1000);
+-	Pint->Set_help("Mouse sensitivity.");
++	Pmulti = sdl_sec->Add_multi("sensitivity",Property::Changeable::Always, ",");
++	Pmulti->Set_help("Mouse sensitivity. The optional second parameter specifies vertical sensitivity (e.g. 100,-50).");
++	Pmulti->SetValue("100");
++	Pint = Pmulti->GetSection()->Add_int("xsens",Property::Changeable::Always,100);
++	Pint->SetMinMax(-1000,1000);
++	Pint = Pmulti->GetSection()->Add_int("ysens",Property::Changeable::Always,100);
++	Pint->SetMinMax(-1000,1000);
+ 
+ 	Pbool = sdl_sec->Add_bool("waitonerror",Property::Changeable::Always, true);
+ 	Pbool->Set_help("Wait before closing the console if dosbox has an error.");
+@@ -2011,7 +2021,7 @@ void Config_Add_SDL() {
+ 	Pmulti = sdl_sec->Add_multi("priority", Property::Changeable::Always, ",");
+ 	Pmulti->SetValue("higher,normal");
+ 	Pmulti->Set_help("Priority levels for dosbox. Second entry behind the comma is for when dosbox is not focused/minimized.\n"
+-	                 "  pause is only valid for the second entry.");
++	                 "pause is only valid for the second entry.");
+ 
+ 	const char* actt[] = { "lowest", "lower", "normal", "higher", "highest", "pause", 0};
+ 	Pstring = Pmulti->GetSection()->Add_string("active",Property::Changeable::Always,"higher");
+@@ -2250,7 +2260,7 @@ int main(int argc, char* argv[]) {
+ #endif  //defined(WIN32) && !(C_DEBUG)
+ 		if (control->cmdline->FindExist("-version") ||
+ 		    control->cmdline->FindExist("--version") ) {
+-			printf("\nDOSBox version %s, copyright 2002-2018 DOSBox Team.\n\n",VERSION);
++			printf("\nDOSBox version %s, copyright 2002-2019 DOSBox Team.\n\n",VERSION);
+ 			printf("DOSBox is written by the DOSBox Team (See AUTHORS file))\n");
+ 			printf("DOSBox comes with ABSOLUTELY NO WARRANTY.  This is free software,\n");
+ 			printf("and you are welcome to redistribute it under certain conditions;\n");
+@@ -2278,7 +2288,7 @@ int main(int argc, char* argv[]) {
+ 
+ 	/* Display Welcometext in the console */
+ 	LOG_MSG("DOSBox version %s",VERSION);
+-	LOG_MSG("Copyright 2002-2018 DOSBox Team, published under GNU GPL.");
++	LOG_MSG("Copyright 2002-2019 DOSBox Team, published under GNU GPL.");
+ 	LOG_MSG("---");
+ 
+ 	/* Init SDL */
+@@ -2297,7 +2307,7 @@ int main(int argc, char* argv[]) {
+ 	sdl.num_joysticks=SDL_NumJoysticks();
+ 
+ 	/* Parse configuration files */
+-	std::string config_file,config_path;
++	std::string config_file, config_path, config_combined;
+ 	Cross::GetPlatformConfigDir(config_path);
+ 
+ 	//First parse -userconf
+@@ -2305,27 +2315,29 @@ int main(int argc, char* argv[]) {
+ 		config_file.clear();
+ 		Cross::GetPlatformConfigDir(config_path);
+ 		Cross::GetPlatformConfigName(config_file);
+-		config_path += config_file;
+-		control->ParseConfigFile(config_path.c_str());
++		config_combined = config_path + config_file;
++		control->ParseConfigFile(config_combined.c_str());
+ 		if(!control->configfiles.size()) {
+ 			//Try to create the userlevel configfile.
+ 			config_file.clear();
+ 			Cross::CreatePlatformConfigDir(config_path);
+ 			Cross::GetPlatformConfigName(config_file);
+-			config_path += config_file;
+-			if(control->PrintConfig(config_path.c_str())) {
+-				LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_path.c_str());
++			config_combined = config_path + config_file;
++			if(control->PrintConfig(config_combined.c_str())) {
++				LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_combined.c_str());
+ 				//Load them as well. Makes relative paths much easier
+-				control->ParseConfigFile(config_path.c_str());
++				control->ParseConfigFile(config_combined.c_str());
+ 			}
+ 		}
+ 	}
+ 
+ 	//Second parse -conf switches
+ 	while(control->cmdline->FindString("-conf",config_file,true)) {
+-		if(!control->ParseConfigFile(config_file.c_str())) {
++		if (!control->ParseConfigFile(config_file.c_str())) {
+ 			// try to load it from the user directory
+-			control->ParseConfigFile((config_path + config_file).c_str());
++			if (!control->ParseConfigFile((config_path + config_file).c_str())) {
++				LOG_MSG("CONFIG: Can't open specified config file: %s",config_file.c_str());
++			}
+ 		}
+ 	}
+ 	// if none found => parse localdir conf
+@@ -2343,11 +2355,11 @@ int main(int argc, char* argv[]) {
+ 		config_file.clear();
+ 		Cross::CreatePlatformConfigDir(config_path);
+ 		Cross::GetPlatformConfigName(config_file);
+-		config_path += config_file;
+-		if(control->PrintConfig(config_path.c_str())) {
+-			LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_path.c_str());
++		config_combined = config_path + config_file;
++		if(control->PrintConfig(config_combined.c_str())) {
++			LOG_MSG("CONFIG: Generating default configuration.\nWriting it to %s",config_combined.c_str());
+ 			//Load them as well. Makes relative paths much easier
+-			control->ParseConfigFile(config_path.c_str());
++			control->ParseConfigFile(config_combined.c_str());
+ 		} else {
+ 			LOG_MSG("CONFIG: Using default settings. Create a configfile to change them");
+ 		}
+diff --git a/src/hardware/dma.cpp b/src/hardware/dma.cpp
+index f310c58..fae61f8 100644
+--- a/src/hardware/dma.cpp
++++ b/src/hardware/dma.cpp
+@@ -122,6 +122,7 @@ static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
+ 			case 0x81:GetDMAChannel(2)->SetPage((Bit8u)val);break;
+ 			case 0x82:GetDMAChannel(3)->SetPage((Bit8u)val);break;
+ 			case 0x83:GetDMAChannel(1)->SetPage((Bit8u)val);break;
++			case 0x87:GetDMAChannel(0)->SetPage((Bit8u)val);break;
+ 			case 0x89:GetDMAChannel(6)->SetPage((Bit8u)val);break;
+ 			case 0x8a:GetDMAChannel(7)->SetPage((Bit8u)val);break;
+ 			case 0x8b:GetDMAChannel(5)->SetPage((Bit8u)val);break;
+@@ -141,6 +142,7 @@ static Bitu DMA_Read_Port(Bitu port,Bitu iolen) {
+ 		case 0x81:return GetDMAChannel(2)->pagenum;
+ 		case 0x82:return GetDMAChannel(3)->pagenum;
+ 		case 0x83:return GetDMAChannel(1)->pagenum;
++		case 0x87:return GetDMAChannel(0)->pagenum;
+ 		case 0x89:return GetDMAChannel(6)->pagenum;
+ 		case 0x8a:return GetDMAChannel(7)->pagenum;
+ 		case 0x8b:return GetDMAChannel(5)->pagenum;
+@@ -365,9 +367,11 @@ public:
+ 		/* install handlers for ports 0x81-0x83 (on the first DMA controller) */
+ 		DmaControllers[0]->DMA_WriteHandler[0x10].Install(0x81,DMA_Write_Port,IO_MB,3);
+ 		DmaControllers[0]->DMA_ReadHandler[0x10].Install(0x81,DMA_Read_Port,IO_MB,3);
++		DmaControllers[0]->DMA_WriteHandler[0x11].Install(0x87,DMA_Write_Port,IO_MB,1);
++		DmaControllers[0]->DMA_ReadHandler[0x11].Install(0x87,DMA_Read_Port,IO_MB,1);
+ 
+ 		if (IS_EGAVGA_ARCH) {
+-			/* install handlers for ports 0x81-0x83 (on the second DMA controller) */
++			/* install handlers for ports 0x89-0x8B (on the second DMA controller) */
+ 			DmaControllers[1]->DMA_WriteHandler[0x10].Install(0x89,DMA_Write_Port,IO_MB,3);
+ 			DmaControllers[1]->DMA_ReadHandler[0x10].Install(0x89,DMA_Read_Port,IO_MB,3);
+ 		}
+diff --git a/src/hardware/hardware.cpp b/src/hardware/hardware.cpp
+index d66143f..80a3ef3 100644
+--- a/src/hardware/hardware.cpp
++++ b/src/hardware/hardware.cpp
+@@ -490,7 +490,7 @@ skip_shot:
+ 			if (!capture.video.buf)
+ 				goto skip_video;
+ 			capture.video.index = (Bit8u*)malloc( 16*4096 );
+-			if (!capture.video.buf)
++			if (!capture.video.index)
+ 				goto skip_video;
+ 			capture.video.indexsize = 16*4096;
+ 			capture.video.indexused = 8;
+diff --git a/src/hardware/iohandler.cpp b/src/hardware/iohandler.cpp
+index 816e3c4..8991e0a 100644
+--- a/src/hardware/iohandler.cpp
++++ b/src/hardware/iohandler.cpp
+@@ -208,14 +208,14 @@ inline void IO_USEC_write_delay_old() {
+ 
+ inline void IO_USEC_read_delay() {
+ 	Bits delaycyc = CPU_CycleMax/IODELAY_READ_MICROSk;
+-	if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc = 0; //Else port acces will set cycles to 0. which might trigger problem with games which read 16 bit values
++	if(GCC_UNLIKELY(delaycyc > CPU_Cycles)) delaycyc = CPU_Cycles;
+ 	CPU_Cycles -= delaycyc;
+ 	CPU_IODelayRemoved += delaycyc;
+ }
+ 
+ inline void IO_USEC_write_delay() {
+ 	Bits delaycyc = CPU_CycleMax/IODELAY_WRITE_MICROSk;
+-	if(GCC_UNLIKELY(CPU_Cycles < 3*delaycyc)) delaycyc=0;
++	if(GCC_UNLIKELY(delaycyc > CPU_Cycles)) delaycyc = CPU_Cycles;
+ 	CPU_Cycles -= delaycyc;
+ 	CPU_IODelayRemoved += delaycyc;
+ }
+diff --git a/src/hardware/ipx.cpp b/src/hardware/ipx.cpp
+index 58317cd..d937955 100644
+--- a/src/hardware/ipx.cpp
++++ b/src/hardware/ipx.cpp
+@@ -854,7 +854,7 @@ public:
+ 		// Help on connect command
+ 		if(strcasecmp("connect", helpStr) == 0) {
+ 			WriteOut("IPXNET CONNECT opens a connection to an IPX tunneling server running on another\n");
+-			WriteOut("DosBox session.  The \"address\" parameter specifies the IP address or host name\n");
++			WriteOut("DOSBox session.  The \"address\" parameter specifies the IP address or host name\n");
+ 			WriteOut("of the server computer.  One can also specify the UDP port to use.  By default\n");
+ 			WriteOut("IPXNET uses port 213, the assigned IANA port for IPX tunneling, for its\nconnection.\n\n");
+ 			WriteOut("The syntax for IPXNET CONNECT is:\n\n");
+@@ -870,9 +870,9 @@ public:
+ 		}
+ 		// Help on the startserver command
+ 		if(strcasecmp("startserver", helpStr) == 0) {
+-			WriteOut("IPXNET STARTSERVER starts and IPX tunneling server on this DosBox session.  By\n");
++			WriteOut("IPXNET STARTSERVER starts and IPX tunneling server on this DOSBox session.  By\n");
+ 			WriteOut("default, the server will accept connections on UDP port 213, though this can be\n");
+-			WriteOut("changed.  Once the server is started, DosBox will automatically start a client\n");
++			WriteOut("changed.  Once the server is started, DOSBox will automatically start a client\n");
+ 			WriteOut("connection to the IPX tunneling server.\n\n");
+ 			WriteOut("The syntax for IPXNET STARTSERVER is:\n\n");
+ 			WriteOut("IPXNET STARTSERVER <port>\n\n");
+@@ -880,9 +880,9 @@ public:
+ 		}
+ 		// Help on the stop server command
+ 		if(strcasecmp("stopserver", helpStr) == 0) {
+-			WriteOut("IPXNET STOPSERVER stops the IPX tunneling server running on this DosBox\nsession.");
++			WriteOut("IPXNET STOPSERVER stops the IPX tunneling server running on this DOSBox\nsession.");
+ 			WriteOut("  Care should be taken to ensure that all other connections have\nterminated ");
+-			WriteOut("as well sinnce stoping the server may cause lockups on other\nmachines still using ");
++			WriteOut("as well since stopping the server may cause lockups on other\nmachines still using ");
+ 			WriteOut("the IPX tunneling server.\n\n");
+ 			WriteOut("The syntax for IPXNET STOPSERVER is:\n\n");
+ 			WriteOut("IPXNET STOPSERVER\n\n");
+@@ -899,7 +899,7 @@ public:
+ 		}
+ 		// Help on the status command
+ 		if(strcasecmp("status", helpStr) == 0) {
+-			WriteOut("IPXNET STATUS reports the current state of this DosBox's sessions IPX tunneling\n");
++			WriteOut("IPXNET STATUS reports the current state of this DOSBox's sessions IPX tunneling\n");
+ 			WriteOut("network.  For a list of the computers connected to the network use the IPXNET \n");
+ 			WriteOut("PING command.\n\n");
+ 			WriteOut("The syntax for IPXNET STATUS is:\n\n");
+@@ -910,7 +910,7 @@ public:
+ 
+ 	void Run(void)
+ 	{
+-		WriteOut("IPX Tunneling utility for DosBox\n\n");
++		WriteOut("IPX Tunneling utility for DOSBox\n\n");
+ 		if(!cmd->GetCount()) {
+ 			WriteOut("The syntax of this command is:\n\n");
+ 			WriteOut("IPXNET [ CONNECT | DISCONNECT | STARTSERVER | STOPSERVER | PING | HELP |\n         STATUS ]\n\n");
+@@ -960,7 +960,7 @@ public:
+ 			}
+ 			if(strcasecmp("stopserver", temp_line.c_str()) == 0) {
+ 				if(!isIpxServer) {
+-					WriteOut("IPX Tunneling Server not running in this DosBox session.\n");
++					WriteOut("IPX Tunneling Server not running in this DOSBox session.\n");
+ 				} else {
+ 					isIpxServer = false;
+ 					DisconnectFromServer(false);
+diff --git a/src/hardware/keyboard.cpp b/src/hardware/keyboard.cpp
+index 0a0a5c1..55dcdaf 100644
+--- a/src/hardware/keyboard.cpp
++++ b/src/hardware/keyboard.cpp
+@@ -115,7 +115,7 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
+ 			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
+ 			break;
+ 		case 0xee:	/* Echo */
+-			KEYBOARD_AddBuffer(0xfa);	/* Acknowledge */
++			KEYBOARD_AddBuffer(0xee);	/* Echo */
+ 			break;
+ 		case 0xf2:	/* Identify keyboard */
+ 			/* AT's just send acknowledge */
+@@ -170,9 +170,11 @@ static void write_p60(Bitu port,Bitu val,Bitu iolen) {
+ 	}
+ }
+ 
++extern bool TIMER_GetOutput2(void);
+ static Bit8u port_61_data = 0;
+ static Bitu read_p61(Bitu port,Bitu iolen) {
+-	port_61_data^=0x20;
++	if (TIMER_GetOutput2()) port_61_data|=0x20;
++	else					port_61_data&=~0x20;
+ 	port_61_data^=0x10;
+ 	return port_61_data;
+ }
+@@ -186,6 +188,12 @@ static void write_p61(Bitu port,Bitu val,Bitu iolen) {
+ 	port_61_data = val;
+ }
+ 
++static Bitu read_p62(Bitu port,Bitu iolen) {
++	Bit8u ret=~0x20;
++	if (TIMER_GetOutput2()) ret|=0x20;
++	return ret;
++}
++
+ static void write_p64(Bitu port,Bitu val,Bitu iolen) {
+ 	switch (val) {
+ 	case 0xae:		/* Activate keyboard */
+@@ -377,6 +385,7 @@ void KEYBOARD_Init(Section* sec) {
+ 	IO_RegisterReadHandler(0x60,read_p60,IO_MB);
+ 	IO_RegisterWriteHandler(0x61,write_p61,IO_MB);
+ 	IO_RegisterReadHandler(0x61,read_p61,IO_MB);
++	if (machine==MCH_CGA || machine==MCH_HERC) IO_RegisterReadHandler(0x62,read_p62,IO_MB);
+ 	IO_RegisterWriteHandler(0x64,write_p64,IO_MB);
+ 	IO_RegisterReadHandler(0x64,read_p64,IO_MB);
+ 	TIMER_AddTickHandler(&KEYBOARD_TickHandler);
+diff --git a/src/hardware/mame/emu.h b/src/hardware/mame/emu.h
+index 16d7ec1..85a9dd8 100644
+--- a/src/hardware/mame/emu.h
++++ b/src/hardware/mame/emu.h
+@@ -12,8 +12,11 @@
+ #include <float.h>
+ #include <stdlib.h>
+ #include <memory.h>
++
++#if C_DEBUG
+ #include <stdio.h>
+ #include <stdarg.h>
++#endif
+ 
+ #ifndef M_PI
+ #define M_PI           3.14159265358979323846
+diff --git a/src/hardware/mpu401.cpp b/src/hardware/mpu401.cpp
+index 4f9e4f3..304cc19 100644
+--- a/src/hardware/mpu401.cpp
++++ b/src/hardware/mpu401.cpp
+@@ -38,7 +38,7 @@ static void MPU401_EOIHandlerDispatch(void);
+ #define MPU401_REVISION	0x01
+ #define MPU401_QUEUE 32
+ #define MPU401_TIMECONSTANT (60000000/1000.0f)
+-#define MPU401_RESETBUSY 27.0f
++#define MPU401_RESETBUSY 14.0f
+ 
+ enum MpuMode { M_UART,M_INTELLIGENT };
+ enum MpuDataType {T_OVERFLOW,T_MARK,T_MIDI_SYS,T_MIDI_NORM,T_COMMAND};
+@@ -124,7 +124,7 @@ static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
+ static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
+ 	if (mpu.mode==M_UART && val!=0xff) return;
+ 	if (mpu.state.reset) {
+-		if (mpu.state.cmd_pending || (val!=0x3f && val!=0xff)) {
++		if (mpu.state.cmd_pending || val!=0xff) {
+ 			mpu.state.cmd_pending=val+1;
+ 			return;
+ 		}
+@@ -605,7 +605,7 @@ static void MPU401_Reset(void) {
+ 	mpu.state.cmask=0xff;
+ 	mpu.state.amask=mpu.state.tmask=0;
+ 	mpu.state.midi_mask=0xffff;
+-	mpu.state.data_onoff=0;
++	mpu.state.data_onoff=-1;
+ 	mpu.state.command_byte=0;
+ 	mpu.state.block_ack=false;
+ 	mpu.clock.tempo=mpu.clock.old_tempo=100;
+diff --git a/src/hardware/opl.cpp b/src/hardware/opl.cpp
+index 54155c5..b21bb5c 100644
+--- a/src/hardware/opl.cpp
++++ b/src/hardware/opl.cpp
+@@ -27,6 +27,7 @@
+ 
+ #include <math.h>
+ #include <stdlib.h> // rand()
++#include <string.h> // memset()
+ #include "dosbox.h"
+ #include "opl.h"
+ 
+diff --git a/src/hardware/sblaster.cpp b/src/hardware/sblaster.cpp
+index 9058df0..0c0a1c3 100644
+--- a/src/hardware/sblaster.cpp
++++ b/src/hardware/sblaster.cpp
+@@ -298,6 +298,8 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
+ //			DSP_ChangeMode(MODE_DMA_MASKED);
+ 			LOG(LOG_SB,LOG_NORMAL)("DMA masked,stopping output, left %d",chan->currcnt);
+ 		}
++	} else if (event==DMA_TRANSFEREND) {
++		if (sb.mode==MODE_DMA) sb.mode=MODE_DMA_MASKED;
+ 	} else if (event==DMA_UNMASKED) {
+ 		if (sb.mode==MODE_DMA_MASKED && sb.dma.mode!=DSP_DMA_NONE) {
+ 			DSP_ChangeMode(MODE_DMA);
+@@ -537,6 +539,8 @@ static void GenerateDMASound(Bitu size) {
+ 				sb.dma.mode = DSP_DMA_NONE;
+ 			}
+ 			else {
++				//Copied this value as the count for the final single cycle
++				sb.dma.total = 0;
+ 				LOG(LOG_SB, LOG_NORMAL)("Switch to Single cycle transfer begun");
+ 			}
+ 		} else {
+@@ -996,6 +1000,8 @@ static void DSP_DoCommand(void) {
+ 		DSP_SB2_ABOVE;
+ 		/* Set mode to single transfer so it ends with current block */
+ 		sb.dma.autoinit=false;		//Should stop itself
++		sb.dma.total = 0;			//This will cancel the switch to single cycle mode
++		//Should really have some sb.dma.autoexit variable since we don't support continue autoinit dsp commands
+ 		break;
+ 	case 0xe0:	/* DSP Identification - SB2.0+ */
+ 		DSP_FlushData();
+diff --git a/src/hardware/serialport/libserial.cpp b/src/hardware/serialport/libserial.cpp
+index 0786031..fdafb9c 100644
+--- a/src/hardware/serialport/libserial.cpp
++++ b/src/hardware/serialport/libserial.cpp
+@@ -41,7 +41,7 @@ bool SERIAL_open(const char* portname, COMPORT* port) {
+ 
+ 	// open the port in NT object space (recommended by Microsoft)
+ 	// allows the user to open COM10+ and custom port names.
+-	int len = strlen(portname);
++	size_t len = strlen(portname);
+ 	if(len > 240) {
+ 		SetLastError(ERROR_BUFFER_OVERFLOW);
+ 		free(cp);
+@@ -125,7 +125,7 @@ void SERIAL_close(COMPORT port) {
+ 	free(port);
+ }
+ 
+-void SERIAL_getErrorString(char* buffer, int length) {
++void SERIAL_getErrorString(char* buffer, size_t length) {
+ 	int error = GetLastError();
+ 	if(length < 50) return;
+ 	memset(buffer,0,length);
+@@ -141,7 +141,7 @@ void SERIAL_getErrorString(char* buffer, int length) {
+ 	const char* err5text = "The specified port is already in use.\n";
+ 	const char* err2text = "The specified port does not exist.\n";
+ 
+-	int sysmsg_offset = 0;
++	size_t sysmsg_offset = 0;
+ 
+ 	if(error == 5) {
+ 		sysmsg_offset = strlen(err5text);
+@@ -287,7 +287,7 @@ bool SERIAL_open(const char* portname, COMPORT* port) {
+ 
+ 	cp->breakstatus=false;
+ 
+-	int len = strlen(portname);
++	size_t len = strlen(portname);
+ 	if(len > 240) {
+ 		///////////////////////////////////SetLastError(ERROR_BUFFER_OVERFLOW);
+ 		return false;
+@@ -299,7 +299,7 @@ bool SERIAL_open(const char* portname, COMPORT* port) {
+ 	if (cp->porthandle < 0) goto cleanup_error;
+ 
+ 	result = tcgetattr(cp->porthandle,&cp->backup);
+-	if (result==-1) goto cleanup_error;
++	if (result == -1) goto cleanup_error;
+ 
+ 	// get port settings
+ 	termios termInfo;
+@@ -334,7 +334,7 @@ void SERIAL_close(COMPORT port) {
+ 	free(port);
+ }
+ 
+-void SERIAL_getErrorString(char* buffer, int length) {
++void SERIAL_getErrorString(char* buffer, size_t length) {
+ 	int error = errno;
+ 	if(length < 50) return;
+ 	memset(buffer,0,length);
+@@ -344,7 +344,7 @@ void SERIAL_getErrorString(char* buffer, int length) {
+ 	const char* err5text = "The specified port is already in use.\n";
+ 	const char* err2text = "The specified port does not exist.\n";
+ 	
+-	int sysmsg_offset = 0;
++	size_t sysmsg_offset = 0;
+ 
+ 	if(error == EBUSY) {
+ 		sysmsg_offset = strlen(err5text);
+@@ -548,7 +548,7 @@ cleanup_error:
+ 	return false;
+ }
+ 
+-void SERIAL_getErrorString(char* buffer, int length) {
++void SERIAL_getErrorString(char* buffer, size_t length) {
+ 	sprintf(buffer, "TODO: error handling is not fun");
+ }
+ void SERIAL_close(COMPORT port) {
+diff --git a/src/hardware/serialport/libserial.h b/src/hardware/serialport/libserial.h
+index 417ff83..c864a9a 100644
+--- a/src/hardware/serialport/libserial.h
++++ b/src/hardware/serialport/libserial.h
+@@ -16,12 +16,13 @@
+  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
++#include <string.h>
+ 
+ typedef struct _COMPORT *COMPORT;
+ 
+ bool SERIAL_open(const char* portname, COMPORT* port);
+ void SERIAL_close(COMPORT port);
+-void SERIAL_getErrorString(char* buffer, int length);
++void SERIAL_getErrorString(char* buffer, size_t length);
+ 
+ #define SERIAL_1STOP 1
+ #define SERIAL_2STOP 2
+diff --git a/src/hardware/timer.cpp b/src/hardware/timer.cpp
+index 0173f99..37dde93 100644
+--- a/src/hardware/timer.cpp
++++ b/src/hardware/timer.cpp
+@@ -402,6 +402,10 @@ void TIMER_SetGate2(bool in) {
+ 	gate2 = in; //Set it here so the counter_latch above works
+ }
+ 
++bool TIMER_GetOutput2(void) {
++	return counter_output(2);
++}
++
+ class TIMER:public Module_base{
+ private:
+ 	IO_ReadHandleObject ReadHandler[4];
+diff --git a/src/ints/bios.cpp b/src/ints/bios.cpp
+index 9364aec..6571514 100644
+--- a/src/ints/bios.cpp
++++ b/src/ints/bios.cpp
+@@ -905,6 +905,12 @@ static Bitu INT15_Handler(void) {
+ 			reg_bx=0x00aa;	// mouse
+ 			// fall through
+ 		case 0x05:		// initialize
++			if ((reg_al==0x05) && (reg_bh!=0x03)) {
++				// non-standard data packet sizes not supported
++				CALLBACK_SCF(true);
++				reg_ah=2;
++				break;
++			}
+ 			Mouse_SetPS2State(false);
+ 			CALLBACK_SCF(false);
+ 			reg_ah=0;
+@@ -1283,6 +1289,7 @@ public:
+ 		// Gameport
+ 		config |= 0x1000;
+ 		mem_writew(BIOS_CONFIGURATION,config);
++		if (IS_EGAVGA_ARCH) config &= ~0x30; //EGA/VGA startup display mode differs in CMOS
+ 		CMOS_SetRegister(0x14,(Bit8u)(config&0xff)); //Should be updated on changes
+ 		/* Setup extended memory size */
+ 		IO_Write(0x70,0x30);
+@@ -1337,6 +1344,7 @@ void BIOS_SetComPorts(Bit16u baseaddr[]) {
+ 	equipmentword &= (~0x0E00);
+ 	equipmentword |= (portcount << 9);
+ 	mem_writew(BIOS_CONFIGURATION,equipmentword);
++	if (IS_EGAVGA_ARCH) equipmentword &= ~0x30; //EGA/VGA startup display mode differs in CMOS
+ 	CMOS_SetRegister(0x14,(Bit8u)(equipmentword&0xff)); //Should be updated on changes
+ }
+ 
+diff --git a/src/ints/bios_disk.cpp b/src/ints/bios_disk.cpp
+index d2afcaa..6403261 100644
+--- a/src/ints/bios_disk.cpp
++++ b/src/ints/bios_disk.cpp
+@@ -27,8 +27,6 @@
+ #include "../dos/drives.h"
+ #include "mapper.h"
+ 
+-#define MAX_DISK_IMAGES 4
+-
+ diskGeo DiskGeometryList[] = {
+ 	{ 160,  8, 1, 40, 0},
+ 	{ 180,  9, 1, 40, 0},
+diff --git a/src/ints/int10_char.cpp b/src/ints/int10_char.cpp
+index d8c5aaa..4acf8cf 100644
+--- a/src/ints/int10_char.cpp
++++ b/src/ints/int10_char.cpp
+@@ -625,6 +625,11 @@ void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr)
+ 			cur_row++;
+ 		}
+ 	}
++
++	if (CurMode->type==M_EGA) {
++		// Reset write ops for EGA graphics modes
++		IO_Write(0x3ce,0x3);IO_Write(0x3cf,0x0);
++	}
+ }
+ 
+ static void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr,Bit8u page) {
+diff --git a/src/ints/int10_memory.cpp b/src/ints/int10_memory.cpp
+index 1d1e2cd..8568b00 100644
+--- a/src/ints/int10_memory.cpp
++++ b/src/ints/int10_memory.cpp
+@@ -133,12 +133,10 @@ void INT10_SetupRomMemory(void) {
+ 		// set up the start of the ROM
+ 		phys_writew(rom_base+0,0xaa55);
+ 		phys_writeb(rom_base+2,0x40);		// Size of ROM: 64 512-blocks = 32KB
+-		if (IS_VGA_ARCH) {
+-			phys_writeb(rom_base+0x1e,0x49);	// IBM string
+-			phys_writeb(rom_base+0x1f,0x42);
+-			phys_writeb(rom_base+0x20,0x4d);
+-			phys_writeb(rom_base+0x21,0x00);
+-		}
++		phys_writeb(rom_base+0x1e,0x49);	// IBM string
++		phys_writeb(rom_base+0x1f,0x42);
++		phys_writeb(rom_base+0x20,0x4d);
++		phys_writeb(rom_base+0x21,0x20);
+ 		int10.rom.used=0x100;
+ 	}
+ 
+diff --git a/src/ints/mouse.cpp b/src/ints/mouse.cpp
+index 2d0d5d7..da92588 100644
+--- a/src/ints/mouse.cpp
++++ b/src/ints/mouse.cpp
+@@ -36,8 +36,8 @@
+ static Bitu call_int33,call_int74,int74_ret_callback,call_mouse_bd;
+ static Bit16u ps2cbseg,ps2cbofs;
+ static bool useps2callback,ps2callbackinit;
+-static Bitu call_ps2;
+-static RealPt ps2_callback;
++static Bitu call_ps2,call_uir;
++static RealPt ps2_callback,uir_callback;
+ static Bit16s oldmouseX, oldmouseY;
+ // forward
+ void WriteMouseIntVector(void);
+@@ -525,18 +525,21 @@ void Mouse_ButtonPressed(Bit8u button) {
+ 	switch (button) {
+ #if (MOUSE_BUTTONS >= 1)
+ 	case 0:
++		if (mouse.buttons&1) return;
+ 		mouse.buttons|=1;
+ 		Mouse_AddEvent(MOUSE_LEFT_PRESSED);
+ 		break;
+ #endif
+ #if (MOUSE_BUTTONS >= 2)
+ 	case 1:
++		if (mouse.buttons&2) return;
+ 		mouse.buttons|=2;
+ 		Mouse_AddEvent(MOUSE_RIGHT_PRESSED);
+ 		break;
+ #endif
+ #if (MOUSE_BUTTONS >= 3)
+ 	case 2:
++		if (mouse.buttons&4) return;
+ 		mouse.buttons|=4;
+ 		Mouse_AddEvent(MOUSE_MIDDLE_PRESSED);
+ 		break;
+@@ -553,18 +556,21 @@ void Mouse_ButtonReleased(Bit8u button) {
+ 	switch (button) {
+ #if (MOUSE_BUTTONS >= 1)
+ 	case 0:
++		if (!(mouse.buttons&1)) return;
+ 		mouse.buttons&=~1;
+ 		Mouse_AddEvent(MOUSE_LEFT_RELEASED);
+ 		break;
+ #endif
+ #if (MOUSE_BUTTONS >= 2)
+ 	case 1:
++		if (!(mouse.buttons&2)) return;
+ 		mouse.buttons&=~2;
+ 		Mouse_AddEvent(MOUSE_RIGHT_RELEASED);
+ 		break;
+ #endif
+ #if (MOUSE_BUTTONS >= 3)
+ 	case 2:
++		if (!(mouse.buttons&4)) return;
+ 		mouse.buttons&=~4;
+ 		Mouse_AddEvent(MOUSE_MIDDLE_RELEASED);
+ 		break;
+@@ -698,6 +704,17 @@ static void Mouse_Reset(void) {
+ 	mouse.mickey_x = 0;
+ 	mouse.mickey_y = 0;
+ 
++	mouse.buttons = 0;
++
++	for (Bit16u but=0; but<MOUSE_BUTTONS; but++) {
++		mouse.times_pressed[but] = 0;
++		mouse.times_released[but] = 0;
++		mouse.last_pressed_x[but] = 0;
++		mouse.last_pressed_y[but] = 0;
++		mouse.last_released_x[but] = 0;
++		mouse.last_released_y[but] = 0;
++	}
++
+ 	// Dont set max coordinates here. it is done by SetResolution!
+ 	mouse.x = static_cast<float>((mouse.max_x + 1)/ 2);
+ 	mouse.y = static_cast<float>((mouse.max_y + 1)/ 2);
+@@ -1030,7 +1047,7 @@ static Bitu MOUSE_BD_Handler(void) {
+ }
+ 
+ static Bitu INT74_Handler(void) {
+-	if (mouse.events>0) {
++	if (mouse.events>0 && !mouse.in_UIR) {
+ 		mouse.events--;
+ 		/* Check for an active Interrupt Handler that will get called */
+ 		if (mouse.sub_mask & mouse.event_queue[mouse.events].type) {
+@@ -1041,10 +1058,11 @@ static Bitu INT74_Handler(void) {
+ 			reg_si=static_cast<Bit16s>(mouse.mickey_x);
+ 			reg_di=static_cast<Bit16s>(mouse.mickey_y);
+ 			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
+-			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
+-			SegSet16(cs, mouse.sub_seg);
+-			reg_ip = mouse.sub_ofs;
+-			if(mouse.in_UIR) LOG(LOG_MOUSE,LOG_ERROR)("Already in UIR!");
++			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback))+7);
++			CPU_Push16(RealSeg(uir_callback));
++			CPU_Push16(RealOff(uir_callback));
++			CPU_Push16(mouse.sub_seg);
++			CPU_Push16(mouse.sub_ofs);
+ 			mouse.in_UIR = true;
+ 			//LOG(LOG_MOUSE,LOG_ERROR)("INT 74 %X",mouse.event_queue[mouse.events].type );
+ 		} else if (useps2callback) {
+@@ -1064,8 +1082,7 @@ static Bitu INT74_Handler(void) {
+ 	return CBRET_NONE;
+ }
+ 
+-Bitu MOUSE_UserInt_CB_Handler(void) {
+-	mouse.in_UIR = false;
++Bitu INT74_Ret_Handler(void) {
+ 	if (mouse.events) {
+ 		if (!mouse.timer_in_progress) {
+ 			mouse.timer_in_progress = true;
+@@ -1075,6 +1092,11 @@ Bitu MOUSE_UserInt_CB_Handler(void) {
+ 	return CBRET_NONE;
+ }
+ 
++Bitu UIR_Handler(void) {
++	mouse.in_UIR = false;
++	return CBRET_NONE;
++}
++
+ void MOUSE_Init(Section* /*sec*/) {
+ 	// Callback for mouse interrupt 0x33
+ 	call_int33=CALLBACK_Allocate();
+@@ -1100,22 +1122,30 @@ void MOUSE_Init(Section* /*sec*/) {
+ 	call_int74=CALLBACK_Allocate();
+ 	CALLBACK_Setup(call_int74,&INT74_Handler,CB_IRQ12,"int 74");
+ 	// pseudocode for CB_IRQ12:
++	//	sti
+ 	//	push ds
+ 	//	push es
+ 	//	pushad
+ 	//	sti
+ 	//	callback INT74_Handler
+-	//		doesn't return here, but rather to CB_IRQ12_RET
+-	//		(ps2 callback/user callback inbetween if requested)
++	//		ps2 or user callback if requested
++	//		otherwise jumps to CB_IRQ12_RET
++	//	push ax
++	//	mov al, 0x20
++	//	out 0xa0, al
++	//	out 0x20, al
++	//	pop	ax
++	//	cld
++	//	retf
+ 
+ 	int74_ret_callback=CALLBACK_Allocate();
+-	CALLBACK_Setup(int74_ret_callback,&MOUSE_UserInt_CB_Handler,CB_IRQ12_RET,"int 74 ret");
++	CALLBACK_Setup(int74_ret_callback,&INT74_Ret_Handler,CB_IRQ12_RET,"int 74 ret");
+ 	// pseudocode for CB_IRQ12_RET:
+-	//	callback MOUSE_UserInt_CB_Handler
+ 	//	cli
+ 	//	mov al, 0x20
+ 	//	out 0xa0, al
+ 	//	out 0x20, al
++	//	callback INT74_Ret_Handler
+ 	//	popad
+ 	//	pop es
+ 	//	pop ds
+@@ -1126,10 +1156,15 @@ void MOUSE_Init(Section* /*sec*/) {
+ 
+ 	// Callback for ps2 user callback handling
+ 	useps2callback = false; ps2callbackinit = false;
+- 	call_ps2=CALLBACK_Allocate();
++	call_ps2=CALLBACK_Allocate();
+ 	CALLBACK_Setup(call_ps2,&PS2_Handler,CB_RETF,"ps2 bios callback");
+ 	ps2_callback=CALLBACK_RealPointer(call_ps2);
+ 
++	// Callback for mouse user routine return
++	call_uir=CALLBACK_Allocate();
++	CALLBACK_Setup(call_uir,&UIR_Handler,CB_RETF_CLI,"mouse uir ret");
++	uir_callback=CALLBACK_RealPointer(call_uir);
++
+ 	memset(&mouse,0,sizeof(mouse));
+ 	mouse.hidden = 1; //Hide mouse on startup
+ 	mouse.timer_in_progress = false;
+diff --git a/src/libs/zmbv/drvproc.cpp b/src/libs/zmbv/drvproc.cpp
+index ffbfe4f..e79c9e2 100644
+--- a/src/libs/zmbv/drvproc.cpp
++++ b/src/libs/zmbv/drvproc.cpp
+@@ -68,7 +68,7 @@
+  *   Defined separately for each message.
+  *
+  ***************************************************************************/
+-LRESULT PASCAL DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARAM lParam1, LPARAM lParam2) {
++extern "C" LRESULT PASCAL __declspec(dllexport) DriverProc(DWORD dwDriverID, HDRVR hDriver, UINT uiMessage, LPARAM lParam1, LPARAM lParam2) {
+   CodecInst* pi = (CodecInst*)dwDriverID;
+ 
+   switch (uiMessage) {
+diff --git a/src/libs/zmbv/makedll.mk b/src/libs/zmbv/makedll.mk
+index e69de29..c2b0b02 100644
+--- a/src/libs/zmbv/makedll.mk
++++ b/src/libs/zmbv/makedll.mk
+@@ -0,0 +1,17 @@
++CPP=g++
++CPPFLAGS=-O3
++LIBS=-static -lz -lwinmm -static-libgcc -static-libstdc++
++
++OBJ = resource.o zmbv.o drvproc.o zmbv_vfw.o
++
++default: zmbv.dll
++
++
++resource.o: resource.rc
++	windres -i resource.rc -o resource.o
++
++%.o: %.cpp
++	$(CPP) -c -o $@ $< $(CPPFLAGS)
++
++zmbv.dll: $(OBJ) 
++	$(CPP) -shared -o $@ $^ $(CPPFLAGS) $(LIBS) zmbv_mingw.def
+\ No newline at end of file
+diff --git a/src/libs/zmbv/resource.h b/src/libs/zmbv/resource.h
+index f4830af..1aa0155 100644
+--- a/src/libs/zmbv/resource.h
++++ b/src/libs/zmbv/resource.h
+@@ -8,14 +8,3 @@
+ #define IDC_EMAIL                       1001
+ #define IDC_SLIDER1                     1008
+ 
+-// Next default values for new objects
+-// 
+-#ifdef APSTUDIO_INVOKED
+-#ifndef APSTUDIO_READONLY_SYMBOLS
+-#define _APS_NO_MFC                     1
+-#define _APS_NEXT_RESOURCE_VALUE        103
+-#define _APS_NEXT_COMMAND_VALUE         40001
+-#define _APS_NEXT_CONTROL_VALUE         1009
+-#define _APS_NEXT_SYMED_VALUE           101
+-#endif
+-#endif
+diff --git a/src/libs/zmbv/resource.rc b/src/libs/zmbv/resource.rc
+index e69de29..5e4e3a4 100644
+--- a/src/libs/zmbv/resource.rc
++++ b/src/libs/zmbv/resource.rc
+@@ -0,0 +1,40 @@
++#include "resource.h"
++#include "windows.h"
++
++#ifndef IDC_STATIC
++#define IDC_STATIC              -1
++#endif
++
++/////////////////////////////////////////////////////////////////////////////
++//
++// Dialog
++//
++
++IDD_ABOUT DIALOGEX 0, 0, 167, 55
++STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION |
++    WS_SYSMENU
++CAPTION "DOSBox Video Codec v0.1a"
++FONT 8, "MS Sans Serif", 0, 0, 0x0
++BEGIN
++    DEFPUSHBUTTON   "OK",IDOK,131,34,29,14
++    CTEXT           "Zipped Motion Block Video v 0.1\nCopyright 2009-2019 DOSBox Team",
++                    IDC_STATIC,7,7,153,25,SS_NOPREFIX
++    PUSHBUTTON      "Email author",IDC_EMAIL,7,34,50,14
++    PUSHBUTTON      "Visit home page",IDC_HOMEPAGE,59,34,58,14
++END
++
++IDD_CONFIGURE DIALOGEX 0, 0, 213, 146
++STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION |
++    WS_SYSMENU
++CAPTION "ZMBV configuration dialog"
++FONT 8, "MS Sans Serif", 0, 0, 0x0
++BEGIN
++    PUSHBUTTON      "Email author",IDC_EMAIL,44,86,50,14
++    PUSHBUTTON      "Visit home page",IDC_HOMEPAGE,109,87,58,14
++    DEFPUSHBUTTON   "OK",IDOK,44,125,50,14
++    PUSHBUTTON      "Cancel",IDCANCEL,117,125,50,14
++    CONTROL         "",IDC_SLIDER1,"msctls_trackbar32",TBS_BOTH |
++                    TBS_NOTICKS | WS_TABSTOP,57,30,92,18
++END
++
++
+diff --git a/src/libs/zmbv/zmbv_mingw.def b/src/libs/zmbv/zmbv_mingw.def
+index e69de29..0414274 100644
+--- a/src/libs/zmbv/zmbv_mingw.def
++++ b/src/libs/zmbv/zmbv_mingw.def
+@@ -0,0 +1,2 @@
++EXPORTS
++    DriverProc = DriverProc@20 @1
+diff --git a/src/libs/zmbv/zmbv_vfw.cpp b/src/libs/zmbv/zmbv_vfw.cpp
+index 0dfae33..1d6922e 100644
+--- a/src/libs/zmbv/zmbv_vfw.cpp
++++ b/src/libs/zmbv/zmbv_vfw.cpp
+@@ -30,10 +30,10 @@
+ #include <crtdbg.h>
+ #include <string.h>
+ 
+-TCHAR szDescription[] = TEXT("Zipped Motion Block Video v0.1");
++TCHAR szDescription[] = TEXT("Zipped Motion Block Video v0.1a");
+ TCHAR szName[]        = TEXT(CODEC_4CC);
+ 
+-#define VERSION         0x00000001      // 0.1
++#define VERSION         0x00000002      // newer version
+ 
+ /********************************************************************
+ ********************************************************************/
+@@ -50,6 +50,7 @@ void Msg(const char fmt[], ...) {
+   
+   va_start(val, fmt);
+   wvsprintf(buf, fmt, val);
++  va_end(val);
+ 
+   const COORD _80x50 = {80,50};
+   static BOOL startup = (AllocConsole(), SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), _80x50));
+@@ -89,7 +90,7 @@ DWORD Close(CodecInst* pinst) {
+ 
+ BOOL CodecInst::QueryAbout() { return TRUE; }
+ 
+-static BOOL CALLBACK AboutDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
++static INT_PTR CALLBACK AboutDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+   if (uMsg == WM_COMMAND) {
+     switch (LOWORD(wParam)) {
+     case IDOK:
+@@ -110,7 +111,7 @@ DWORD CodecInst::About(HWND hwnd) {
+   return ICERR_OK;
+ }
+ 
+-static BOOL CALLBACK ConfigureDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
++static INT_PTR CALLBACK ConfigureDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+ 
+   if (uMsg == WM_INITDIALOG) {
+ 
+@@ -174,6 +175,7 @@ DWORD CodecInst::GetInfo(ICINFO* icinfo, DWORD dwSize) {
+ ****************************************************************/
+ 
+ static int GetInputBitDepth(const BITMAPINFOHEADER *lpbiIn) {
++	//Msg( "Get input depth compression %d bitcount %d\n", lpbiIn->biCompression, lpbiIn->biBitCount );
+ 	if (lpbiIn->biCompression == BI_RGB) {
+ 		if (lpbiIn->biPlanes != 1)
+ 			return -1;
+@@ -213,11 +215,14 @@ static bool CanCompress(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut, b
+ 	if (lpbiIn) {
+ 		if (GetInputBitDepth(lpbiIn) < 0)
+ 			return false;
+-	} else return false;
++	} else 
++		return false;
+ 	if (lpbiOut) {
++		//Needs to match our 4cc format
+ 		if (memcmp(&lpbiOut->biCompression,CODEC_4CC, 4))
+ 			return false;
+-	} else return !requireOutput;
++	} else
++		return !requireOutput;
+ 	return true;
+ }
+ 
+@@ -225,7 +230,8 @@ static bool CanCompress(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut, b
+ ****************************************************************/
+ 
+ DWORD CodecInst::CompressQuery(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
+-	if (CanCompress(lpbiIn,lpbiOut,false)) return ICERR_OK;
++	if (CanCompress(lpbiIn,lpbiOut,false)) 
++		return ICERR_OK;
+ 	return ICERR_BADFORMAT;
+ }
+ 
+@@ -372,7 +378,8 @@ DWORD CodecInst::DecompressQuery(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER l
+ DWORD CodecInst::DecompressGetFormat(LPBITMAPINFOHEADER lpbiIn, LPBITMAPINFOHEADER lpbiOut) {
+ 	if (memcmp(&lpbiIn->biCompression,CODEC_4CC,4))
+ 		 return ICERR_BADFORMAT;
+-	if (!lpbiOut) return sizeof(BITMAPINFOHEADER);
++	if (!lpbiOut)
++		return sizeof(BITMAPINFOHEADER);
+ 	*lpbiOut = *lpbiIn;
+ 	lpbiOut->biPlanes		= 1;
+ 	lpbiOut->biSize			= sizeof(BITMAPINFOHEADER);
+diff --git a/src/libs/zmbv/zmbv_vfw.rc b/src/libs/zmbv/zmbv_vfw.rc
+index bd5ac62..643418a 100644
+--- a/src/libs/zmbv/zmbv_vfw.rc
++++ b/src/libs/zmbv/zmbv_vfw.rc
+@@ -59,7 +59,7 @@ CAPTION "DOSBox Video Codec v0.1"
+ FONT 8, "MS Sans Serif", 0, 0, 0x0
+ BEGIN
+     DEFPUSHBUTTON   "OK",IDOK,131,34,29,14
+-    CTEXT           "Zipped Motion Block Video v 0.1\nCopyright 2009-2018 DOSBox Team",
++    CTEXT           "Zipped Motion Block Video v 0.1\nCopyright 2009-2019 DOSBox Team",
+                     IDC_STATIC,7,7,153,25,SS_NOPREFIX
+     PUSHBUTTON      "Email author",IDC_EMAIL,7,34,50,14
+     PUSHBUTTON      "Visit home page",IDC_HOMEPAGE,59,34,58,14
+diff --git a/src/misc/cross.cpp b/src/misc/cross.cpp
+index 6a01117..6752af3 100644
+--- a/src/misc/cross.cpp
++++ b/src/misc/cross.cpp
+@@ -21,6 +21,7 @@
+ #include "cross.h"
+ #include "support.h"
+ #include <string>
++#include <limits.h>
+ #include <stdlib.h>
+ 
+ #ifdef WIN32
+@@ -85,10 +86,10 @@ void Cross::CreatePlatformConfigDir(std::string& in) {
+ 	in += "\\DOSBox";
+ 	mkdir(in.c_str());
+ #elif defined(MACOSX)
+-	in = "~/Library/Preferences/";
++	in = "~/Library/Preferences";
+ 	ResolveHomedir(in);
+-#else
+ 	//Don't create it. Assume it exists
++#else
+ 	in = "~/.dosbox";
+ 	ResolveHomedir(in);
+ 	mkdir(in.c_str(),0700);
+@@ -155,6 +156,7 @@ dir_information* open_directory(const char* dirname) {
+ }
+ 
+ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
++	if (!dirp) return false;
+ 	dirp->handle = FindFirstFile(dirp->base_path, &dirp->search_data);
+ 	if (INVALID_HANDLE_VALUE == dirp->handle) {
+ 		return false;
+@@ -169,6 +171,7 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
+ }
+ 
+ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
++	if (!dirp) return false;
+ 	int result = FindNextFile(dirp->handle, &dirp->search_data);
+ 	if (result==0) return false;
+ 
+@@ -181,7 +184,7 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
+ }
+ 
+ void close_directory(dir_information* dirp) {
+-	if (dirp->handle != INVALID_HANDLE_VALUE) {
++	if (dirp && dirp->handle != INVALID_HANDLE_VALUE) {
+ 		FindClose(dirp->handle);
+ 		dirp->handle = INVALID_HANDLE_VALUE;
+ 	}
+@@ -197,10 +200,12 @@ dir_information* open_directory(const char* dirname) {
+ }
+ 
+ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
++	if (!dirp) return false;
+ 	return read_directory_next(dirp,entry_name,is_directory);
+ }
+ 
+ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
++	if (!dirp) return false;
+ 	struct dirent* dentry = readdir(dirp->dir);
+ 	if (dentry==NULL) {
+ 		return false;
+@@ -236,7 +241,62 @@ bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_direc
+ }
+ 
+ void close_directory(dir_information* dirp) {
+-	closedir(dirp->dir);
++	if (dirp) closedir(dirp->dir);
+ }
+ 
+ #endif
++
++FILE *fopen_wrap(const char *path, const char *mode) {
++#if defined(WIN32) || defined(OS2)
++	;
++#elif defined (MACOSX)
++	;
++#else  
++#if defined (HAVE_REALPATH)
++	char work[CROSS_LEN] = {0};
++	strncpy(work,path,CROSS_LEN-1);
++	char* last = strrchr(work,'/');
++	
++	if (last) {
++		if (last != work) {
++			*last = 0;
++			//If this compare fails, then we are dealing with files in / 
++			//Which is outside the scope, but test anyway. 
++			//However as realpath only works for exising files. The testing is 
++			//in that case not done against new files.
++		}
++		char* check = realpath(work,NULL);
++		if (check) {
++			if ( ( strlen(check) == 5 && strcmp(check,"/proc") == 0) || strncmp(check,"/proc/",6) == 0) {
++//				LOG_MSG("lst hit %s blocking!",path);
++				free(check);
++				return NULL;
++			}
++			free(check);
++		}
++	}
++
++#if 0
++//Lightweight version, but then existing files can still be read, which is not ideal	
++	if (strpbrk(mode,"aw+") != NULL) {
++		LOG_MSG("pbrk ok");
++		char* check = realpath(path,NULL);
++		//Will be null if file doesn't exist.... ENOENT
++		//TODO What about unlink /proc/self/mem and then create it ?
++		//Should be safe for what we want..
++		if (check) {
++			if (strncmp(check,"/proc/",6) == 0) {
++				free(check);
++				return NULL;
++			}
++			free(check);
++		}
++	}
++*/
++#endif //0 
++
++#endif //HAVE_REALPATH
++#endif
++
++	return fopen(path,mode);
++}
+diff --git a/src/misc/programs.cpp b/src/misc/programs.cpp
+index cd265c5..a0e885f 100644
+--- a/src/misc/programs.cpp
++++ b/src/misc/programs.cpp
+@@ -78,7 +78,7 @@ static Bitu PROGRAMS_Handler(void) {
+ 	HostPt writer=(HostPt)&index;
+ 	for (;size>0;size--) *writer++=mem_readb(reader++);
+ 	Program * new_program;
+-	if (index > internal_progs.size()) E_Exit("something is messing with the memory");
++	if (index >= internal_progs.size()) E_Exit("something is messing with the memory");
+ 	PROGRAMS_Main * handler = internal_progs[index];
+ 	(*handler)(&new_program);
+ 	new_program->Run();
+@@ -220,9 +220,16 @@ Bitu Program::GetEnvCount(void) {
+ }
+ 
+ bool Program::SetEnv(const char * entry,const char * new_string) {
+-	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
+-	PhysPt env_write=env_read;
+-	char env_string[1024+1];
++	PhysPt env_read = PhysMake(psp->GetEnvironment(),0);
++	
++	//Get size of environment.
++	DOS_MCB mcb(psp->GetEnvironment()-1);
++	Bit16u envsize = mcb.GetSize()*16;
++
++
++	PhysPt env_write = env_read;
++	PhysPt env_write_start = env_read;
++	char env_string[1024+1] = { 0 };
+ 	do 	{
+ 		MEM_StrCopy(env_read,env_string,1024);
+ 		if (!env_string[0]) break;
+@@ -235,16 +242,19 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
+ 	} while (1);
+ /* TODO Maybe save the program name sometime. not really needed though */
+ 	/* Save the new entry */
++
++	//ensure room
++	if (envsize <= (env_write-env_write_start) + strlen(entry) + 1 + strlen(new_string) + 2) return false;
++
+ 	if (new_string[0]) {
+ 		std::string bigentry(entry);
+ 		for (std::string::iterator it = bigentry.begin(); it != bigentry.end(); ++it) *it = toupper(*it);
+-		sprintf(env_string,"%s=%s",bigentry.c_str(),new_string); 
+-//		sprintf(env_string,"%s=%s",entry,new_string); //oldcode
++		snprintf(env_string,1024+1,"%s=%s",bigentry.c_str(),new_string);
+ 		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
+ 		env_write += (PhysPt)(strlen(env_string)+1);
+ 	}
+ 	/* Clear out the final piece of the environment */
+-	mem_writed(env_write,0);
++	mem_writeb(env_write,0);
+ 	return true;
+ }
+ 
+@@ -709,9 +719,14 @@ void CONFIG::Run(void) {
+ 			// Input has been parsed (pvar[0]=section, [1]=property, [2]=value)
+ 			// now execute
+ 			Section* tsec = control->GetSection(pvars[0]);
+-			std::string value;
+-			value += pvars[2];
++			std::string value(pvars[2]);
++			//Due to parsing there can be a = at the start of value.
++			while (value.size() && (value.at(0) ==' ' ||value.at(0) =='=') ) value.erase(0,1);
+ 			for(Bitu i = 3; i < pvars.size(); i++) value += (std::string(" ") + pvars[i]);
++			if (value.empty() ) {
++				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
++				return;
++			}
+ 			std::string inputline = pvars[1] + "=" + value;
+ 			
+ 			tsec->ExecuteDestroy(false);
+diff --git a/src/misc/setup.cpp b/src/misc/setup.cpp
+index 2843652..693b17b 100644
+--- a/src/misc/setup.cpp
++++ b/src/misc/setup.cpp
+@@ -429,6 +429,9 @@ bool Prop_multival::SetValue(std::string const& input) {
+ 	Property *p = section->Get_prop(0);
+ 	//No properties in this section. do nothing
+ 	if (!p) return false;
++	Value::Etype prevtype = Value::V_NONE;
++	string prevargument = "";
++
+ 	string::size_type loc = string::npos;
+ 	while( (p = section->Get_prop(i++)) ) {
+ 		//trim leading separators
+@@ -443,13 +446,32 @@ bool Prop_multival::SetValue(std::string const& input) {
+ 			in = local;
+ 			local = "";
+ 		}
+-		//Test Value. If it fails set default
+-		Value valtest (in,p->Get_type());
+-		if (!p->CheckValue(valtest,true)) {
+-			make_default_value();
+-			return false;
++
++		if (p->Get_type() == Value::V_STRING) {
++			//Strings are only checked against the suggested values list.
++			//Test Value. If it fails set default
++			Value valtest (in,p->Get_type());
++			if (!p->CheckValue(valtest,true)) {
++				make_default_value();
++				return false;
++			}
++			p->SetValue(in);
++		} else {
++			//Non-strings can have more things, conversion alone is not enough (as invalid values as converted to 0)
++			bool r = p->SetValue(in);
++			if (!r) {
++				if (in.empty() && p->Get_type() == prevtype ) {
++					//Nothing there, but same type of variable, so repeat it (sensitivity)
++					in = prevargument; 
++					p->SetValue(in);
++				} else {
++					//Something was there to be parsed or not the same type. Invalidate entire property.
++					make_default_value();
++				}
++			}
+ 		}
+-		p->SetValue(in);
++		prevtype = p->Get_type();
++		prevargument = in;
+ 
+ 	}
+ 	return retval;
+@@ -634,8 +656,15 @@ bool Section_prop::HandleInputline(string const& gegevens){
+ 
+ void Section_prop::PrintData(FILE* outfile) const {
+ 	/* Now print out the individual section entries */
+-	for(const_it tel=properties.begin();tel!=properties.end();tel++){
+-		fprintf(outfile,"%s=%s\n",(*tel)->propname.c_str(),(*tel)->GetValue().ToString().c_str());
++	size_t len = 0;
++	// Determine maximum length of the props in this section
++	for(const_it tel = properties.begin();tel != properties.end();tel++) {
++		if ((*tel)->propname.length() > len)
++			len = (*tel)->propname.length();
++	}
++
++	for(const_it tel = properties.begin();tel != properties.end();tel++) {
++		fprintf(outfile,"%-*s = %s\n", len, (*tel)->propname.c_str(), (*tel)->GetValue().ToString().c_str());
+ 	}
+ }
+ 
+@@ -686,7 +715,7 @@ bool Config::PrintConfig(char const * const configfilename) const {
+ 			}
+ 			i=0;
+ 			char prefix[80];
+-			snprintf(prefix,80, "\n# %*s  ", (int)maxwidth, "");
++			snprintf(prefix,80, "\n# %*s    ", (int)maxwidth, "");
+ 			while ((p = sec->Get_prop(i++))) {
+ 				std::string help = p->Get_help();
+ 				std::string::size_type pos = std::string::npos;
+@@ -829,7 +858,7 @@ bool Config::ParseConfigFile(char const * const configfilename) {
+ 	settings_type = (configfiles.size() == 0)? "primary":"additional";
+ 	configfiles.push_back(configfilename);
+ 
+-	LOG_MSG("CONFIG:Loading %s settings from config file %s", settings_type,configfilename);
++	LOG_MSG("CONFIG: Loading %s settings from config file %s", settings_type,configfilename);
+ 
+ 	//Get directory from configfilename, used with relative paths.
+ 	current_config_dir=configfilename;
+diff --git a/src/shell/shell.cpp b/src/shell/shell.cpp
+index a04135c..590daed 100644
+--- a/src/shell/shell.cpp
++++ b/src/shell/shell.cpp
+@@ -31,7 +31,7 @@
+ Bitu call_shellstop;
+ /* Larger scope so shell_del autoexec can use it to
+  * remove things from the environment */
+-Program * first_shell = 0;
++DOS_Shell * first_shell = 0;
+ 
+ static Bitu shellstop_handler(void) {
+ 	return CBRET_STOP;
+@@ -41,6 +41,12 @@ static void SHELL_ProgramStart(Program * * make) {
+ 	*make = new DOS_Shell;
+ }
+ 
++//Repeat it with the correct type, could do it in the function below, but this way it should be 
++//clear that if the above function is changed, this function might need a change as well.
++static void SHELL_ProgramStart_First_shell(DOS_Shell * * make) {
++	*make = new DOS_Shell;
++}
++
+ #define AUTOEXEC_SIZE 4096
+ static char autoexec_data[AUTOEXEC_SIZE] = { 0 };
+ static std::list<std::string> autoexec_strings;
+@@ -120,21 +126,29 @@ AutoexecObject::~AutoexecObject(){
+ 
+ 	// Remove the line from the autoexecbuffer and update environment
+ 	for(auto_it it = autoexec_strings.begin(); it != autoexec_strings.end(); ) {
+-		if((*it) == buf) {
+-			it = autoexec_strings.erase(it);
++		if ((*it) == buf) {
+ 			std::string::size_type n = buf.size();
+ 			char* buf2 = new char[n + 1];
+ 			safe_strncpy(buf2, buf.c_str(), n + 1);
++			bool stringset = false;
+ 			// If it's a environment variable remove it from there as well
+-			if((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
++			if ((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
+ 				char* after_set = buf2 + 4;//move to variable that is being set
+ 				char* test = strpbrk(after_set,"=");
+-				if(!test) continue;
++				if (!test) continue;
+ 				*test = 0;
++				stringset = true;
+ 				//If the shell is running/exists update the environment
+-				if(first_shell) first_shell->SetEnv(after_set,"");
++				if (first_shell) first_shell->SetEnv(after_set,"");
+ 			}
+ 			delete [] buf2;
++			if (stringset && first_shell && first_shell->bf && first_shell->bf->filename.find("AUTOEXEC.BAT") != std::string::npos) {
++				//Replace entry with spaces if it is a set and from autoexec.bat, as else the location counter will be off.
++				*it = buf.assign(buf.size(),' ');
++				it++;
++			} else {
++				it = autoexec_strings.erase(it);
++			}
+ 		} else it++;
+ 	}
+ 	this->CreateAutoexec();
+@@ -746,7 +760,7 @@ void SHELL_Init() {
+ 	dos.psp(psp_seg);
+ 
+ 
+-	SHELL_ProgramStart(&first_shell);
++	SHELL_ProgramStart_First_shell(&first_shell);
+ 	first_shell->Run();
+ 	delete first_shell;
+ 	first_shell = 0;//Make clear that it shouldn't be used anymore
+diff --git a/src/shell/shell_misc.cpp b/src/shell/shell_misc.cpp
+index 99f4486..5f6741a 100644
+--- a/src/shell/shell_misc.cpp
++++ b/src/shell/shell_misc.cpp
+@@ -253,17 +253,21 @@ void DOS_Shell::InputCommand(char * line) {
+ 					if ((path = strrchr(line+completion_index,'/'))) completion_index = (Bit16u)(path-line+1);
+ 
+ 					// build the completion list
+-					char mask[DOS_PATHLENGTH];
++					char mask[DOS_PATHLENGTH] = {0};
++					if (strlen(p_completion_start) + 3 >= DOS_PATHLENGTH) {
++						//Beep;
++						break;
++					}
+ 					if (p_completion_start) {
+-						strcpy(mask, p_completion_start);
++						safe_strncpy(mask, p_completion_start,DOS_PATHLENGTH);
+ 						char* dot_pos=strrchr(mask,'.');
+ 						char* bs_pos=strrchr(mask,'\\');
+ 						char* fs_pos=strrchr(mask,'/');
+ 						char* cl_pos=strrchr(mask,':');
+ 						// not perfect when line already contains wildcards, but works
+ 						if ((dot_pos-bs_pos>0) && (dot_pos-fs_pos>0) && (dot_pos-cl_pos>0))
+-							strcat(mask, "*");
+-						else strcat(mask, "*.*");
++							strncat(mask, "*",DOS_PATHLENGTH - 1);
++						else strncat(mask, "*.*",DOS_PATHLENGTH - 1);
+ 					} else {
+ 						strcpy(mask, "*.*");
+ 					}
+diff --git a/src/winres.rc b/src/winres.rc
+index 99292c2..176cf8b 100644
+--- a/src/winres.rc
++++ b/src/winres.rc
+@@ -19,12 +19,12 @@ BEGIN
+     BEGIN
+         BLOCK "040904b0"
+         BEGIN
+-            VALUE "Comments", "© 2002-2018 DOSBox Team, published under GNU GPL"
++            VALUE "Comments", "© 2002-2019 DOSBox Team, published under GNU GPL"
+             VALUE "CompanyName", "DOSBox Team"
+             VALUE "FileDescription", "DOSBox DOS Emulator"
+             VALUE "FileVersion", "0, 74, 0, 0"
+             VALUE "InternalName", "DOSBox"
+-            VALUE "LegalCopyright", "Copyright © 2002-2018 DOSBox Team"
++            VALUE "LegalCopyright", "Copyright © 2002-2019 DOSBox Team"
+             VALUE "OriginalFilename", "dosbox.exe"
+             VALUE "ProductName", "DOSBox DOS Emulator"
+             VALUE "ProductVersion", "0, 74, 0, 0"
+diff --git a/visualc_net/dosbox.vcproj b/visualc_net/dosbox.vcproj
+index 7d62ff3..e8938c5 100644
+--- a/visualc_net/dosbox.vcproj
++++ b/visualc_net/dosbox.vcproj
+@@ -436,6 +436,9 @@
+ 					<File
+ 						RelativePath="..\src\dos\drive_local.cpp">
+ 					</File>
++					<File
++						RelativePath="..\src\dos\drive_overlay.cpp">
++					</File>
+ 					<File
+ 						RelativePath="..\src\dos\drive_virtual.cpp">
+ 					</File>

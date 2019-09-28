@@ -4,6 +4,6 @@
 
 emu_start
 
-dosbox "$@" > /var/log/dosbox.log 2>&1
+LANG=C dosbox "$@" > /var/log/dosbox.log 2>&1
 
 emu_stop
